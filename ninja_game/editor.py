@@ -14,14 +14,14 @@ class Editor:
         pygame.init()
 
         pygame.display.set_caption('editor')
-        self.window_size = (640, 480)
+        self.window_size = (640, 360)
         self.fullscreen = False
 
         self.screen = pygame.display.set_mode(
             self.window_size,
             pygame.RESIZABLE
         )
-        self.display = pygame.Surface((320, 240))
+        self.display = pygame.Surface((320, 180))
 
         self.clock = pygame.time.Clock()
         
@@ -32,14 +32,31 @@ class Editor:
             'stone': load_images('tiles/stone'),
             'spawners': load_images('tiles/spawners'),
             'grassSpawner': load_images('grass'), #celui qui retire le commentaire je l encule 
+            'tuto': load_images('tuto'),
         }
+        
+        # Redimensionne automatiquement les images 'tuto' en 16x16
+
+        original_img = self.assets['tuto'][0]
+        self.assets['tuto'][0] = pygame.transform.scale(original_img, (30, 30))
+
+        original_img = self.assets['tuto'][1]
+        self.assets['tuto'][1] = pygame.transform.scale(original_img, (30, 30))
+
+        original_img = self.assets['tuto'][2]
+        self.assets['tuto'][2] = pygame.transform.scale(original_img, (64, 64))
+
+        original_img = self.assets['tuto'][3]
+        self.assets['tuto'][3] = pygame.transform.scale(original_img, (30, 30))
+        
         
         self.movement = [False, False, False, False]
         
         self.tilemap = Tilemap(self, tile_size=16)
         
+        self.level = 0
         try:
-            self.tilemap.load('map.json')
+            self.tilemap.load(f'data/maps/{self.level}.json')
         except FileNotFoundError:
             pass
         
@@ -140,12 +157,28 @@ class Editor:
                     if event.key == pygame.K_t:
                         self.tilemap.autotile()
                     if event.key == pygame.K_o:
-                        self.tilemap.save('map.json')
-                        nbrDeMap = os.listdir('data/maps/')
-                        nbrDeMap = len(nbrDeMap) # ca fait direct +1 vu que obn commence a 0
-                        self.tilemap.save(f'data/maps/{nbrDeMap}.json')
-                        self.tilemap.save(f'../ninja_game_server/data/maps/{nbrDeMap}.json')
-                        print('Map saved to map.json')
+                        self.tilemap.save(f'data/maps/{self.level}.json')
+                        print(f'Map saved to data/maps/{self.level}.json')
+                    if event.key == pygame.K_UP:
+                        self.level += 1
+                        self.tilemap.tilemap = {}
+                        self.tilemap.offgrid_tiles = []
+                        try:
+                            self.tilemap.load(f'data/maps/{self.level}.json')
+                            print(f"Loaded level {self.level}")
+                        except FileNotFoundError:
+                            print(f"New level {self.level} created (empty)")
+                    if event.key == pygame.K_DOWN:
+                        if self.level > 0:
+                            self.level -= 1
+                            self.tilemap.tilemap = {}
+                            self.tilemap.offgrid_tiles = []
+                            try:
+                                self.tilemap.load(f'data/maps/{self.level}.json')
+                                print(f"Loaded level {self.level}")
+                            except FileNotFoundError:
+                                print(f"New level {self.level} created (empty)")
+
                     if event.key == pygame.K_LSHIFT:
                         self.shift = True
                     if event.key == pygame.K_F11:

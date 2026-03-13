@@ -85,7 +85,7 @@ class GameServer:
 
         # --- Charger la map ---
         self.map = TilemapServer()
-        self.map_id = 0
+        self.map_id = 1
         self.map.load(f"data/maps/{self.map_id}.json")
         print("carte chargée sur le serveur.")
 
