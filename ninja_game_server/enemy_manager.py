@@ -26,10 +26,12 @@ class EnemyManager:
 
             if spawner['variant'] == 2: # Boss spawner
                 self.create_enemy(spawner['pos'], "patrol") # will be changed to spawn the boss
+            if spawner['variant'] == 3:
+                self.create_enemy(spawner['pos'], "walking_enemy")
 
     def create_enemy(self, pos: list, enemy_type: str) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
-        enemy_types = {"blob": Blob, "patrol": Patrol}
+        enemy_types = {"blob": Blob, "patrol": Patrol, "walking_enemy": WalkingEnemy}
         self.enemies[self.next_enemy_id] = enemy_types[enemy_type](self.next_enemy_id, pos, self)
         self.next_enemy_id += 1
 
@@ -359,6 +361,7 @@ class Patrol(Enemy):
 VISION_DISTANCE_ENEMY_2 = 16*3
 VISION_FOV_ENEMY_2 = pi/4
 SPEED_MODIFIER_RAGE_ENEMY_2 = 2
+GRAVITY_ENEMY_2 = 5
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -384,13 +387,16 @@ class WalkingEnemy(Enemy):
                     if self.can_see_player(players[pid]):
                         self.properties['state'] = 'rage'
 
-        velocity = [self.orientation * self.speed, 0]
-        pos_check = add_vecs(velocity, pos)
-        pos_check = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] + 10])
-        if self.enemy_manager.tilemap.solid_check(pos_check):
-            self.orientation *= -1
-            velocity = [self.orientation * self.speed, 0]
-        
+        if not self.enemy_manager.tilemap.solid_check([0, GRAVITY_ENEMY_2]):
+            pos_check = add_vecs([self.orientation * self.speed, 0], pos)
+            pos_check2 = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] / 2])
+            pos_check = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] + 10])
+            if self.enemy_manager.tilemap.solid_check(pos_check2) or not self.enemy_manager.tilemap.solid_check(pos_check):
+                self.orientation *= -1
+            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+        else:
+            velocity = [0, GRAVITY_ENEMY_2]
+
         self.move_and_slide(velocity, delta)
 
 def list_copy(lst: list) -> list:
