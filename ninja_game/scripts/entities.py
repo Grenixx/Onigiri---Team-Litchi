@@ -149,6 +149,7 @@ class Player(PhysicsEntity):
         self.dash_dir = None # Direction du dash actuel ('down' ou None)
         self.dash_cooldown_timer = 0 # Cooldown entre deux dashs
 
+
     def update(self, tilemap, movement=(0, 0), dt=0):
         # On ignore le mouvement normal si on est en train de dasher
         # pour éviter d'additionner run_speed (120) + dash_speed (330)
@@ -418,9 +419,15 @@ class PurpleCircle:
                 offset_x = enemy_rect.x - player_rect.x
                 offset_y = enemy_rect.y - player_rect.y
                 if not self.game.dead and self.game.invincible_frame_time <= 0:
-                    self.game.screenshake = max(16, self.game.screenshake)
+                    self.game.screenshake = max(16, self.game.screenshake)      
                     self.game.sfx['hit'].play()
-                    self.game.dead += dt * 60
+                    self.game.hp-=25
+                    if self.game.hp<=0:
+                        self.game.dead += dt * 60
+                        print("Player is dead")
+                    else :
+                        self.game.invincible_frame_time = 60  
+                        print(f"Player HP: {self.game.hp}")
 
             # 3. Collision Arme (Dégâts infligés)
             if weapon_hitbox.colliderect(enemy_rect):

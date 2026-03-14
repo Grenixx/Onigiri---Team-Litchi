@@ -195,6 +195,7 @@ class Game:
         
         self.scroll = [0, 0]
         self.dead = 0
+        self.hp=100
         self.invincible_frame_time = 0
         self.transition = -30
 
@@ -280,7 +281,12 @@ class Game:
 
             # --- PLAYER RENDER ---
             if not self.dead:
-                self.player.render(self.display, offset=render_scroll)
+                show_p=True
+                if self.invincible_frame_time > 0:
+                    if (pygame.time.get_ticks() // 100) % 2 == 0:
+                        show_p = False
+                if show_p:
+                    self.player.render(self.display, offset=render_scroll)
                 if self.debug:
                     mask_image = self.player.mask.to_surface(unsetcolor=(0,0,0,0), setcolor=(255,0,0,255))
                     self.display.blit(mask_image, (
