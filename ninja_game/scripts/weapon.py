@@ -48,6 +48,8 @@ class WeaponBase:
         self.attack_direction = "front"
         self.angle = 0
 
+        self.damage_number = 50 
+
         # animation placeholder, charge les sprites selon le type
         self.animation = self.load_animation(weapon_type)
 

@@ -9,7 +9,7 @@ import pygame
 from screeninfo import get_monitors
 
 from scripts.utils import load_image, load_images, Animation
-from scripts.entities import PhysicsEntity, Player, PurpleCircle, RemotePlayerRenderer
+from scripts.entities import PhysicsEntity, Player, ClientEnemyManager, RemotePlayerRenderer
 from scripts.weapon import Weapon
 from scripts.tilemap import Tilemap
 from scripts.clouds import Clouds
@@ -129,7 +129,7 @@ class Game:
         
         self.player = Player(self, (50, 50), (8, 15))
 
-        self.enemies_renderer = PurpleCircle(self)
+        self.enemies_renderer = ClientEnemyManager(self)
         self.remote_players_renderer = RemotePlayerRenderer(self)
         
         self.tilemap = Tilemap(self, tile_size=16)

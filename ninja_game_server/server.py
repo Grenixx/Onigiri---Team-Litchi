@@ -184,6 +184,12 @@ class GameServer:
                 del self.EnemyManager.enemies[eid]
             return
 
+        if msg_type == 67:
+            eid, damage_number = struct.unpack("II", data)
+            if eid in self.EnemyManager.enemies:
+                self.EnemyManager.enemies[eid].damage(eid,damage_number)
+            return
+
         # --- Request Level Change (Debug) ---
         if msg_type == 5:
             self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) #modulo nombre de map dans le fichier

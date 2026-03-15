@@ -366,7 +366,7 @@ class Player(PhysicsEntity):
 
 
 
-class PurpleCircle:
+class ClientEnemyManager:
     """Classe gérant les ennemis ronds violets + collisions avec le joueur."""
     def __init__(self, game):
         self.game = game
@@ -397,6 +397,7 @@ class PurpleCircle:
         weapon_hitbox = current_weapon.current_rect
         is_attacking = current_weapon.attack_timer > 0
         to_remove = []
+        to_damage = []
 
         # On nettoie les animations des ennemis disparus
         active_eids = set(self.game.net.enemies.keys())
@@ -441,13 +442,22 @@ class PurpleCircle:
                         angle = random.random() * math.pi * 2
                         self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
                     
-                    to_remove.append(eid)
+                    #pas encore coder mais dcp quand il a plus de pv et que le client le sais deja go le supprimer intantanement et bien sur aussi envoyer 
+                    #une requete coter serv au cas ou et puis ces deja code faut juste fare gafffe a pas ccrash si la valeur est deja retirer coter serv
+                    
+                    #to_remove.append(eid)
+                    to_damage.append(eid)
 
-        # Retrait des ennemis
+        # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         for eid in to_remove:
             if eid in self.game.net.enemies:
                 del self.game.net.enemies[eid]
             self.game.net.remove_enemy(eid)
+
+        for eid in to_damage:
+            if eid in self.game.net.enemies:
+                del self.game.net.enemies[eid]
+            self.game.net.damage_enemy(eid, current_weapon.damage_number) 
 
 
     def render(self, surf, offset=(0, 0), dt=1):
