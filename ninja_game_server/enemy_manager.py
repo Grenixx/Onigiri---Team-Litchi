@@ -66,11 +66,13 @@ class Enemy:
     def can_see_player(self, player: list) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
         pos = [self.properties['x'], self.properties['y']]
+        player_pos = list_copy(player)
+        """
         pos[0] += self.size[0] / 2
         pos[1] += self.size[1] / 2
-        player_pos = list_copy(player)
         player_pos[0] += PLAYER_SIZE[0] / 2
         player_pos[1] += PLAYER_SIZE[1] / 2
+        """
         return not raycast_collide(
             pos,
             angle(vector_to([self.properties['x'], self.properties['y']], player_pos)),
@@ -359,17 +361,20 @@ class Patrol(Enemy):
                         players_last_pos[pid] = self.players_last_pos[pid]
         self.players_last_pos = players_last_pos
 
-VISION_DISTANCE_ENEMY_2 = 16*3
-VISION_FOV_ENEMY_2 = pi/2
+VISION_DISTANCE_ENEMY_2 = 16*5
+VISION_FOV_ENEMY_2 = pi/4
 SPEED_MODIFIER_RAGE_ENEMY_2 = 2
 GRAVITY_ENEMY_2 = 5
+RAGE_COOLDOWN = 3 * 20 # seconds * ticks
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5)
+        super().__init__(eid, pos, enemy_manager, 1.5)
         self.properties['type'] = "walking_enemy"
         self.orientation = random.choice([-1, 1])
-        self.rage_cooldown = -1
+        self.properties['flip'] = self.orientation == -1
+        self.rage_cooldown_timer = -1
+        self.properties['state'] = 'idle'
         print(f"Walking enemy created at {pos} !")
 
     def physics_process(self, delta: float) -> None:
@@ -377,17 +382,27 @@ class WalkingEnemy(Enemy):
         pos = [self.properties['x'], self.properties['y']]
         players = self.enemy_manager.players
         
-        self.properties['state'] = 'idle'
+        rage = False
         for pid in players.keys():
             dist = distance_to(pos, players[pid])
             if dist <= VISION_DISTANCE_ENEMY_2:
-                agl = angle(sub_vecs(players[pid], pos))
-                agl -= angle([self.orientation, 0])
-                agl = abs(agl)
-                agl %= pi
+                agl = diff_angles(angle(sub_vecs(players[pid], pos)), angle([self.orientation, 0]))
                 if agl <= VISION_FOV_ENEMY_2:
                     if self.can_see_player(players[pid]):
-                        self.properties['state'] = 'rage'
+                        rage = True
+                        break
+
+        if rage:
+            self.properties['state'] = 'rage'
+        elif self.properties['state'] == 'rage':
+            if self.rage_cooldown_timer == -1:
+                self.rage_cooldown_timer = RAGE_COOLDOWN
+            elif self.rage_cooldown_timer > 0:
+                self.rage_cooldown_timer -= 1
+            else:
+                self.properties['state'] = 'idle'
+                self.rage_cooldown_timer = -1
+            print(self.rage_cooldown_timer)
 
         if not self.enemy_manager.tilemap.solid_check([0, GRAVITY_ENEMY_2]):
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
@@ -395,9 +410,13 @@ class WalkingEnemy(Enemy):
             pos_check = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] + 10])
             if self.enemy_manager.tilemap.solid_check(pos_check2) or not self.enemy_manager.tilemap.solid_check(pos_check):
                 self.orientation *= -1
+                self.properties['flip'] = not self.properties['flip']
             velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
         else:
             velocity = [0, GRAVITY_ENEMY_2]
+
+        if self.properties['state'] == 'rage':
+            velocity[0] *= SPEED_MODIFIER_RAGE_ENEMY_2
 
         self.move_and_slide(velocity, delta)
 
@@ -491,6 +510,14 @@ def angle_modulo(angle: float) -> float:
     while angle < -pi:
         angle += 2*pi
     return angle
+
+def diff_angles(angle1: float, angle2: float) -> float:
+    """
+    abs(angle1 - angle2)
+    """
+    angle1 -= angle2
+    angle1 = abs(angle_modulo(angle1))
+    return angle1
 
 def is_within(pos: list, pos1: list, pos2: list) -> bool:
     """
