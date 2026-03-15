@@ -32,7 +32,8 @@ def load_images(path, convert_alpha=False):
     folder_path = resource_path(os.path.join(BASE_IMG_PATH, path))
     images = []
     for img_name in sorted(os.listdir(folder_path)):
-        images.append(load_image(os.path.join(path, img_name), convert_alpha=convert_alpha))  # ne pas rajouter BASE_IMG_PATH ici !
+        if os.path.isfile(os.path.join(folder_path, img_name)):
+            images.append(load_image(os.path.join(path, img_name), convert_alpha=convert_alpha))  # ne pas rajouter BASE_IMG_PATH ici !
     return images
 
 
