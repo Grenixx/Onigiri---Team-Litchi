@@ -149,6 +149,7 @@ class Player(PhysicsEntity):
         self.dash_dir = None # Direction du dash actuel ('down' ou None)
         self.dash_cooldown_timer = 0 # Cooldown entre deux dashs
 
+
     def update(self, tilemap, movement=(0, 0), dt=0):
         # On ignore le mouvement normal si on est en train de dasher
         # pour éviter d'additionner run_speed (120) + dash_speed (330)
@@ -365,7 +366,7 @@ class Player(PhysicsEntity):
 
 
 
-class PurpleCircle:
+class ClientEnemyManager:
     """Classe gérant les ennemis ronds violets + collisions avec le joueur."""
     def __init__(self, game):
         self.game = game
@@ -396,6 +397,7 @@ class PurpleCircle:
         weapon_hitbox = current_weapon.current_rect
         is_attacking = current_weapon.attack_timer > 0
         to_remove = []
+        to_damage = []
 
         # On nettoie les animations des ennemis disparus
         active_eids = set(self.game.net.enemies.keys())
@@ -418,9 +420,15 @@ class PurpleCircle:
                 offset_x = enemy_rect.x - player_rect.x
                 offset_y = enemy_rect.y - player_rect.y
                 if not self.game.dead and self.game.invincible_frame_time <= 0:
-                    self.game.screenshake = max(16, self.game.screenshake)
+                    self.game.screenshake = max(16, self.game.screenshake)      
                     self.game.sfx['hit'].play()
-                    self.game.dead += dt * 60
+                    self.game.hp-=25
+                    if self.game.hp<=0:
+                        self.game.dead += dt * 60
+                        print("Player is dead")
+                    else :
+                        self.game.invincible_frame_time = 60  
+                        print(f"Player HP: {self.game.hp}")
 
             # 3. Collision Arme (Dégâts infligés)
             if weapon_hitbox.colliderect(enemy_rect):
@@ -434,13 +442,23 @@ class PurpleCircle:
                         angle = random.random() * math.pi * 2
                         self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
                     
-                    to_remove.append(eid)
+                    #pas encore coder mais dcp quand il a plus de pv et que le client le sais deja go le supprimer intantanement et bien sur aussi envoyer 
+                    #une requete coter serv au cas ou et puis ces deja code faut juste fare gafffe a pas ccrash si la valeur est deja retirer coter serv
+                    
+                    #to_remove.append(eid)
+                    to_damage.append(eid)
 
-        # Retrait des ennemis
+        # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         for eid in to_remove:
             if eid in self.game.net.enemies:
                 del self.game.net.enemies[eid]
             self.game.net.remove_enemy(eid)
+
+        for eid in to_damage:
+            #if eid in self.game.net.enemies:
+            #    del self.game.net.enemies[eid]
+            self.game.net.damage_enemy(eid, current_weapon.damage_number) 
+            
 
 
     def render(self, surf, offset=(0, 0), dt=1):

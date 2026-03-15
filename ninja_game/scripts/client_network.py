@@ -134,6 +134,14 @@ class ClientNetwork:
         except Exception as e:
             print("Remove enemy error:", e)
 
+    def damage_enemy(self, eid,damage_number):
+        try:
+            packet = b'\x08' + struct.pack("II", eid, damage_number)
+            self.sock.sendto(packet, self.server)
+            print(f"Demande d'infliger {damage_number} a ce monstre {eid}")
+        except Exception as e:
+            print("Damage enemy error:", e)
+
     def send_map_change_request(self):
         try:
             # Type 5: Request Map Change

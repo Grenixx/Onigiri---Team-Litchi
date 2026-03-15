@@ -9,7 +9,7 @@ import pygame
 from screeninfo import get_monitors
 
 from scripts.utils import load_image, load_images, Animation
-from scripts.entities import PhysicsEntity, Player, PurpleCircle, RemotePlayerRenderer
+from scripts.entities import PhysicsEntity, Player, ClientEnemyManager, RemotePlayerRenderer
 from scripts.weapon import Weapon
 from scripts.tilemap import Tilemap
 from scripts.clouds import Clouds
@@ -117,8 +117,8 @@ class Game:
         }
 
         self.MUSIC_Volume = 0  ############# Volume global #############
-        self.SFX_Volume = 0  ########### Volume des SFX #############
-        self.music_on = False  # État de la musique (activée par défaut)
+        self.SFX_Volume = 0  
+        self.music_on = False  
 
         # Ajuster les volumes
         self.sfx['ambience'].set_volume(self.SFX_Volume)
@@ -132,7 +132,7 @@ class Game:
         
         self.player = Player(self, (50, 50), (8, 15))
 
-        self.enemies_renderer = PurpleCircle(self)
+        self.enemies_renderer = ClientEnemyManager(self)
         self.remote_players_renderer = RemotePlayerRenderer(self)
         
         self.tilemap = Tilemap(self, tile_size=16)
@@ -198,6 +198,7 @@ class Game:
         
         self.scroll = [0, 0]
         self.dead = 0
+        self.hp=100
         self.invincible_frame_time = 0
         self.transition = -30
 
@@ -283,7 +284,12 @@ class Game:
 
             # --- PLAYER RENDER ---
             if not self.dead:
-                self.player.render(self.display, offset=render_scroll)
+                show_p=True
+                if self.invincible_frame_time > 0:
+                    if (pygame.time.get_ticks() // 100) % 2 == 0:
+                        show_p = False
+                if show_p:
+                    self.player.render(self.display, offset=render_scroll)
                 if self.debug:
                     mask_image = self.player.mask.to_surface(unsetcolor=(0,0,0,0), setcolor=(255,0,0,255))
                     self.display.blit(mask_image, (

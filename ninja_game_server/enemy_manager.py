@@ -136,8 +136,8 @@ class Enemy:
         else:
             self.properties['y'] = new_pos[1]
 
-    def damage():
-        pass
+    def damage(self ,damage_number):
+        print(f"ARRRRG j'ai pruis {self}{damage_number}")
     
     def kill():
         pass
