@@ -11,7 +11,6 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-### HE OUI Pre-calculer tous les masques de 10 à 400 est correct mais ça prend beaucoup de RAM (~390 surfaces). a changer potentielement
 class LightingSystem:
     def __init__(self, size):
         self.size = size

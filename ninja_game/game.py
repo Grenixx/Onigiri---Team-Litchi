@@ -114,8 +114,8 @@ class Game:
         }
 
         self.MUSIC_Volume = 0  ############# Volume global #############
-        self.SFX_Volume = 0  ########### Volume des SFX #############
-        self.music_on = False  # État de la musique (activée par défaut)
+        self.SFX_Volume = 0  
+        self.music_on = False  
 
         # Ajuster les volumes
         self.sfx['ambience'].set_volume(self.SFX_Volume)

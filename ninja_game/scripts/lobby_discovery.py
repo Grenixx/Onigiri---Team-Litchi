@@ -73,11 +73,10 @@ class LobbyManager:
                 self.my_id = result['name'] # Firebase retourne {"name": "-Nv..."}
                 print(f"Lobby enregistré avec l'ID : {self.my_id}")
         else:
-            # Sinon on fait un PUT/PATCH sur notre ID
             url = f"{FIREBASE_URL}{LOBBY_PATH}/{self.my_id}.json"
             req = urllib.request.Request(url, data=payload, method='PUT')
             with urllib.request.urlopen(req) as response:
-                pass # C'est bon
+                pass 
 
     def _remove_lobby(self):
         """Supprime le lobby de la base de données."""
