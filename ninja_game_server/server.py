@@ -274,8 +274,8 @@ class GameServer:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Ninja Game Server')
+    parser.add_argument('--start_local', type=int, default=1, help='Whether the server starts in local')
     parser.add_argument('--name', type=str, default="Ninja Server", help='Name of the server')
     args = parser.parse_args()
-
-    server = GameServer(True, server_name=args.name)  # mode local == True
+    server = GameServer(local=args.start_local == 1, server_name=args.name)  # mode local == True
     server.run()

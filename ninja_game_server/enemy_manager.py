@@ -365,7 +365,7 @@ VISION_DISTANCE_ENEMY_2 = 16*5
 VISION_FOV_ENEMY_2 = pi/4
 SPEED_MODIFIER_RAGE_ENEMY_2 = 2
 GRAVITY_ENEMY_2 = 5
-RAGE_COOLDOWN = 3 * 20 # seconds * ticks
+RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -402,7 +402,6 @@ class WalkingEnemy(Enemy):
             else:
                 self.properties['state'] = 'idle'
                 self.rage_cooldown_timer = -1
-            print(self.rage_cooldown_timer)
 
         if not self.enemy_manager.tilemap.solid_check([0, GRAVITY_ENEMY_2]):
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
