@@ -32,22 +32,23 @@ class Editor:
             'stone': load_images('tiles/stone'),
             'spawners': load_images('tiles/spawners'),
             'grassSpawner': load_images('grass'), #celui qui retire le commentaire je l encule 
-            'tuto': load_images('tuto'),
+            'steles': load_images('tuto/steles'),
+            'texte':load_images('tuto/texte'),
         }
         
         # Redimensionne automatiquement les images 'tuto' en 16x16
 
-        original_img = self.assets['tuto'][0]
-        self.assets['tuto'][0] = pygame.transform.scale(original_img, (30, 30))
+        original_img = self.assets['steles'][0]
+        self.assets['steles'][0] = pygame.transform.scale(original_img, (30, 30))
 
-        original_img = self.assets['tuto'][1]
-        self.assets['tuto'][1] = pygame.transform.scale(original_img, (30, 30))
+        original_img = self.assets['steles'][1]
+        self.assets['steles'][1] = pygame.transform.scale(original_img, (30, 30))
 
-        original_img = self.assets['tuto'][2]
-        self.assets['tuto'][2] = pygame.transform.scale(original_img, (64, 64))
+        original_img = self.assets['steles'][2]
+        self.assets['steles'][2] = pygame.transform.scale(original_img, (64, 64))
 
-        original_img = self.assets['tuto'][3]
-        self.assets['tuto'][3] = pygame.transform.scale(original_img, (30, 30))
+        original_img = self.assets['steles'][3]
+        self.assets['steles'][3] = pygame.transform.scale(original_img, (30, 30))
         
         
         self.movement = [False, False, False, False]

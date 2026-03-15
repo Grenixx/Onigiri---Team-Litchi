@@ -70,7 +70,7 @@ class Game:
             'decor': load_images(resource_path('data/images/tiles/decor')),
             'grass': load_images(resource_path('data/images/tiles/grass')),
             'grassSpawner': load_images(resource_path('data/images/grass')),
-            'tuto': load_images(resource_path('data/images/tuto')),
+            'steles': load_images(resource_path('data/images/tuto/steles')),
             'large_decor': load_images(resource_path('data/images/tiles/large_decor')),
             'stone': load_images(resource_path('data/images/tiles/stone')),
             'player': load_image(resource_path('data/images/entities/player.png')),
@@ -95,6 +95,7 @@ class Game:
             'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
             'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
             'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
+            'texte': load_images(resource_path('data/images/tuto/texte')),
         }
 
         if 'tuto' in self.assets and len(self.assets['tuto']) >= 4:
