@@ -61,7 +61,6 @@ class Enemy:
         self.speed = speed
         self.size = size
         self.spawn_position = pos
-        print(f"ennemi créé en {pos} !")
         self.unstuck()
 
     def can_see_player(self, player: list) -> None:
@@ -157,6 +156,7 @@ class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5)
         self.properties['type'] = "blob"
+        print(f"Blob created at {pos} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -239,6 +239,7 @@ class Patrol(Enemy):
         self.wander_angle = None
         self.wander_dist = None
         self.wander_speed = self.speed
+        print(f"Patrol created at {pos} !")
     
     def create_wander_pos(self, hit_result: list = [False, False]) -> None:
         """Creates a wandering position when the patrol doesn't see the player"""
@@ -359,7 +360,7 @@ class Patrol(Enemy):
         self.players_last_pos = players_last_pos
 
 VISION_DISTANCE_ENEMY_2 = 16*3
-VISION_FOV_ENEMY_2 = pi/4
+VISION_FOV_ENEMY_2 = pi/2
 SPEED_MODIFIER_RAGE_ENEMY_2 = 2
 GRAVITY_ENEMY_2 = 5
 
@@ -369,6 +370,7 @@ class WalkingEnemy(Enemy):
         self.properties['type'] = "walking_enemy"
         self.orientation = random.choice([-1, 1])
         self.rage_cooldown = -1
+        print(f"Walking enemy created at {pos} !")
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -377,7 +379,7 @@ class WalkingEnemy(Enemy):
         
         self.properties['state'] = 'idle'
         for pid in players.keys():
-            dist = distance_to(pos, self.players_last_pos[pid])
+            dist = distance_to(pos, players[pid])
             if dist <= VISION_DISTANCE_ENEMY_2:
                 agl = angle(sub_vecs(players[pid], pos))
                 agl -= angle([self.orientation, 0])
