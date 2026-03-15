@@ -415,7 +415,10 @@ class WalkingEnemy(Enemy):
             velocity = [0, GRAVITY_ENEMY_2]
 
         if self.properties['state'] == 'rage':
-            velocity[0] *= SPEED_MODIFIER_RAGE_ENEMY_2
+            if self.rage_cooldown_timer == -1:
+                velocity[0] *= SPEED_MODIFIER_RAGE_ENEMY_2
+            else:
+                velocity[0] *= 1 + (SPEED_MODIFIER_RAGE_ENEMY_2 - 1) * easeOutCubic(self.rage_cooldown_timer / RAGE_COOLDOWN)
 
         self.move_and_slide(velocity, delta)
 
@@ -599,6 +602,15 @@ def raycast_pos(pos: list, angle: float, tilemap, dist_max: float = 1000, dist_c
                 pos_check[1] -= 0.0000000000001
 
     return pos_check
+
+# Easing functions
+
+def easeOutCubic(t: float) -> float:
+    return 1 - (1 - t)**3;
+
+def easeOutQuint(x: float) -> float:
+    return 1 - (1 - x)**5;
+
 
 """ todo:
 create class for raycast and vectors
