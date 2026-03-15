@@ -184,10 +184,11 @@ class GameServer:
                 del self.EnemyManager.enemies[eid]
             return
 
-        if msg_type == 67:
-            eid, damage_number = struct.unpack("II", data)
+        if msg_type == 8 and len(data) >= 8:
+            print("recu")
+            eid, damage_number = struct.unpack("II", data[1:9])
             if eid in self.EnemyManager.enemies:
-                self.EnemyManager.enemies[eid].damage(eid,damage_number)
+                self.EnemyManager.enemies[eid].damage(damage_number)
             return
 
         # --- Request Level Change (Debug) ---

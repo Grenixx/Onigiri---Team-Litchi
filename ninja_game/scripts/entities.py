@@ -455,9 +455,10 @@ class ClientEnemyManager:
             self.game.net.remove_enemy(eid)
 
         for eid in to_damage:
-            if eid in self.game.net.enemies:
-                del self.game.net.enemies[eid]
+            #if eid in self.game.net.enemies:
+            #    del self.game.net.enemies[eid]
             self.game.net.damage_enemy(eid, current_weapon.damage_number) 
+            
 
 
     def render(self, surf, offset=(0, 0), dt=1):
