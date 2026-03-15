@@ -4,6 +4,8 @@ from math import *
 
 from TilemapServer import PHYSICS_TILES
 
+PLAYER_SIZE = (14, 18)
+
 class EnemyManager:
     def __init__(self, tilemap):
         self.tilemap = tilemap
@@ -24,10 +26,12 @@ class EnemyManager:
 
             if spawner['variant'] == 2: # Boss spawner
                 self.create_enemy(spawner['pos'], "patrol") # will be changed to spawn the boss
+            if spawner['variant'] == 3:
+                self.create_enemy(spawner['pos'], "walking_enemy")
 
     def create_enemy(self, pos: list, enemy_type: str) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
-        enemy_types = {"blob": Blob, "patrol": Patrol}
+        enemy_types = {"blob": Blob, "patrol": Patrol, "walking_enemy": WalkingEnemy}
         self.enemies[self.next_enemy_id] = enemy_types[enemy_type](self.next_enemy_id, pos, self)
         self.next_enemy_id += 1
 
@@ -42,7 +46,7 @@ class EnemyManager:
             enemy.physics_process(0.0)
 
 class Enemy:
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, size: tuple = (18, 25)):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, size: tuple = (16, 23)):
         self.eid = eid
         self.properties = {
             'x': pos[0],
@@ -57,18 +61,26 @@ class Enemy:
         self.speed = speed
         self.size = size
         self.spawn_position = pos
-        print(f"ennemi créé en {pos} !")
         self.unstuck()
 
     def can_see_player(self, player: list) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
-        return not raycast_collide([self.properties['x'], self.properties['y']],
-                                    angle(vector_to([self.properties['x'], self.properties['y']], player)),
-                                    self.enemy_manager.tilemap,
-                                    distane_to([self.properties['x'], self.properties['y']], player) - 10,
-                                    4,
-                                    PHYSICS_TILES
-                                    )
+        pos = [self.properties['x'], self.properties['y']]
+        player_pos = list_copy(player)
+        """
+        pos[0] += self.size[0] / 2
+        pos[1] += self.size[1] / 2
+        player_pos[0] += PLAYER_SIZE[0] / 2
+        player_pos[1] += PLAYER_SIZE[1] / 2
+        """
+        return not raycast_collide(
+            pos,
+            angle(vector_to([self.properties['x'], self.properties['y']], player_pos)),
+            self.enemy_manager.tilemap,
+            distance_to([self.properties['x'], self.properties['y']], player_pos) - 10,
+            4,
+            PHYSICS_TILES
+        )
     def create_enemy(self, pos: list, enemy_type: str) -> None:
         self.enemy_manager.create_enemy(pos, enemy_type)
 
@@ -94,10 +106,10 @@ class Enemy:
         w, h = self.size
         epsilon = 0.1 # Petite marge pour éviter de coller aux murs adjacents
         points = [
-            (x + epsilon +3, y + epsilon),           # Haut-Gauche
-            (x + w - epsilon+3, y + epsilon),       # Haut-Droite
-            (x + epsilon, y + h - epsilon),       # Bas-Gauche
-            (x + w - epsilon, y + h - epsilon)    # Bas-Droite
+            (x + epsilon + 5, y + epsilon),           # Haut-Gauche
+            (x + w - epsilon + 5, y + epsilon),       # Haut-Droite
+            (x + epsilon + 5, y + h - epsilon),       # Bas-Gauche
+            (x + w - epsilon + 5, y + h - epsilon)    # Bas-Droite
         ]
         for p in points:
             if self.enemy_manager.tilemap.solid_check(p):
@@ -146,6 +158,7 @@ class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5)
         self.properties['type'] = "blob"
+        print(f"Blob created at {pos} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -168,10 +181,10 @@ class Blob(Enemy):
             if closest_dist == None or closest_dist > dist:
                 closest_dist,closest_pid = dist,pid
 
-        if distane_to(pos, players[closest_pid]) < 16*30 and self.can_see_player(players[closest_pid]):
+        if distance_to(pos, players[closest_pid]) < 16*30 and self.can_see_player(players[closest_pid]):
             self.properties['target_player'] = closest_pid
             step = [0,0]
-            dist = distane_to(pos, players[closest_pid])
+            dist = distance_to(pos, players[closest_pid])
             if dist > 1:
                 step = normalized(vector_to(pos, players[closest_pid]))
                 step = [i * self.speed for i in step]
@@ -202,7 +215,7 @@ class Blob(Enemy):
             
             # test
             if random.randint(0, 500) == 0:
-                new_blob_pos = raycast_pos(pos, angle(vector_to(pos, players[pid])), tilemap, distane_to(pos, players[pid]) - 10, 4, PHYSICS_TILES, 10, True)
+                new_blob_pos = raycast_pos(pos, angle(vector_to(pos, players[pid])), tilemap, distance_to(pos, players[pid]) - 10, 4, PHYSICS_TILES, 10, True)
                 if new_blob_pos != None:
                     self.create_enemy(new_blob_pos, "blob")
                 else:
@@ -228,6 +241,7 @@ class Patrol(Enemy):
         self.wander_angle = None
         self.wander_dist = None
         self.wander_speed = self.speed
+        print(f"Patrol created at {pos} !")
     
     def create_wander_pos(self, hit_result: list = [False, False]) -> None:
         """Creates a wandering position when the patrol doesn't see the player"""
@@ -259,7 +273,7 @@ class Patrol(Enemy):
                 self.wander_angle = pi
         
         if hit_result == [False, False]:
-            if distane_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN:
+            if distance_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN:
                 self.wander_angle = angle(sub_vecs(self.spawn_position, pos))
         self.wander_pos = add_vecs(vec_from_angle(self.wander_dist, self.wander_angle), pos)
         #print(self.wander_pos, self.properties['x'], self.properties['y'])
@@ -271,9 +285,9 @@ class Patrol(Enemy):
         self.properties['state'] = 'idle'
         if not self.wander_pos:
             self.create_wander_pos()
-        #print(distane_to(self.wander_pos, pos))
+        #print(distance_to(self.wander_pos, pos))
         velocity = [0,0]
-        if distane_to(self.wander_pos, pos) > 1:
+        if distance_to(self.wander_pos, pos) > 1:
             velocity = normalized(vector_to(pos, self.wander_pos))
             self.wander_speed = max(self.wander_speed - WANDER_SPEED_DECAY, MIN_WANDER_SPEED) # * delta
             velocity = [i * self.wander_speed for i in velocity]
@@ -312,7 +326,7 @@ class Patrol(Enemy):
             self.wander_pos = None
             self.wander_speed = self.speed
             self.properties['target_player'] = closest_pid
-            if dist > 5:
+            if dist > 4:
                 velocity = normalized(vector_to(pos, self.players_last_pos[closest_pid]))
                 velocity = [i * self.speed for i in velocity]
             elif not self.can_see_player(players[closest_pid]):
@@ -325,7 +339,7 @@ class Patrol(Enemy):
         # --- For animations --- 
 
         if closest_pid:
-            if sqrt(closest_dist) > 5:
+            if sqrt(closest_dist) > 4:
                 if self.properties['vx'] < 0:
                     self.properties['flip'] = True
                 elif self.properties['vx'] > 0:
@@ -339,13 +353,74 @@ class Patrol(Enemy):
         players_last_pos = {}
         for pid in players.keys():
             if self.can_see_player(players[pid]):
-                if distane_to(players[pid], pos) < VISION_DISTANCE_PATROL and distane_to(players[pid], pos) > 1:
+                if distance_to(players[pid], pos) < VISION_DISTANCE_PATROL and distance_to(players[pid], pos) > 1:
                     players_last_pos[pid] = [players[pid][0],players[pid][1]]
             else:
                 if pid in self.players_last_pos.keys():
-                    if distane_to(self.players_last_pos[pid], pos) > 5:
+                    if distance_to(self.players_last_pos[pid], pos) > 4:
                         players_last_pos[pid] = self.players_last_pos[pid]
         self.players_last_pos = players_last_pos
+
+VISION_DISTANCE_ENEMY_2 = 16*5
+VISION_FOV_ENEMY_2 = pi/4
+SPEED_MODIFIER_RAGE_ENEMY_2 = 2
+GRAVITY_ENEMY_2 = 5
+RAGE_COOLDOWN = 1 * 20 # seconds * ticks
+
+class WalkingEnemy(Enemy):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager, 1.5)
+        self.properties['type'] = "walking_enemy"
+        self.orientation = random.choice([-1, 1])
+        self.properties['flip'] = self.orientation == -1
+        self.rage_cooldown_timer = -1
+        self.properties['state'] = 'idle'
+        print(f"Walking enemy created at {pos} !")
+
+    def physics_process(self, delta: float) -> None:
+        """The physics engine of the enemy called every tick by EnemyManager.update()"""
+        pos = [self.properties['x'], self.properties['y']]
+        players = self.enemy_manager.players
+        
+        rage = False
+        for pid in players.keys():
+            dist = distance_to(pos, players[pid])
+            if dist <= VISION_DISTANCE_ENEMY_2:
+                agl = diff_angles(angle(sub_vecs(players[pid], pos)), angle([self.orientation, 0]))
+                if agl <= VISION_FOV_ENEMY_2:
+                    if self.can_see_player(players[pid]):
+                        rage = True
+                        break
+
+        if rage:
+            self.properties['state'] = 'rage'
+        elif self.properties['state'] == 'rage':
+            if self.rage_cooldown_timer == -1:
+                self.rage_cooldown_timer = RAGE_COOLDOWN
+            elif self.rage_cooldown_timer > 0:
+                self.rage_cooldown_timer -= 1
+            else:
+                self.properties['state'] = 'idle'
+                self.rage_cooldown_timer = -1
+
+        if not self.enemy_manager.tilemap.solid_check([0, GRAVITY_ENEMY_2]):
+            pos_check = add_vecs([self.orientation * self.speed, 0], pos)
+            pos_check2 = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] / 2])
+            pos_check = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] + 10])
+            if self.enemy_manager.tilemap.solid_check(pos_check2) or not self.enemy_manager.tilemap.solid_check(pos_check):
+                self.orientation *= -1
+                self.properties['flip'] = not self.properties['flip']
+            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+        else:
+            velocity = [0, GRAVITY_ENEMY_2]
+
+        if self.properties['state'] == 'rage':
+            if self.rage_cooldown_timer == -1:
+                velocity[0] *= SPEED_MODIFIER_RAGE_ENEMY_2
+            else:
+                velocity[0] *= 1 + (SPEED_MODIFIER_RAGE_ENEMY_2 - 1) * easeOutCubic(self.rage_cooldown_timer / RAGE_COOLDOWN)
+
+        self.move_and_slide(velocity, delta)
 
 def list_copy(lst: list) -> list:
     """
@@ -354,9 +429,15 @@ def list_copy(lst: list) -> list:
     return [i for i in lst]
 
 def add_vecs(vec1: list, vec2: list) -> list:
+    """
+    vec1 + vec2
+    """
     return [vec1[i] + vec2[i] for i in range(2)]
 
 def sub_vecs(vec1: list, vec2: list) -> list:
+    """
+    vec1 - vec2
+    """
     return [vec1[i] - vec2[i] for i in range(2)]
 
 def vector_to(pos1: list, pos2: list) -> list:
@@ -372,7 +453,7 @@ def distance_squared_to(pos1: list, pos2: list) -> float:
     vec = vector_to(pos1,pos2)
     return vec[0] ** 2 + vec[1] ** 2
 
-def distane_to(pos1: list, pos2: list) -> float:
+def distance_to(pos1: list, pos2: list) -> float:
     """
     Returns the distance between position 1 and position 2
     """
@@ -382,13 +463,13 @@ def norm(vec: list) -> float:
     """
     Returns the norm of a vector
     """
-    return distane_to([0,0],vec)
+    return distance_to([0,0],vec)
 
 def normalized(vec: list) -> list:
     """
     Returns the normalized input vector
     """
-    norm = distane_to([0,0],vec)
+    norm = distance_to([0,0],vec)
     vec = [i/norm for i in vec]
     return vec
 
@@ -431,6 +512,14 @@ def angle_modulo(angle: float) -> float:
     while angle < -pi:
         angle += 2*pi
     return angle
+
+def diff_angles(angle1: float, angle2: float) -> float:
+    """
+    abs(angle1 - angle2)
+    """
+    angle1 -= angle2
+    angle1 = abs(angle_modulo(angle1))
+    return angle1
 
 def is_within(pos: list, pos1: list, pos2: list) -> bool:
     """
@@ -513,6 +602,15 @@ def raycast_pos(pos: list, angle: float, tilemap, dist_max: float = 1000, dist_c
                 pos_check[1] -= 0.0000000000001
 
     return pos_check
+
+# Easing functions
+
+def easeOutCubic(t: float) -> float:
+    return 1 - (1 - t)**3;
+
+def easeOutQuint(x: float) -> float:
+    return 1 - (1 - x)**5;
+
 
 """ todo:
 create class for raycast and vectors

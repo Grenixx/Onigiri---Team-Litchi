@@ -96,6 +96,8 @@ class Game:
             'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
             'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
             'texte': load_images(resource_path('data/images/tuto/texte')),
+            'walking_enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
+            'walking_enemy/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
         }
 
         if 'tuto' in self.assets and len(self.assets['tuto']) >= 4:
@@ -185,7 +187,7 @@ class Game:
             self.leaf_spawners.append(pygame.Rect(4 + tree['pos'][0], 4 + tree['pos'][1], 23, 13))
             
         #ca les prend puis supr donc on doit rajouter TOUT les spawner pour eviter de les blit comme des decors
-        for spawner in self.tilemap.extract([('spawners', 0), ('spawners', 1), ('spawners', 2)]):
+        for spawner in self.tilemap.extract([('spawners', i) for i in range(10)]):
             if spawner['variant'] == 0:
                 self.player.pos = spawner['pos']
                 self.player.air_time = 0
