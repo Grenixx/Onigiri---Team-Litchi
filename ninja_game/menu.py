@@ -367,20 +367,25 @@ def main():
         clock.tick(FPS)
 
 def splash_screen():
-
     logo = pygame.image.load("logo.png").convert_alpha()
-    logo = pygame.transform.scale(logo, (WIDTH, HEIGHT))
+    lw, lh = logo.get_size()
 
+    scale = min(WIDTH / lw, HEIGHT / lh)
+    new_size = (int(lw * scale), int(lh * scale))
+    logo = pygame.transform.smoothscale(logo, new_size)
+
+    logo_x = (WIDTH - new_size[0]) // 2
+    logo_y = (HEIGHT - new_size[1]) // 2
 
     overlay = pygame.Surface((WIDTH, HEIGHT))
     overlay.fill((0, 0, 0))
     for alpha in range(255, -1, -5):
         overlay.set_alpha(alpha)
-        screen.blit(logo, (0, 0))
+        screen.fill((0, 0, 0))
+        screen.blit(logo, (logo_x, logo_y))
         screen.blit(overlay, (0, 0))
         pygame.display.flip()
         clock.tick(60)
-
 
     start = pygame.time.get_ticks()
     while pygame.time.get_ticks() - start < 2000:
@@ -388,13 +393,14 @@ def splash_screen():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-        screen.blit(logo, (0, 0))
+        screen.fill((0, 0, 0))
+        screen.blit(logo, (logo_x, logo_y))
         pygame.display.flip()
-
 
     for alpha in range(0, 255, 5):
         overlay.set_alpha(alpha)
-        screen.blit(logo, (0, 0))
+        screen.fill((0, 0, 0))
+        screen.blit(logo, (logo_x, logo_y))
         screen.blit(overlay, (0, 0))
         pygame.display.flip()
         clock.tick(60)
