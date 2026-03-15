@@ -46,7 +46,7 @@ class EnemyManager:
             enemy.physics_process(0.0)
 
 class Enemy:
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, size: tuple = (16, 23)):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23)):
         self.eid = eid
         self.properties = {
             'x': pos[0],
@@ -62,6 +62,8 @@ class Enemy:
         self.size = size
         self.spawn_position = pos
         self.unstuck()
+        self.hp = hp
+        self.knockback_velocity = [0,0]
 
     def can_see_player(self, player: list) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
@@ -81,6 +83,7 @@ class Enemy:
             4,
             PHYSICS_TILES
         )
+
     def create_enemy(self, pos: list, enemy_type: str) -> None:
         self.enemy_manager.create_enemy(pos, enemy_type)
 
@@ -148,15 +151,19 @@ class Enemy:
         else:
             self.properties['y'] = new_pos[1]
 
-    def damage(self ,damage_number):
-        print(f"ARRRRG j'ai pruis {self}{damage_number}")
+    def damage(self, damage_amount: int, pid: int) -> None:
+        print(pid)
+        self.hp -= damage_amount
+        if self.hp <= 0:
+            self.kill()
+        #self.knockback_velocity = sub_vecs([self.properties['x'], self.properties['y']], self.enemy_manager.players[pid])
     
-    def kill():
+    def kill(self):
         pass
 
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5)
+        super().__init__(eid, pos, enemy_manager, 1.5, 50)
         self.properties['type'] = "blob"
         print(f"Blob created at {pos} !")
     
@@ -234,7 +241,7 @@ MAX_DISTANCE_FROM_SPAWN = 16*12
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5)
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150)
         self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
@@ -369,7 +376,7 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5)
+        super().__init__(eid, pos, enemy_manager, 1.5, 100)
         self.properties['type'] = "walking_enemy"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == -1

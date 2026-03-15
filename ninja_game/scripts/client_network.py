@@ -136,7 +136,7 @@ class ClientNetwork:
 
     def damage_enemy(self, eid,damage_number):
         try:
-            packet = b'\x08' + struct.pack("II", eid, damage_number)
+            packet = b'\x08' + struct.pack("III", eid, damage_number, self.id)
             self.sock.sendto(packet, self.server)
             print(f"Demande d'infliger {damage_number} a ce monstre {eid}")
         except Exception as e:
