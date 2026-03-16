@@ -370,7 +370,6 @@ class ClientEnemyManager:
     """Classe gérant les ennemis ronds violets + collisions avec le joueur."""
     def __init__(self, game):
         self.game = game
-        self.radius = 8  # rayon du cercle pour les collisions
         self.size = (18, 25) # (Largeur, Hauteur)
         self.collision_offset = (5, 0) # (X, Y)
 
@@ -410,7 +409,15 @@ class ClientEnemyManager:
             anim = self.enemy_anims[eid]
             
             # Hitbox basée sur la position serveur (Top-Left)
+            if etype == "patrol":
+                self.size = (18, 25)
+                self.collision_offset = (5, 0)
+            elif etype == "Dromp":
+                self.size = (64, 64)
+                self.collision_offset = (0, 0)
             enemy_rect = pygame.Rect(ex + self.collision_offset[0], ey + self.collision_offset[1], self.size[0], self.size[1])
+
+                
             
 
             # 2. Collision Joueur (Dégâts reçus)
