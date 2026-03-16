@@ -391,9 +391,9 @@ class Game:
                             self.sfx['jump'].set_volume(self.SFX_Volume)
                             print("Musique coupée")
                     # Mouvement horizontal
-                    if event.key == self.controls["LEFT"]:
+                    if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = True
-                    if event.key == self.controls["RIGHT"]:
+                    if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = True
                     # On vérifie d'abord la touche, PUIS on tente de sauter.
                     if event.key == self.controls["JUMP"]:
@@ -428,9 +428,9 @@ class Game:
 
                 # Si une touche est relâchée
                 if event.type == pygame.KEYUP or event.type == pygame.K_SPACE:
-                    if event.key == self.controls["LEFT"]:
+                    if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = False
-                    if event.key == self.controls["RIGHT"]:
+                    if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = False
                     if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
                         pass 
@@ -438,10 +438,10 @@ class Game:
                 def execute_attack(self):
                     direction = None
                     keys = pygame.key.get_pressed()
-                    if keys[self.controls["UP"]]: direction = 'up'
-                    elif keys[self.controls["DOWN"]]: direction = 'down'
-                    elif keys[self.controls["LEFT"]]: direction = 'left'
-                    elif keys[self.controls["RIGHT"]]: direction = 'right'
+                    if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction = 'up'
+                    elif keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction = 'down'
+                    elif keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction = 'left'
+                    elif keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction = 'right'
                     self.player.attack(direction)
                 # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -450,12 +450,7 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == self.controls["ATTACK"]: # Touche définie pour l'attaque
                         execute_attack(self)
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if event.button == 1:
-                        self.net.damaging_eid = []
-                elif event.type == pygame.KEYUP:
-                    if event.key == self.controls["ATTACK"]:
-                        self.net.damaging_eid = []
+                
 
             # --- MISE À JOUR INPUTS MANETTE ---
             self.controller.update()

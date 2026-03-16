@@ -347,9 +347,9 @@ class Player(PhysicsEntity):
             if direction == 'up':
                 attack_direction = 'up'
             elif direction == 'down':
-                 if self.air_time > 0.09:
+                if self.air_time > 0.09:
                     attack_direction = 'down'
-                 else:
+                else:
                     attack_direction = 'front'
 
             
@@ -396,7 +396,6 @@ class ClientEnemyManager:
         current_weapon = player.weapon.weapon_equiped
         weapon_hitbox = current_weapon.current_rect
         is_attacking = current_weapon.attack_timer > 0
-        to_remove = []
         to_damage = []
 
         # On nettoie les animations des ennemis disparus
@@ -408,7 +407,6 @@ class ClientEnemyManager:
         for eid, (ex, ey, flip, state) in list(self.game.net.enemies.items()):
             self.set_state_for_enemy(eid, state)
             anim = self.enemy_anims[eid]
-            enemy_img = anim.img()
             
             # Hitbox basée sur la position serveur (Top-Left)
             enemy_rect = pygame.Rect(ex + self.collision_offset[0], ey + self.collision_offset[1], self.size[0], self.size[1])
@@ -430,13 +428,9 @@ class ClientEnemyManager:
                         self.game.invincible_frame_time = 60  
                         print(f"Player HP: {self.game.hp}")
 
-            # 3. Collision Arme (Dégâts infligés)
+            # 3. Collision Arme
             if weapon_hitbox.colliderect(enemy_rect):
-                offset_x = enemy_rect.x - weapon_hitbox.x
-                offset_y = enemy_rect.y - weapon_hitbox.y
-                
-                # Kill logic
-                if is_attacking:
+                  if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
                     for i in range(30):
                         angle = random.random() * math.pi * 2
@@ -446,17 +440,18 @@ class ClientEnemyManager:
                     #une requete coter serv au cas ou et puis ces deja code faut juste fare gafffe a pas ccrash si la valeur est deja retirer coter serv
                     
                     #to_remove.append(eid)
-                    to_damage.append(eid)
-
+                    if not (eid in self.game.net.damaging_eid):
+                        to_damage.append(eid)
+                
+            if not is_attacking and not weapon_hitbox.colliderect(enemy_rect):
+                self.game.net.damaging_eid = []
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
-        for eid in to_remove:
-            if eid in self.game.net.enemies:
-                del self.game.net.enemies[eid]
-            self.game.net.remove_enemy(eid)
+        #for eid in to_remove:
+        #    if eid in self.game.net.enemies:
+        #        del self.game.net.enemies[eid]
+        #    self.game.net.remove_enemy(eid)
 
         for eid in to_damage:
-            #if eid in self.game.net.enemies:
-            #    del self.game.net.enemies[eid]
             self.game.net.damage_enemy(eid, current_weapon.damage_number)
             
 
