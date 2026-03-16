@@ -156,9 +156,10 @@ class GameServer:
             else:
                 pid = self.players.clients[addr]
             
-            self.send_map_change(self, self.map_id, addr)
             # renvoyer le PID à chaque paquet de connexion reçu
-            self.sock.sendto(struct.pack("I", pid), addr)
+            #self.sock.sendto(struct.pack("<BI", 4, int(self.map_id)), addr)
+
+            self.sock.sendto(struct.pack("II", pid, int(self.map_id)), addr)
             return
 
         # -- ping --
@@ -245,8 +246,6 @@ class GameServer:
         for addr in self.players.clients:
             self.sock.sendto(payload, addr)
 
-    def send_map_change(self, map_id, addr):
-        self.sock.sendto(struct.pack("<BI", 4, int(map_id)), addr)
 
     # ---------------------------
     # --- Envoi aux clients ---

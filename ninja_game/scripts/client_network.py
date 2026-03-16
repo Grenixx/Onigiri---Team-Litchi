@@ -36,8 +36,8 @@ class ClientNetwork:
                 while time.time() - start_time < 2:  # attente max 2 secondes
                     try:
                         data, _ = self.sock.recvfrom(4096)
-                        if len(data) == 4:
-                            self.id = struct.unpack("I", data)[0]
+                        if len(data) == 8:
+                            self.id, self.map_change_id = struct.unpack("II", data[0:8])
                             print(f"Connected with ID {self.id}")
                             break
                         else:
