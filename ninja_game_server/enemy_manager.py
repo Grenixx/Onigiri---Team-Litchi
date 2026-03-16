@@ -256,7 +256,7 @@ MAX_DISTANCE_FROM_SPAWN = 16*12
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (16, 23), "left-right")
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (16, 23))
         self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
