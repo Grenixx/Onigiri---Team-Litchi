@@ -204,7 +204,7 @@ class Enemy:
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 50)
-        self.properties['type'] = "blob"
+        self.properties['type'] = "Blob"
         print(f"Blob created at {pos} !")
     
     def physics_process(self, delta: float) -> None:
@@ -417,7 +417,7 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 100, (16,23), "left-right")
-        self.properties['type'] = "walking_enemy"
+        self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == -1
         self.rage_cooldown_timer = -1
