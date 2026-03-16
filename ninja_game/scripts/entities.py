@@ -347,9 +347,9 @@ class Player(PhysicsEntity):
             if direction == 'up':
                 attack_direction = 'up'
             elif direction == 'down':
-                 if self.air_time > 0.09:
+                if self.air_time > 0.09:
                     attack_direction = 'down'
-                 else:
+                else:
                     attack_direction = 'front'
 
             
