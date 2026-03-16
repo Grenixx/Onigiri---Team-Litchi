@@ -458,12 +458,7 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == self.controls["ATTACK"]: # Touche définie pour l'attaque
                         execute_attack(self)
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if event.button == 1:
-                        self.net.damaging_eid = []
-                elif event.type == pygame.KEYUP:
-                    if event.key == self.controls["ATTACK"]:
-                        self.net.damaging_eid = []
+                
 
             # --- MISE À JOUR INPUTS MANETTE ---
             self.controller.update()

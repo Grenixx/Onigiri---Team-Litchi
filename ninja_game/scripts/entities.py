@@ -428,13 +428,9 @@ class ClientEnemyManager:
                         self.game.invincible_frame_time = 60  
                         print(f"Player HP: {self.game.hp}")
 
-            # 3. Collision Arme (Dégâts infligés)
+            # 3. Collision Arme
             if weapon_hitbox.colliderect(enemy_rect):
-                offset_x = enemy_rect.x - weapon_hitbox.x
-                offset_y = enemy_rect.y - weapon_hitbox.y
-                
-                # Kill logic
-                if is_attacking:
+                  if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
                     for i in range(30):
                         angle = random.random() * math.pi * 2
@@ -444,11 +440,10 @@ class ClientEnemyManager:
                     #une requete coter serv au cas ou et puis ces deja code faut juste fare gafffe a pas ccrash si la valeur est deja retirer coter serv
                     
                     #to_remove.append(eid)
-                    to_damage.append(eid)
-                else :
-                    self.game.net.damaging_eid = []
-
-            if not is_attacking:
+                    if not (eid in self.game.net.damaging_eid):
+                        to_damage.append(eid)
+                
+            if not is_attacking and not weapon_hitbox.colliderect(enemy_rect):
                 self.game.net.damaging_eid = []
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         #for eid in to_remove:
