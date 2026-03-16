@@ -29,7 +29,7 @@ BUTTON_HOVER = (100, 160, 210)
 TEXT_COLOR = (255, 255, 255)
 FONT_NAME = None  
 FONT_SIZE = 36
-CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_s,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB,"UP":pygame.K_z,"DOWN":pygame.K_d,"ATTACK":pygame.K_f}
+CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_d,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB,"UP":pygame.K_z,"DOWN":pygame.K_DOWN,"ATTACK":pygame.K_f}
 DATA = {
     "controls": CONTROLS, "graphics": [WIDTH, HEIGHT], "fps": FPS
 }
@@ -43,7 +43,7 @@ action_changing=None
 
 def reset_user_prefs():
     global CONTROLS, WIDTH, HEIGHT, FPS
-    CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_s,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB}
+    CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_d,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB,"UP":pygame.K_UP,"DOWN":pygame.K_DOWN,"ATTACK":pygame.K_f}
     WIDTH, HEIGHT = monitor.width, monitor.height
     FPS = 60
     update_user_prefs()
