@@ -45,8 +45,11 @@ class EnemyManager:
         for _, enemy in enemies:
             enemy.physics_process(0.0)
 
+KNOCKBACK_MIN_ANGLE = pi/6
+KNOCKBACK_DEPLETION = 1 # units / tick
+
 class Enemy:
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23)):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23), knockback_type: str = "any", knockback_strength: float | int = 16):
         self.eid = eid
         self.properties = {
             'x': pos[0],
@@ -64,6 +67,8 @@ class Enemy:
         self.unstuck()
         self.hp = hp
         self.knockback_velocity = [0,0]
+        self.knockback_type = knockback_type
+        self.knockback_strength = knockback_strength
 
     def can_see_player(self, player: list) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
@@ -140,7 +145,7 @@ class Enemy:
         """
         self.properties['vx'] = velocity[0]
         self.properties['vy'] = velocity[1]
-        new_pos = [self.properties['x'] + self.properties['vx'], self.properties['y'] + self.properties['vy']]
+        new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
         collision = self.does_collide(new_pos)
         if collision[0]:
             self.properties['vx'] = 0
@@ -150,15 +155,26 @@ class Enemy:
             self.properties['vy'] = 0
         else:
             self.properties['y'] = new_pos[1]
+        
+        norm_k = norm(self.knockback_velocity)
+        if norm_k != 0:
+            self.knockback_velocity = mult_vec(self.knockback_velocity, max((norm_k - KNOCKBACK_DEPLETION) / norm_k, 0))
 
     def damage(self, damage_amount: int, pid: int) -> None:
         self.hp -= damage_amount
         if self.hp <= 0:
             self.kill()
-        #self.knockback_velocity = sub_vecs([self.properties['x'], self.properties['y']], self.enemy_manager.players[pid])
+        knockback_velocity = sub_vecs([self.properties['x'], self.properties['y']], self.enemy_manager.players[pid])
+        if self.knockback_type == "any":
+            knockback_velocity = mult_vec(normalized(knockback_velocity), self.knockback_strength)
+            self.knockback_velocity = knockback_velocity
+        elif self.knockback_type == "left-right":
+            if diff_angles(pi/2, angle(knockback_velocity)) > KNOCKBACK_MIN_ANGLE and diff_angles(-pi/2, angle(knockback_velocity)) > KNOCKBACK_MIN_ANGLE:
+                knockback_velocity = [sign(knockback_velocity[0]) * self.knockback_strength, 0]
+                self.knockback_velocity = knockback_velocity
     
     def kill(self):
-        pass
+        self.enemy_manager.enemies.pop(self.eid)
 
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -240,7 +256,7 @@ MAX_DISTANCE_FROM_SPAWN = 16*12
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150)
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (16, 23), "left-right")
         self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
@@ -375,7 +391,7 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 100)
+        super().__init__(eid, pos, enemy_manager, 1.5, 100, (16,23), "left-right")
         self.properties['type'] = "walking_enemy"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == -1
@@ -428,6 +444,9 @@ class WalkingEnemy(Enemy):
 
         self.move_and_slide(velocity, delta)
 
+def sign(x: float | int) -> int:
+    return round(x / abs(x))
+
 def list_copy(lst: list) -> list:
     """
     Prevents side effects in lists
@@ -445,6 +464,12 @@ def sub_vecs(vec1: list, vec2: list) -> list:
     vec1 - vec2
     """
     return [vec1[i] - vec2[i] for i in range(2)]
+
+def mult_vec(vec: list, k: float) -> list:
+    """
+    vec1 * k
+    """
+    return [vec[i] * k for i in range(2)]
 
 def vector_to(pos1: list, pos2: list) -> list:
     """
