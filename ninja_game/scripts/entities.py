@@ -396,7 +396,6 @@ class ClientEnemyManager:
         current_weapon = player.weapon.weapon_equiped
         weapon_hitbox = current_weapon.current_rect
         is_attacking = current_weapon.attack_timer > 0
-        to_remove = []
         to_damage = []
 
         # On nettoie les animations des ennemis disparus
@@ -408,7 +407,6 @@ class ClientEnemyManager:
         for eid, (ex, ey, flip, state) in list(self.game.net.enemies.items()):
             self.set_state_for_enemy(eid, state)
             anim = self.enemy_anims[eid]
-            enemy_img = anim.img()
             
             # Hitbox basée sur la position serveur (Top-Left)
             enemy_rect = pygame.Rect(ex + self.collision_offset[0], ey + self.collision_offset[1], self.size[0], self.size[1])
@@ -450,6 +448,8 @@ class ClientEnemyManager:
                 else :
                     self.game.net.damaging_eid = []
 
+            if not is_attacking:
+                self.game.net.damaging_eid = []
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         #for eid in to_remove:
         #    if eid in self.game.net.enemies:
