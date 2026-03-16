@@ -363,6 +363,12 @@ class Game:
                     return
                 # Si une touche est pressée
                 if event.type == pygame.KEYDOWN:
+                    keys_pressed = pygame.key.get_pressed()
+                    if keys_pressed[pygame.K_LCTRL] and keys_pressed[pygame.K_RCTRL]:
+                        if self.player.run_speed == 120:
+                            self.player.run_speed = 320
+                        else:
+                            self.player.run_speed = 120
                     if event.key == pygame.K_ESCAPE:
                         event.type = pygame.QUIT
                     if event.key == pygame.K_F1:

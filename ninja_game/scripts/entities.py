@@ -25,6 +25,7 @@ class PhysicsEntity:
 
         self.gravity = 600  # pixels/seconde²
         self.max_fall_speed = 300  # pixels/seconde
+        self.run_speed = 120  # pixels/seconde
 
         # Initialisation du masque pour éviter l'AttributeError au premier render
         self.mask = self.animation.mask(flip=self.flip)
@@ -40,7 +41,7 @@ class PhysicsEntity:
     def update(self, tilemap, movement=(0, 0), dt=0):
         self.collisions = {'up': False, 'down': False, 'right': False, 'left': False}
         
-        horizontal_speed = movement[0] * 120  # 120 pixels/seconde (run_speed)
+        horizontal_speed = movement[0] * self.run_speed
         
         frame_movement = (
             (horizontal_speed + self.velocity[0]) * dt,
