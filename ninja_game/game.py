@@ -252,7 +252,8 @@ class Game:
             self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, self.player.velocity[0], self.player.velocity[1])
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  #/5 # smooth cam
-            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1]) #/5 # smooth cam
+
+            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - 35 - self.scroll[1]) #/5 # smooth cam
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
             self.remote_players = self.net.remote_players
