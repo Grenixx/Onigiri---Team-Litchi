@@ -414,10 +414,10 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 100, (64,64), "left-right")
+        super().__init__(eid, pos, enemy_manager, 1.5, 100, (64,59.5), "any")
         self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
-        self.properties['flip'] = self.orientation == -1
+        self.properties['flip'] = self.orientation == 1
         self.rage_cooldown_timer = -1
         self.properties['state'] = 'idle'
         print(f"Walking enemy created at {pos} !")
