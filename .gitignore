@@ -4,4 +4,5 @@
 /ninja_game/__pycache__
 /ninja_game/scripts/__pycache__
 /ninja_game_server/__pycache__
+ninja_game\user_prefs.json
 *.pyc
