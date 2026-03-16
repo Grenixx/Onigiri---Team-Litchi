@@ -101,7 +101,7 @@ class ClientNetwork:
                                 enemy_type = data[offset+13:offset+28].decode('utf-8').rstrip('\x00')
                                 state = data[offset+28:offset+43].decode('utf-8').rstrip('\x00')
 
-                                new_enemies[eid] = (x, y, flip, state, enemy_type)
+                                new_enemies[eid] = (x, y, flip, enemy_type, state)
 
                                 offset += 43
                         self.enemies = new_enemies

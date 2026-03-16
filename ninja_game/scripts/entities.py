@@ -374,7 +374,7 @@ class ClientEnemyManager:
         self.size = (18, 25) # (Largeur, Hauteur)
         self.collision_offset = (5, 0) # (X, Y)
 
-        base_anim = self.game.assets.get(f'patrol/idle', self.game.assets['Dromp/idle'])
+        base_anim = self.game.assets.get(f'patrol/idle', self.game.assets['patrol/idle'])
         self.animation = base_anim.copy()
         self.enemy_masks = {}
         self.enemy_anims = {}  # eid -> animation
@@ -382,7 +382,8 @@ class ClientEnemyManager:
 
     def set_state_for_enemy(self, eid, etype, state):
         if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state:
-            base_anim = self.game.assets.get(f'{etype}/{state}', self.game.assets['partrol/idle'])
+            print(f'{etype}/{state}')
+            base_anim = self.game.assets.get(f'{etype}/{state}')
             self.enemy_anims[eid] = base_anim.copy()
             self.enemy_anims[eid].state = state
 
@@ -469,7 +470,7 @@ class ClientEnemyManager:
             del self.enemy_anims[eid]
 
         for eid, (x, y, flip, etype, state) in self.game.net.enemies.items():
-            self.set_state_for_enemy(eid, state)
+            self.set_state_for_enemy(eid, etype, state)
             anim = self.enemy_anims[eid]
             
             anim.update(dt)
