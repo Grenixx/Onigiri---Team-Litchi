@@ -46,10 +46,10 @@ class EnemyManager:
             enemy.physics_process(0.0)
 
 KNOCKBACK_MIN_ANGLE = pi/6
-KNOCKBACK_DEPLETION = 1 # units / tick
+KNOCKBACK_DEPLETION = 0.5 # units / tick
 
 class Enemy:
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23), knockback_type: str = "any", knockback_strength: float | int = 16):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23), knockback_type: str = "any", knockback_strength: float | int = 8):
         self.eid = eid
         self.properties = {
             'x': pos[0],
