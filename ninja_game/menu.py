@@ -24,12 +24,12 @@ WIDTH, HEIGHT = monitor.width, monitor.height
 
 FPS = 60
 BG_COLOR = (30, 30, 40)
-BUTTON_COLOR = (70, 130, 180)
-BUTTON_HOVER = (100, 160, 210)
+BUTTON_COLOR = (000, 000, 000)
+BUTTON_HOVER = (000, 000, 000)
 TEXT_COLOR = (255, 255, 255)
 FONT_NAME = None  
 FONT_SIZE = 36
-CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_d,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB,"UP":pygame.K_z,"DOWN":pygame.K_DOWN,"ATTACK":pygame.K_f}
+CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_d,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB,"UP":pygame.K_UP,"DOWN":pygame.K_DOWN,"ATTACK":pygame.K_f}
 DATA = {
     "controls": CONTROLS, "graphics": [WIDTH, HEIGHT], "fps": FPS
 }
@@ -369,7 +369,7 @@ host_menu = Menu("Host Game", [
     ("Back", lambda: set_active_menu(main_menu))
 ], font)
 
-main_menu = Menu("Main Menu", [("HOST GAME", open_host_menu), ("FIND GAME", open_server_browser),("OPTIONS", open_options),("QUIT GAME", quit_game),], font)
+main_menu = Menu("ONIGIRI", [("HOST GAME", open_host_menu), ("FIND GAME", open_server_browser),("OPTIONS", open_options),("QUIT GAME", quit_game),], font)
 options_menu = Menu("Options", [("Audio",None),("Keyboards",lambda: set_active_menu(keyboard_menu)),("Graphics",lambda: set_active_menu(graphics_menu)),("FPS",lambda: set_active_menu(fps_menu)),("Reset Preferences", lambda : reset_user_prefs()),("Back", lambda: set_active_menu(main_menu)),], font)
 keyboard_menu = Menu("Keyboard", [(lambda: f"Jump : {pygame.key.name(CONTROLS['JUMP'])}", lambda: rebinding("JUMP")),(lambda: f"Change Arm : {pygame.key.name(CONTROLS['CHANGE ARM'])}", lambda: rebinding("CHANGE ARM")),(lambda: f"Dash : {pygame.key.name(CONTROLS['DASH'])}", lambda: rebinding("DASH")),(lambda: f"Left : {pygame.key.name(CONTROLS['LEFT'])}", lambda: rebinding("LEFT")),(lambda: f"Right : {pygame.key.name(CONTROLS['RIGHT'])}", lambda: rebinding("RIGHT")),
 (lambda: f"UP : {pygame.key.name(CONTROLS['UP'])}", lambda: rebinding("UP")),(lambda: f"DOWN : {pygame.key.name(CONTROLS['DOWN'])}", lambda: rebinding("DOWN")),("Back", lambda: set_active_menu(options_menu))], font)
