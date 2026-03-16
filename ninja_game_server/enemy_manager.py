@@ -282,7 +282,7 @@ MAX_DISTANCE_FROM_SPAWN = 16*12
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
-        self.properties['type'] = 0
+        self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
         self.wander_angle = None
@@ -417,7 +417,7 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 100, (16,23), "left-right")
-        self.properties['type'] = 1
+        self.properties['type'] = "walking_enemy"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == -1
         self.rage_cooldown_timer = -1
