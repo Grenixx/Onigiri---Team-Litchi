@@ -269,13 +269,22 @@ class GameServer:
             state_bytes = state.encode("utf-8")[:15]
             state_bytes += b'\x00' * (15 - len(state_bytes))
 
+            enemy_type = e.properties.get("type", "")
+            type_bytes = enemy_type.encode("utf-8")[:15]
+            type_bytes += b'\x00' * (15 - len(type_bytes))
+
             payload += (
-                struct.pack("Iff?", eid,
-                            e.properties['x'],
-                            e.properties['y'],
-                            e.properties['flip'])
+                struct.pack(
+                    "Iff?",
+                    eid,
+                    e.properties['x'],
+                    e.properties['y'],
+                    e.properties['flip']
+                )
+                + type_bytes
                 + state_bytes
             )
+            
         for addr in self.players.clients:
             self.sock.sendto(payload, addr)
 

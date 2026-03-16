@@ -97,11 +97,11 @@ class Game:
             'mace': Animation(load_images(resource_path('data/images/entities/weapon/mace'), True), img_dur=5, loop=False),
             'mace1': Animation(load_images(resource_path('data/images/entities/weapon/mace1'), True), img_dur=5, loop=False),
             'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
+            'texte': load_images(resource_path('data/images/tuto/texte')),
             'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
             'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
-            'texte': load_images(resource_path('data/images/tuto/texte')),
-            'walking_enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=3, loop=True),
-            'walking_enemy/rage': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=2, loop=True),#a changer
+            'Dromp/idle': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=3, loop=True),
+            'Dromp/rage': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=1, loop=True),#a changer
         }
 
         self.sfx = {

@@ -94,13 +94,16 @@ class ClientNetwork:
                         offset += 1
                         new_enemies = {}
                         for _ in range(enemy_count):
-                            # 13 = Iff? (4+4+4+1)
-                            # +15 = taille du state
-                            if len(data) >= offset + 28:  # 13 + 15
+
+                            if len(data) >= offset + 43:
                                 eid, x, y, flip = struct.unpack("Iff?", data[offset:offset+13])
-                                state = data[offset+13:offset+28].decode('utf-8').rstrip('\x00')
-                                new_enemies[eid] = (x, y, flip, state)
-                                offset += 28
+
+                                enemy_type = data[offset+13:offset+28].decode('utf-8').rstrip('\x00')
+                                state = data[offset+28:offset+43].decode('utf-8').rstrip('\x00')
+
+                                new_enemies[eid] = (x, y, flip, state, enemy_type)
+
+                                offset += 43
                         self.enemies = new_enemies
                     continue
 
