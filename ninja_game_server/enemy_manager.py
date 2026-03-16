@@ -425,7 +425,7 @@ class WalkingEnemy(Enemy):
                 self.properties['state'] = 'idle'
                 self.rage_cooldown_timer = -1
 
-        if not self.enemy_manager.tilemap.solid_check([0, GRAVITY_ENEMY_2]):
+        if not self.enemy_manager.tilemap.solid_check(add_vecs(pos, [0, GRAVITY_ENEMY_2])):
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
             pos_check2 = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] / 2])
             pos_check = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] + 10])
@@ -434,7 +434,7 @@ class WalkingEnemy(Enemy):
                 self.properties['flip'] = not self.properties['flip']
             velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
         else:
-            velocity = [0, GRAVITY_ENEMY_2]
+            velocity = [self.orientation * self.speed / 4, GRAVITY_ENEMY_2]
 
         if self.properties['state'] == 'rage':
             if self.rage_cooldown_timer == -1:

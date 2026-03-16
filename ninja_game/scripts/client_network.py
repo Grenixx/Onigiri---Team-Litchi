@@ -16,6 +16,7 @@ class ClientNetwork:
         self.remote_players = {}
         self.ping = 0.0
         self.map_change_id = None # <--- Nouveau
+        self.damaging_eid = []
 
         # thread de réception
         threading.Thread(target=self.listen, daemon=True).start()
@@ -134,7 +135,10 @@ class ClientNetwork:
         except Exception as e:
             print("Remove enemy error:", e)
 
-    def damage_enemy(self, eid,damage_number):
+    def damage_enemy(self, eid, damage_number):
+        if eid in self.damaging_eid:
+            return
+        self.damaging_eid.append(eid)
         try:
             packet = b'\x08' + struct.pack("III", eid, damage_number, self.id)
             self.sock.sendto(packet, self.server)
