@@ -64,7 +64,7 @@ void main() {
   if (remappedPerlin < 0.) {
     color = vec3(0.0, 0.0, 0.0);  
   } else if (remappedPerlin < 0.1) {
-    color = vec3(1.0, 0.0, 0.0);
+    color = vec3(0.4667, 0.0118, 0.0118);
   } else if (remappedPerlin < 0.2) {
     color = vec3(0.0, 0.0, 0.0);;  
   } else if (remappedPerlin < 0.3) {
