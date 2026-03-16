@@ -141,7 +141,7 @@ class Enemy:
             res[1] = True
         return res
 
-    def adjust_position(self, pos, new_pos, x_or_y, precision):
+    def adjust_position(self, pos, new_pos, precision):
         velo = sub_vecs(new_pos, pos)
         pos_check = pos
         rep = 1
@@ -165,10 +165,8 @@ class Enemy:
         new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
         pos_shift = sub_vecs([self.properties['x'], self.properties['y']], self.last_pos)
         collision = self.does_collide(new_pos)
-        if pos_shift[0] != 0 and collision[0] == True:
-            self.properties['x'], self.properties['y'] = self.adjust_position([self.properties['x'], self.properties['y']], new_pos, 'x', 10)
-        if pos_shift[1] != 0 and collision[1] == True:
-            self.properties['x'], self.properties['y'] = self.adjust_position([self.properties['x'], self.properties['y']], new_pos, 'y', 10)
+        if (pos_shift[0] != 0 and collision[0] == True) or (pos_shift[1] != 0 and collision[1] == True):
+            self.properties['x'], self.properties['y'] = self.adjust_position([self.properties['x'], self.properties['y']], new_pos, 10)
         self.last_pos = [self.properties['x'], self.properties['y']]
         self.last_collisions = collision
         self.last_velocity = velocity
@@ -416,7 +414,7 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 100, (16,23), "left-right")
+        super().__init__(eid, pos, enemy_manager, 1.5, 100, (64,64), "left-right")
         self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == -1
