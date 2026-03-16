@@ -69,6 +69,9 @@ class Enemy:
         self.knockback_velocity = [0,0]
         self.knockback_type = knockback_type
         self.knockback_strength = knockback_strength
+        self.last_pos = pos
+        self.last_velocity = [0,0]
+        self.last_collisions = [False, False]
 
     def can_see_player(self, player: list) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
@@ -147,6 +150,9 @@ class Enemy:
         self.properties['vy'] = velocity[1]
         new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
         collision = self.does_collide(new_pos)
+        self.last_pos = [self.properties['x'], self.properties['y']]
+        self.last_collisions = collision
+        self.last_velocity = velocity
         if collision[0]:
             self.properties['vx'] = 0
         else:
@@ -256,7 +262,7 @@ MAX_DISTANCE_FROM_SPAWN = 16*12
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (16, 23))
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
         self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
