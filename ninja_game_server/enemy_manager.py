@@ -148,8 +148,11 @@ class Enemy:
         else:
             self.properties['y'] = new_pos[1]
 
-    def damage():
-        pass
+    def damage(self, damage_amount: int, pid: int) -> None:
+        self.hp -= damage_amount
+        if self.hp <= 0:
+            self.kill()
+        #self.knockback_velocity = sub_vecs([self.properties['x'], self.properties['y']], self.enemy_manager.players[pid])
     
     def kill():
         pass
