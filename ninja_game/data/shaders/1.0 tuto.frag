@@ -1,5 +1,4 @@
-#version 150
-// La ligne precision a été supprimée
+precision mediump float;
 
 uniform float u_time;
 uniform vec2 u_resolution;
@@ -25,7 +24,6 @@ void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution;
   uv = gl_FragCoord.xy / u_resolution.y;
   
-  vec3 color = vec3(0.0);
   uv *= 15.0;
   vec2 gridId = floor(uv);
   vec2 gridUv = fract(uv);
@@ -59,17 +57,20 @@ void main() {
   // Remap perlin from [-1.0, 1.0] to [0.0, 1.0]
   float remappedPerlin = perlin;
 
-  // Define colors based on remappedPerlin ranges
+ // vec3 bgColor = vec3(0.0, 0.0, 0.0);
+  //vec3 Ringcolor = vec3(0.0, 0.0, 0.0);
+  vec3 color = vec3(0.0, 0.0, 0.0);
+
   if (remappedPerlin < 0.) {
-    color = vec3(0.0);  // Dark Blue
+    color = vec3(0.0, 0.0, 0.0);  
   } else if (remappedPerlin < 0.1) {
-    color = vec3(0.29, 0.0, 0.0);  // Light Blue
+    color = vec3(1.0, 0.0, 0.0);
   } else if (remappedPerlin < 0.2) {
-    color = vec3(0.82, 0.04, 0.03);  // Cyan
+    color = vec3(0.0, 0.0, 0.0);;  
   } else if (remappedPerlin < 0.3) {
-    color = vec3(1.0, 0.16, 0.0);  // Light Green
+    color = vec3(0.0, 0.0, 0.0);  
   } else if (remappedPerlin < 0.4){
-    color = vec3(0.0);  // White
+    color = vec3(0.0, 0.0, 0.0);  
   }
 
   gl_FragColor = vec4(color, 1.0);

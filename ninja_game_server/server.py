@@ -73,7 +73,7 @@ class PlayerManager:
 # --- Game Server ---
 # ==============================
 class GameServer:
-    def __init__(self,  local : bool = False, ip="0.0.0.0", port=5006, server_name="Ninja Server", rate=1/60):
+    def __init__(self,  local : bool = False, ip="0.0.0.0", port=5005, server_name="Ninja Server", rate=1/60):
         self.ip = ip
         self.port = port
         self.rate = rate
@@ -85,7 +85,7 @@ class GameServer:
 
         # --- Charger la map ---
         self.map = TilemapServer()
-        self.map_id = 1
+        self.map_id = 0
         self.map.load(f"data/maps/{self.map_id}.json")
         print("carte chargée sur le serveur.")
 
@@ -151,12 +151,15 @@ class GameServer:
         if msg_type == 10: # 10 = connexion
             if addr not in self.players.clients:
                 pid = self.players.add_player(addr)
+                #self.broadcast_map_change(self.map_id)
                 print(f"New player: {pid} ({addr})") 
             else:
                 pid = self.players.clients[addr]
             
             # renvoyer le PID à chaque paquet de connexion reçu
-            self.sock.sendto(struct.pack("I", pid), addr)
+            #self.sock.sendto(struct.pack("<BI", 4, int(self.map_id)), addr)
+
+            self.sock.sendto(struct.pack("II", pid, int(self.map_id)), addr)
             return
 
         # -- ping --
@@ -184,11 +187,10 @@ class GameServer:
                 del self.EnemyManager.enemies[eid]
             return
 
-        if msg_type == 8 and len(data) >= 8:
-            print("recu")
-            eid, damage_number = struct.unpack("II", data[1:9])
+        if msg_type == 8 and len(data) >= 12:
+            eid, damage_number, pid = struct.unpack("III", data[1:13])
             if eid in self.EnemyManager.enemies:
-                self.EnemyManager.enemies[eid].damage(damage_number)
+                self.EnemyManager.enemies[eid].damage(damage_number, pid)
             return
 
         # --- Request Level Change (Debug) ---
@@ -196,6 +198,8 @@ class GameServer:
             self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) #modulo nombre de map dans le fichier
             self.change_level(self.next_map)
             return
+        
+        
 
     # ---------------------------
     # --- Mises à jour ---
@@ -242,6 +246,7 @@ class GameServer:
         for addr in self.players.clients:
             self.sock.sendto(payload, addr)
 
+
     # ---------------------------
     # --- Envoi aux clients ---
     # ---------------------------
@@ -281,8 +286,8 @@ class GameServer:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='Ninja Game Server')
+    parser.add_argument('--start_local', type=int, default=1, help='Whether the server starts in local')
     parser.add_argument('--name', type=str, default="Ninja Server", help='Name of the server')
     args = parser.parse_args()
-
-    server = GameServer(True, server_name=args.name)  # mode local == True
+    server = GameServer(local=args.start_local == 1, server_name=args.name)  # mode local == True
     server.run()

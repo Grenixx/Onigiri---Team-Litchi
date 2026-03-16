@@ -22,7 +22,7 @@ def get_public_ip():
 class LobbyManager:
     """Gère l'enregistrement (côté serveur) et la découverte (côté client)."""
     
-    def __init__(self, mode='client', server_port=5006, server_name="Game Room"):
+    def __init__(self, mode='client', server_port=5, server_name="Game Room"):
         self.mode = mode
         self.running = False
         

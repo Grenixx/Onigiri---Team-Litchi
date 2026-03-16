@@ -16,6 +16,7 @@ class ClientNetwork:
         self.remote_players = {}
         self.ping = 0.0
         self.map_change_id = None # <--- Nouveau
+        self.damaging_eid = []
 
         # thread de réception
         threading.Thread(target=self.listen, daemon=True).start()
@@ -35,8 +36,8 @@ class ClientNetwork:
                 while time.time() - start_time < 2:  # attente max 2 secondes
                     try:
                         data, _ = self.sock.recvfrom(4096)
-                        if len(data) == 4:
-                            self.id = struct.unpack("I", data)[0]
+                        if len(data) == 8:
+                            self.id, self.map_change_id = struct.unpack("II", data[0:8])
                             print(f"Connected with ID {self.id}")
                             break
                         else:
@@ -134,9 +135,12 @@ class ClientNetwork:
         except Exception as e:
             print("Remove enemy error:", e)
 
-    def damage_enemy(self, eid,damage_number):
+    def damage_enemy(self, eid, damage_number):
+        if eid in self.damaging_eid:
+            return
+        self.damaging_eid.append(eid)
         try:
-            packet = b'\x08' + struct.pack("II", eid, damage_number)
+            packet = b'\x08' + struct.pack("III", eid, damage_number, self.id)
             self.sock.sendto(packet, self.server)
             print(f"Demande d'infliger {damage_number} a ce monstre {eid}")
         except Exception as e:
@@ -149,6 +153,8 @@ class ClientNetwork:
             self.sock.sendto(packet, self.server)
         except Exception as e:
             print("Send map change error:", e)
+
+    
 
     def _ping_loop(self):
         """Thread séparé qui envoie périodiquement un ping."""

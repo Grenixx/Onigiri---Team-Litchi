@@ -4,6 +4,7 @@ import math
 import random
 import time
 import moderngl
+import json
 
 import pygame
 from screeninfo import get_monitors
@@ -21,6 +22,8 @@ from scripts.client_network import ClientNetwork
 from scripts.controller import Controller  
 from scripts.lighting import LightingSystem
 from scripts.shader_effect import ShaderEffect
+
+
 
 ###
 # TIPS POUR MOI MEME pour les bugg lier au mouvement peut etre pour etduidier le gresillement je peux retirer l offset de la camera pour voir si c est la cam 
@@ -44,6 +47,7 @@ class Game:
         self.max_fps = max_fps
         pygame.init()
 
+        self.controls=self.loadcontrols() #chargement des touches du fichier de config user_prefs.json 
         pygame.display.set_caption('ninja game')
         if resolution == [0, 0]:
             monitors = get_monitors()
@@ -67,37 +71,37 @@ class Game:
         self.movement = [False, False]
         
         self.assets = {
-            'decor': load_images('tiles/decor'),
-            'grass': load_images('tiles/grass'),
-            'grassSpawner': load_images('grass'),
-            'tuto': load_images('tuto/steles') + load_images('tuto/texte'),
-            'steles': load_images('tuto/steles'),
-            'texte': load_images('tuto/texte'),
-            'spawners': load_images('tiles/spawners'),
-            'large_decor': load_images('tiles/large_decor'),
-            'stone': load_images('tiles/stone'),
-            'player': load_image('entities/player.png'),
-            'background': load_image('background.png'),
-            'clouds': load_images('clouds'),
-            'enemy/idle': Animation(load_images('entities/enemy/idle'), img_dur=6),
-            'enemy/run': Animation(load_images('entities/enemy/run'), img_dur=4),
-            'player/idle': Animation(load_images('entities/player/idle'), img_dur=6),
-            'player/run': Animation(load_images('entities/player/run'), img_dur=4),
-            'player/attack_front': Animation(load_images('entities/player/attack_front'), img_dur=20, loop=False),
-            'player/attack_up': Animation(load_images('entities/player/attack_up'), img_dur=20, loop=False),
-            'player/attack_down': Animation(load_images('entities/player/attack_down'), img_dur=20, loop=False),
-            'player/jump': Animation(load_images('entities/player/jump')),
-            'player/slide': Animation(load_images('entities/player/slide')),
-            'player/wall_slide': Animation(load_images('entities/player/wall_slide')),
-            'particle/leaf': Animation(load_images('particles/leaf'), img_dur=20, loop=False),
-            'particle/particle': Animation(load_images('particles/particle'), img_dur=6, loop=False),
-            'gun': load_image('gun.png'),
-            'projectile': load_image('projectile.png'),
-            'mace': Animation(load_images('entities/weapon/mace', True), img_dur=5, loop=False),
-            'mace1': Animation(load_images('entities/weapon/mace1', True), img_dur=5, loop=False),
-            'slashTriangle': Animation(load_images('entities/weapon/slashTriangle', True), img_dur=1.5, loop=False),
-            'patrol/idle': Animation(load_images('entities/enemy/patrol/idle', True), img_dur=3, loop=True),
-            'patrol/rage': Animation(load_images('entities/enemy/patrol/rage', True), img_dur=2, loop=True),
+            'decor': load_images(resource_path('data/images/tiles/decor')),
+            'grass': load_images(resource_path('data/images/tiles/grass')),
+            'grassSpawner': load_images(resource_path('data/images/grass')),
+            'tuto': load_images(resource_path('data/images/tuto/steles')),
+            'large_decor': load_images(resource_path('data/images/tiles/large_decor')),
+            'stone': load_images(resource_path('data/images/tiles/stone')),
+            'player': load_image(resource_path('data/images/entities/player.png')),
+            'background': load_image(resource_path('data/images/background.png')),
+            'clouds': load_images(resource_path('data/images/clouds')),
+            'enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/idle')), img_dur=6),
+            'enemy/run': Animation(load_images(resource_path('data/images/entities/enemy/run')), img_dur=4),
+            'player/idle': Animation(load_images(resource_path('data/images/entities/player/idle')), img_dur=6),
+            'player/run': Animation(load_images(resource_path('data/images/entities/player/run')), img_dur=4),
+            'player/attack_front': Animation(load_images(resource_path('data/images/entities/player/attack_front')), img_dur=20, loop=False),
+            'player/attack_up': Animation(load_images(resource_path('data/images/entities/player/attack_up')), img_dur=20, loop=False),
+            'player/attack_down': Animation(load_images(resource_path('data/images/entities/player/attack_down')), img_dur=20, loop=False),
+            'player/jump': Animation(load_images(resource_path('data/images/entities/player/jump'))),
+            'player/slide': Animation(load_images(resource_path('data/images/entities/player/slide'))),
+            'player/wall_slide': Animation(load_images(resource_path('data/images/entities/player/wall_slide'))),
+            'particle/leaf': Animation(load_images(resource_path('data/images/particles/leaf')), img_dur=20, loop=False),
+            'particle/particle': Animation(load_images(resource_path('data/images/particles/particle')), img_dur=6, loop=False),
+            'gun': load_image(resource_path('data/images/gun.png')),
+            'projectile': load_image(resource_path('data/images/projectile.png')),
+            'mace': Animation(load_images(resource_path('data/images/entities/weapon/mace'), True), img_dur=5, loop=False),
+            'mace1': Animation(load_images(resource_path('data/images/entities/weapon/mace1'), True), img_dur=5, loop=False),
+            'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
+            'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
+            'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
+            'texte': load_images(resource_path('data/images/tuto/texte')),
+            'walking_enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
+            'walking_enemy/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
         }
 
         self.sfx = {
@@ -129,17 +133,17 @@ class Game:
         
         self.tilemap = Tilemap(self, tile_size=16)
         
-        self.level = 0
+        self.level = 0        
         self.load_level(self.level)
         
         self.screenshake = 0
 
-        self.net = ClientNetwork(ip, 5006)
+        self.net = ClientNetwork(ip, 5005)
         self.net.connect()
         self.remote_players = {}
         
         self.ctx = moderngl.create_standalone_context()
-        self.shader_bg = ShaderBackground(SCALE[0], SCALE[1], "data/shaders/2.9.frag", ctx=self.ctx)
+        self.shader_bg = ShaderBackground(SCALE[0], SCALE[1], "data/shaders/1.0 tuto.frag", ctx=self.ctx)
         self.scream_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/4.0.frag", ctx=self.ctx)
         self.transition_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/3.9transi.frag", ctx=self.ctx)
         self.scream_active = False # Désactivé par défaut, on le déclenche sur commande
@@ -154,6 +158,22 @@ class Game:
 
         self.font = pygame.font.SysFont("consolas", 16)
         self.debug = True
+
+    def loadcontrols(self):
+        default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
+        try:
+            path = resource_path('user_prefs.json')
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                    user_keys = data.get('controls', {})
+                    # On fusionne avec les défauts pour éviter les clés manquantes
+                    return {k: user_keys.get(k, default_keys[k]) for k in default_keys}
+            return default_keys
+        except Exception as e:
+            print(f"Erreur chargement contrôles: {e}")
+            return default_keys
+
 
     def set_zoom(self, zoom_value):
         self.zoom = max(0.5, min(zoom_value, 2.0))
@@ -179,7 +199,7 @@ class Game:
             self.leaf_spawners.append(pygame.Rect(4 + tree['pos'][0], 4 + tree['pos'][1], 23, 13))
             
         #ca les prend puis supr donc on doit rajouter TOUT les spawner pour eviter de les blit comme des decors
-        for spawner in self.tilemap.extract([('spawners', 0), ('spawners', 1), ('spawners', 2)]):
+        for spawner in self.tilemap.extract([('spawners', i) for i in range(10)]):
             if spawner['variant'] == 0:
                 self.player.pos = spawner['pos']
                 self.player.air_time = 0
@@ -371,17 +391,17 @@ class Game:
                             self.sfx['jump'].set_volume(self.SFX_Volume)
                             print("Musique coupée")
                     # Mouvement horizontal
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_q:
+                    if event.key == self.controls["LEFT"]:
                         self.movement[0] = True
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if event.key == self.controls["RIGHT"]:
                         self.movement[1] = True
                     # On vérifie d'abord la touche, PUIS on tente de sauter.
-                    if event.key == pygame.K_SPACE or event.key == pygame.K_w:
+                    if event.key == self.controls["JUMP"]:
                         if self.player.request_jump():
                             self.sfx['jump'].play()
-                    if event.key == pygame.K_x or event.key == pygame.K_LSHIFT:
+                    if event.key == self.controls["DASH"]:
                         self.player.dash()
-                    if event.key == pygame.K_v:
+                    if event.key == self.controls["CHANGE_WEAPON"]:
                         self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
                         self.weapon_type = self.weaponDictionary[self.currentWeaponIndex]
                         self.player.weapon.set_weapon(self.weapon_type)
@@ -408,9 +428,9 @@ class Game:
 
                 # Si une touche est relâchée
                 if event.type == pygame.KEYUP or event.type == pygame.K_SPACE:
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_q:
+                    if event.key == self.controls["LEFT"]:
                         self.movement[0] = False
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if event.key == self.controls["RIGHT"]:
                         self.movement[1] = False
                     if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
                         pass 
@@ -418,18 +438,24 @@ class Game:
                 def execute_attack(self):
                     direction = None
                     keys = pygame.key.get_pressed()
-                    if keys[pygame.K_UP] or keys[pygame.K_z]: direction = 'up'
-                    elif keys[pygame.K_DOWN] or keys[pygame.K_s]: direction = 'down'
-                    elif keys[pygame.K_LEFT] or keys[pygame.K_q]: direction = 'left'
-                    elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: direction = 'right'
+                    if keys[self.controls["UP"]]: direction = 'up'
+                    elif keys[self.controls["DOWN"]]: direction = 'down'
+                    elif keys[self.controls["LEFT"]]: direction = 'left'
+                    elif keys[self.controls["RIGHT"]]: direction = 'right'
                     self.player.attack(direction)
                 # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Clic gauche
                         execute_attack(self)
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_c: # Touche C
+                    if event.key == self.controls["ATTACK"]: # Touche définie pour l'attaque
                         execute_attack(self)
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.net.damaging_eid = []
+                elif event.type == pygame.KEYUP:
+                    if event.key == self.controls["ATTACK"]:
+                        self.net.damaging_eid = []
 
             # --- MISE À JOUR INPUTS MANETTE ---
             self.controller.update()
@@ -460,10 +486,10 @@ class Game:
             # 2. Directions (is_pressed)
             direction = None
             # Clavier
-            if keys[pygame.K_UP] or keys[pygame.K_z]: direction = 'up'
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]: direction = 'down'
-            elif keys[pygame.K_LEFT] or keys[pygame.K_q]: direction = 'left'
-            elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: direction = 'right'
+            if keys[self.controls["UP"]]: direction = 'up'
+            elif keys[self.controls["DOWN"]]: direction = 'down'
+            elif keys[self.controls["LEFT"]]: direction = 'left'
+            elif keys[self.controls["RIGHT"]]: direction = 'right'
             
             # Manette (écrase seulement si stick actif)
             if self.controller.joystick:
