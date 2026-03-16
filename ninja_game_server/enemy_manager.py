@@ -141,6 +141,20 @@ class Enemy:
             res[1] = True
         return res
 
+    def adjust_position(self, pos, new_pos, x_or_y, precision):
+        velo = sub_vecs(new_pos, pos)
+        pos_check = pos
+        rep = 1
+        for _ in range(precision):
+            pos_check = [pos[i]/2 + new_pos[i]/2 for i in range(2)]
+            collide = self.check_collision(pos_check)
+            if collide:
+                pos_check = add_vecs(mult_vec(pos, 1/2), mult_vec(new_pos, 1/2))
+            else:
+                pos = add_vecs(mult_vec(pos, 1/2), mult_vec(new_pos, 1/2))
+
+        return pos
+
     def move_and_slide(self, velocity: list, delta: float) -> None:
         """
         Applies the velocity and updates the position
@@ -149,7 +163,12 @@ class Enemy:
         self.properties['vx'] = velocity[0]
         self.properties['vy'] = velocity[1]
         new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
+        pos_shift = sub_vecs([self.properties['x'], self.properties['y']], self.last_pos)
         collision = self.does_collide(new_pos)
+        if pos_shift[0] != 0 and collision[0] == True:
+            self.properties['x'], self.properties['y'] = self.adjust_position([self.properties['x'], self.properties['y']], new_pos, 'x', 10)
+        if pos_shift[1] != 0 and collision[1] == True:
+            self.properties['x'], self.properties['y'] = self.adjust_position([self.properties['x'], self.properties['y']], new_pos, 'y', 10)
         self.last_pos = [self.properties['x'], self.properties['y']]
         self.last_collisions = collision
         self.last_velocity = velocity
@@ -263,7 +282,7 @@ MAX_DISTANCE_FROM_SPAWN = 16*12
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
-        self.properties['type'] = "patrol"
+        self.properties['type'] = 1
         self.players_last_pos = {}
         self.wander_pos = []
         self.wander_angle = None
@@ -398,7 +417,7 @@ RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 100, (16,23), "left-right")
-        self.properties['type'] = "walking_enemy"
+        self.properties['type'] = 3
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == -1
         self.rage_cooldown_timer = -1
