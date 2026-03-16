@@ -73,7 +73,7 @@ class PlayerManager:
 # --- Game Server ---
 # ==============================
 class GameServer:
-    def __init__(self,  local : bool = False, ip="0.0.0.0", port=5006, server_name="Ninja Server", rate=1/60):
+    def __init__(self,  local : bool = False, ip="0.0.0.0", port=5005, server_name="Ninja Server", rate=1/60):
         self.ip = ip
         self.port = port
         self.rate = rate
