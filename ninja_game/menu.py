@@ -5,6 +5,7 @@ import subprocess
 import atexit
 import pygame
 import moderngl
+import json
 from game import Game
 from scripts.lobby_discovery import LobbyManager
 from scripts.shader_bg import ShaderBackground
@@ -28,11 +29,54 @@ BUTTON_HOVER = (100, 160, 210)
 TEXT_COLOR = (255, 255, 255)
 FONT_NAME = None  
 FONT_SIZE = 36
-CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_s,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB}
+CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_s,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB,"UP":pygame.K_z,"DOWN":pygame.K_d,"ATTACK":pygame.K_f}
+DATA = {
+    "controls": CONTROLS, "graphics": [WIDTH, HEIGHT], "fps": FPS
+}
+
+
+
+USER_PREFS_FILE = "user_prefs.json"
 wait_key=False
 action_changing=None
 
 
+def reset_user_prefs():
+    global CONTROLS, WIDTH, HEIGHT, FPS
+    CONTROLS={"LEFT":pygame.K_q,"RIGHT":pygame.K_s,"JUMP":pygame.K_SPACE,"DASH":pygame.K_LSHIFT,"CHANGE ARM":pygame.K_TAB}
+    WIDTH, HEIGHT = monitor.width, monitor.height
+    FPS = 60
+    update_user_prefs()
+    save_user_prefs()
+    resize(WIDTH, HEIGHT) 
+    for menu in lst_menu:
+        menu.rebuild()  
+
+def save_user_prefs():
+    with open(USER_PREFS_FILE, 'w') as f:
+        json.dump(DATA, f)
+
+    
+def update_user_prefs():
+    DATA["controls"] = CONTROLS
+    DATA["graphics"] = [WIDTH, HEIGHT]
+    DATA["fps"] = FPS
+    save_user_prefs()
+
+
+def load_user_prefs():
+    global CONTROLS, WIDTH, HEIGHT, FPS
+    with open(USER_PREFS_FILE, 'r') as f:
+        data = json.load(f)
+        CONTROLS.update(data.get("controls", {}))
+        graphics = data.get("graphics", [WIDTH, HEIGHT])
+        if len(graphics) == 2:
+            WIDTH, HEIGHT = graphics
+        FPS = data.get("fps", FPS)
+
+
+if os.path.exists(USER_PREFS_FILE):
+    load_user_prefs()
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("Menu")
@@ -160,7 +204,8 @@ class Menu:
             elif isinstance(item, tuple):
                 # Standard text, callback tuple
                 text, callback = item
-                btn = Button(rect, text, callback, self.font)
+                display_text = text() if callable(text) else text
+                btn = Button(rect, display_text, callback, self.font)
                 self.items.append(btn)
 
     def draw(self, surface):
@@ -199,6 +244,8 @@ class Menu:
 
 def start_game(ip="127.0.0.1"):
     game = Game(FPS, [WIDTH,HEIGHT], ip=ip)
+    update_user_prefs()
+    save_user_prefs()
     game.run()
     
     # Au retour, on s'assure que l'écran du menu est bien défini
@@ -211,6 +258,8 @@ def open_options():
 
 
 def quit_game():
+    update_user_prefs()
+    save_user_prefs()
     pygame.quit()
     sys.exit()
   
@@ -237,6 +286,7 @@ def resize(new_width, new_height):
     # c'est plus joli pour le pixel art et plus performant.
     for menu in lst_menu:
         menu.rebuild()
+    update_user_prefs()
     
 
 def rebinding(action):
@@ -244,10 +294,14 @@ def rebinding(action):
     wait_key = True
     action_changing = action
     print(CONTROLS)
-    
+
+
 def refps(fps_value):
     global FPS
     FPS=fps_value
+    update_user_prefs()
+
+
 
 
 def refresh_servers():
@@ -279,6 +333,8 @@ def open_server_browser():
 server_name_input = InputButton((0,0,0,0), "Ninja Server", font)
 
 def host_game():
+    update_user_prefs() 
+    save_user_prefs() 
     """Lance le serveur via le fichier .bat et rejoint la partie."""
     import time
     
@@ -314,8 +370,9 @@ host_menu = Menu("Host Game", [
 ], font)
 
 main_menu = Menu("Main Menu", [("HOST GAME", open_host_menu), ("FIND GAME", open_server_browser),("OPTIONS", open_options),("QUIT GAME", quit_game),], font)
-options_menu = Menu("Options", [("Audio",None),("Keyboards",lambda: set_active_menu(keyboard_menu)),("Graphics",lambda: set_active_menu(graphics_menu)),("FPS",lambda: set_active_menu(fps_menu)),("Back", lambda: set_active_menu(main_menu)),], font)
-keyboard_menu = Menu("Keyboard", [(f"Jump : {CONTROLS['JUMP']}",lambda: rebinding("JUMP")),(f"Change Arm : {CONTROLS['CHANGE ARM']}",lambda: rebinding("ATTACK")),(f"Dash : {CONTROLS['DASH']}",lambda: rebinding("DODGE")),(f"left : {CONTROLS['LEFT']}",lambda: rebinding("LEFT")),(f"Right : {CONTROLS['RIGHT']}",lambda: rebinding("RIGHT")),("Back", lambda: set_active_menu(options_menu))],font)
+options_menu = Menu("Options", [("Audio",None),("Keyboards",lambda: set_active_menu(keyboard_menu)),("Graphics",lambda: set_active_menu(graphics_menu)),("FPS",lambda: set_active_menu(fps_menu)),("Reset Preferences", lambda : reset_user_prefs()),("Back", lambda: set_active_menu(main_menu)),], font)
+keyboard_menu = Menu("Keyboard", [(lambda: f"Jump : {pygame.key.name(CONTROLS['JUMP'])}", lambda: rebinding("JUMP")),(lambda: f"Change Arm : {pygame.key.name(CONTROLS['CHANGE ARM'])}", lambda: rebinding("CHANGE ARM")),(lambda: f"Dash : {pygame.key.name(CONTROLS['DASH'])}", lambda: rebinding("DASH")),(lambda: f"Left : {pygame.key.name(CONTROLS['LEFT'])}", lambda: rebinding("LEFT")),(lambda: f"Right : {pygame.key.name(CONTROLS['RIGHT'])}", lambda: rebinding("RIGHT")),("Back", lambda: set_active_menu(options_menu))
+], font)
 graphics_menu = Menu("Graphics",[("3840-2160",lambda: resize(3840, 2160)),("2560-1440",lambda: resize(2560, 1440)),("1920-1080",lambda: resize(1920, 1080)),("1680-1050",lambda: resize(1680, 1050)),("1280-720",lambda: resize(1280,720)),("1024-768",lambda: resize(1024,768)),("800-600",lambda: resize(800,600)),("Back", lambda: set_active_menu(options_menu))],font)
 fps_menu = Menu("FPS",[("30 FPS",lambda: refps(30)),("45 FPS",lambda: refps(45)),("60 FPS",lambda: refps(60)),("120 FPS",lambda: refps(120)),("144 FPS",lambda: refps(144)),("165 FPS",lambda: refps(165)),("180 FPS",lambda: refps(180)),("240 FPS",lambda: refps(240)),("UNCAPPED FPS",lambda: refps(100000000)),("Back", lambda: set_active_menu(options_menu))],font)
 lst_menu = [main_menu,host_menu,options_menu,keyboard_menu,graphics_menu,server_menu]
@@ -326,13 +383,19 @@ def set_active_menu(menu):
     last_menu = active_menu 
     active_menu = menu
     
-    
+
 
 active_menu = main_menu
 last_menu = main_menu
 
 
 def main():
+    if not os.path.exists(USER_PREFS_FILE):
+        save_user_prefs()  # Crée un fichier de préférences par défaut s'il n'existe pas
+    else :
+        load_user_prefs() 
+    for menu in lst_menu:
+        menu.rebuild()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -345,6 +408,9 @@ def main():
                 CONTROLS[action_changing] = event.key
                 wait_key = False
                 action_changing = None
+                update_user_prefs()
+                for menu in lst_menu:  
+                    menu.rebuild() 
                 continue
             if active_menu:
                 active_menu.handle_event(event)
@@ -367,6 +433,12 @@ def main():
         clock.tick(FPS)
 
 def splash_screen():
+    if not os.path.exists(USER_PREFS_FILE):
+        save_user_prefs()  # Crée un fichier de préférences par défaut s'il n'existe pas
+    else :
+        load_user_prefs() 
+    for menu in lst_menu:
+        menu.rebuild()
     logo = pygame.image.load("logo.png").convert_alpha()
     lw, lh = logo.get_size()
 
@@ -407,3 +479,5 @@ def splash_screen():
 
 splash_screen()
 main() 
+
+

@@ -1,4 +1,5 @@
-precision mediump float;
+#version 150
+// La ligne precision a été supprimée
 
 uniform float u_time;
 uniform vec2 u_resolution;

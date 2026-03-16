@@ -4,6 +4,7 @@ import math
 import random
 import time
 import moderngl
+import json
 
 import pygame
 from screeninfo import get_monitors
@@ -21,6 +22,8 @@ from scripts.client_network import ClientNetwork
 from scripts.controller import Controller  
 from scripts.lighting import LightingSystem
 from scripts.shader_effect import ShaderEffect
+
+
 
 ###
 # TIPS POUR MOI MEME pour les bugg lier au mouvement peut etre pour etduidier le gresillement je peux retirer l offset de la camera pour voir si c est la cam 
@@ -44,6 +47,7 @@ class Game:
         self.max_fps = max_fps
         pygame.init()
 
+        self.controls=self.loadcontrols() #chargement des touches du fichier de config user_prefs.json 
         pygame.display.set_caption('ninja game')
         if resolution == [0, 0]:
             monitors = get_monitors()
@@ -162,6 +166,22 @@ class Game:
 
         self.font = pygame.font.SysFont("consolas", 16)
         self.debug = True
+
+    def loadcontrols(self):
+        default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
+        try:
+            path = resource_path('user_prefs.json')
+            if os.path.exists(path):
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                    user_keys = data.get('controls', {})
+                    # On fusionne avec les défauts pour éviter les clés manquantes
+                    return {k: user_keys.get(k, default_keys[k]) for k in default_keys}
+            return default_keys
+        except Exception as e:
+            print(f"Erreur chargement contrôles: {e}")
+            return default_keys
+
 
     def set_zoom(self, zoom_value):
         self.zoom = max(0.5, min(zoom_value, 2.0))
@@ -379,17 +399,17 @@ class Game:
                             self.sfx['jump'].set_volume(self.SFX_Volume)
                             print("Musique coupée")
                     # Mouvement horizontal
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_q:
+                    if event.key == self.controls["LEFT"]:
                         self.movement[0] = True
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if event.key == self.controls["RIGHT"]:
                         self.movement[1] = True
                     # On vérifie d'abord la touche, PUIS on tente de sauter.
-                    if event.key == pygame.K_SPACE or event.key == pygame.K_w:
+                    if event.key == self.controls["JUMP"]:
                         if self.player.request_jump():
                             self.sfx['jump'].play()
-                    if event.key == pygame.K_x or event.key == pygame.K_LSHIFT:
+                    if event.key == self.controls["DASH"]:
                         self.player.dash()
-                    if event.key == pygame.K_v:
+                    if event.key == self.controls["CHANGE_WEAPON"]:
                         self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
                         self.weapon_type = self.weaponDictionary[self.currentWeaponIndex]
                         self.player.weapon.set_weapon(self.weapon_type)
@@ -416,9 +436,9 @@ class Game:
 
                 # Si une touche est relâchée
                 if event.type == pygame.KEYUP or event.type == pygame.K_SPACE:
-                    if event.key == pygame.K_LEFT or event.key == pygame.K_q:
+                    if event.key == self.controls["LEFT"]:
                         self.movement[0] = False
-                    if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                    if event.key == self.controls["RIGHT"]:
                         self.movement[1] = False
                     if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
                         pass 
@@ -426,17 +446,17 @@ class Game:
                 def execute_attack(self):
                     direction = None
                     keys = pygame.key.get_pressed()
-                    if keys[pygame.K_UP] or keys[pygame.K_z]: direction = 'up'
-                    elif keys[pygame.K_DOWN] or keys[pygame.K_s]: direction = 'down'
-                    elif keys[pygame.K_LEFT] or keys[pygame.K_q]: direction = 'left'
-                    elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: direction = 'right'
+                    if keys[self.controls["UP"]]: direction = 'up'
+                    elif keys[self.controls["DOWN"]]: direction = 'down'
+                    elif keys[self.controls["LEFT"]]: direction = 'left'
+                    elif keys[self.controls["RIGHT"]]: direction = 'right'
                     self.player.attack(direction)
                 # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Clic gauche
                         execute_attack(self)
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_c: # Touche C
+                    if event.key == self.controls["ATTACK"]: # Touche définie pour l'attaque
                         execute_attack(self)
 
             # --- MISE À JOUR INPUTS MANETTE ---
@@ -468,10 +488,10 @@ class Game:
             # 2. Directions (is_pressed)
             direction = None
             # Clavier
-            if keys[pygame.K_UP] or keys[pygame.K_z]: direction = 'up'
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]: direction = 'down'
-            elif keys[pygame.K_LEFT] or keys[pygame.K_q]: direction = 'left'
-            elif keys[pygame.K_RIGHT] or keys[pygame.K_d]: direction = 'right'
+            if keys[self.controls["UP"]]: direction = 'up'
+            elif keys[self.controls["DOWN"]]: direction = 'down'
+            elif keys[self.controls["LEFT"]]: direction = 'left'
+            elif keys[self.controls["RIGHT"]]: direction = 'right'
             
             # Manette (écrase seulement si stick actif)
             if self.controller.joystick:
