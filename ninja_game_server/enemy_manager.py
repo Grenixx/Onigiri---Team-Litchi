@@ -432,10 +432,15 @@ class WalkingEnemy(Enemy):
                 self.rage_cooldown_timer = -1
 
         if self.does_collide(add_vecs(pos, [0, GRAVITY_ENEMY_2]))[1]:
+            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+            collide = self.does_collide(add_vecs(add_vecs(velocity, pos), self.knockback_velocity))
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
-            pos_check2 = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] / 2])
-            pos_check = add_vecs(pos_check, [self.size[0] * self.orientation, self.size[1] + 10])
-            if self.enemy_manager.tilemap.solid_check(pos_check2) or not self.enemy_manager.tilemap.solid_check(pos_check):
+            if self.orientation == 1:
+                add = self.size[0] * self.orientation
+            else:
+                add = 0
+            pos_check = add_vecs(pos_check, [add, self.size[1] + 10])
+            if collide[0] or not self.enemy_manager.tilemap.solid_check(pos_check):
                 self.orientation *= -1
                 self.properties['flip'] = not self.properties['flip']
             velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
