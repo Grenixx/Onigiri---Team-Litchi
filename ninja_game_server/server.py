@@ -151,11 +151,12 @@ class GameServer:
         if msg_type == 10: # 10 = connexion
             if addr not in self.players.clients:
                 pid = self.players.add_player(addr)
-                self.broadcast_map_change(self.map_id)
+                #self.broadcast_map_change(self.map_id)
                 print(f"New player: {pid} ({addr})") 
             else:
                 pid = self.players.clients[addr]
             
+            self.send_map_change(self, self.map_id, addr)
             # renvoyer le PID à chaque paquet de connexion reçu
             self.sock.sendto(struct.pack("I", pid), addr)
             return
@@ -243,6 +244,9 @@ class GameServer:
         payload = struct.pack("<BI", 4, int(map_id))
         for addr in self.players.clients:
             self.sock.sendto(payload, addr)
+
+    def send_map_change(self, map_id, addr):
+        self.sock.sendto(struct.pack("<BI", 4, int(map_id)), addr)
 
     # ---------------------------
     # --- Envoi aux clients ---
