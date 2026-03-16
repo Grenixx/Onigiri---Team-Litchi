@@ -17,7 +17,7 @@ def load_image(path, convert_alpha=False):
     img = pygame.image.load(full_path)
     
     # On force le colorkey noir AVANT le convert_alpha pour les masques
-    img.set_colorkey((0, 0, 0))
+    img.set_colorkey((0, 0, 1))
     
     if convert_alpha:
         img = img.convert_alpha()

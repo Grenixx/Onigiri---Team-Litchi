@@ -1,4 +1,5 @@
 import sys
+import json
 
 import pygame
 
@@ -44,7 +45,7 @@ class Editor:
         self.level = 0
         try:
             self.tilemap.load(f'data/maps/{self.level}.json')
-        except FileNotFoundError:
+        except (FileNotFoundError, json.JSONDecodeError):
             pass
         
         self.scroll = [0, 0]
@@ -153,7 +154,7 @@ class Editor:
                         try:
                             self.tilemap.load(f'data/maps/{self.level}.json')
                             print(f"Loaded level {self.level}")
-                        except FileNotFoundError:
+                        except (FileNotFoundError, json.JSONDecodeError):
                             print(f"New level {self.level} created (empty)")
                     if event.key == pygame.K_DOWN:
                         if self.level > 0:
@@ -163,7 +164,7 @@ class Editor:
                             try:
                                 self.tilemap.load(f'data/maps/{self.level}.json')
                                 print(f"Loaded level {self.level}")
-                            except FileNotFoundError:
+                            except (FileNotFoundError, json.JSONDecodeError):
                                 print(f"New level {self.level} created (empty)")
 
                     if event.key == pygame.K_LSHIFT:

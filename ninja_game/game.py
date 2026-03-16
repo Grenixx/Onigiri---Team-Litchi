@@ -100,14 +100,6 @@ class Game:
             'patrol/rage': Animation(load_images('entities/enemy/patrol/rage', True), img_dur=2, loop=True),
         }
 
-        if 'tuto' in self.assets and len(self.assets['tuto']) >= 4:
-            self.assets['tuto'][0] = pygame.transform.scale(self.assets['tuto'][0], (30, 30))
-            self.assets['tuto'][1] = pygame.transform.scale(self.assets['tuto'][1], (30, 30))
-            self.assets['tuto'][2] = pygame.transform.scale(self.assets['tuto'][2], (64, 64))
-            self.assets['tuto'][3] = pygame.transform.scale(self.assets['tuto'][3], (30, 30))
-        elif 'tuto' in self.assets:
-             print("Attention: Pas assez d'images dans 'tuto' pour appliquer le redimensionnement automatique.")
-
         self.sfx = {
             'jump': pygame.mixer.Sound(resource_path('data/sfx/jump.wav')),
             'dash': pygame.mixer.Sound(resource_path('data/sfx/dash.wav')),
