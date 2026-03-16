@@ -185,7 +185,6 @@ class GameServer:
             return
 
         if msg_type == 8 and len(data) >= 12:
-            print("recu")
             eid, damage_number, pid = struct.unpack("III", data[1:13])
             if eid in self.EnemyManager.enemies:
                 self.EnemyManager.enemies[eid].damage(damage_number, pid)

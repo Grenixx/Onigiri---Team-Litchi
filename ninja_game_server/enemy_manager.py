@@ -152,7 +152,6 @@ class Enemy:
             self.properties['y'] = new_pos[1]
 
     def damage(self, damage_amount: int, pid: int) -> None:
-        print(pid)
         self.hp -= damage_amount
         if self.hp <= 0:
             self.kill()
