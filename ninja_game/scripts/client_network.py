@@ -150,6 +150,8 @@ class ClientNetwork:
         except Exception as e:
             print("Send map change error:", e)
 
+    
+
     def _ping_loop(self):
         """Thread séparé qui envoie périodiquement un ping."""
         while self.running:

@@ -151,6 +151,7 @@ class GameServer:
         if msg_type == 10: # 10 = connexion
             if addr not in self.players.clients:
                 pid = self.players.add_player(addr)
+                self.broadcast_map_change(self.map_id)
                 print(f"New player: {pid} ({addr})") 
             else:
                 pid = self.players.clients[addr]
@@ -195,6 +196,8 @@ class GameServer:
             self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) #modulo nombre de map dans le fichier
             self.change_level(self.next_map)
             return
+        
+        
 
     # ---------------------------
     # --- Mises à jour ---
