@@ -100,8 +100,8 @@ class Game:
             'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
             'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
             'texte': load_images(resource_path('data/images/tuto/texte')),
-            'walking_enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
-            'walking_enemy/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
+            'walking_enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=3, loop=True),
+            'walking_enemy/rage': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=2, loop=True),#a changer
         }
 
         self.sfx = {
