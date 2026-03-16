@@ -66,7 +66,7 @@ class Editor:
             self.scroll[1] += (self.movement[3] - self.movement[2]) * 2
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
             
-            self.tilemap.render(self.display, offset=render_scroll)
+            self.tilemap.render(self.display, offset=render_scroll, show_spawners=True)
             
             current_tile_img = self.assets[self.tile_list[self.tile_group]][self.tile_variant].copy()
             current_tile_img.set_alpha(100)
