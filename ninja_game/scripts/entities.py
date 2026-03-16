@@ -447,16 +447,16 @@ class ClientEnemyManager:
                     
                     #to_remove.append(eid)
                     to_damage.append(eid)
+                else :
+                    self.game.net.damaging_eid = []
 
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
-        for eid in to_remove:
-            if eid in self.game.net.enemies:
-                del self.game.net.enemies[eid]
-            self.game.net.remove_enemy(eid)
+        #for eid in to_remove:
+        #    if eid in self.game.net.enemies:
+        #        del self.game.net.enemies[eid]
+        #    self.game.net.remove_enemy(eid)
 
         for eid in to_damage:
-            #if eid in self.game.net.enemies:
-            #    del self.game.net.enemies[eid]
             self.game.net.damage_enemy(eid, current_weapon.damage_number)
             
 
