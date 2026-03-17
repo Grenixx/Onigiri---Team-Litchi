@@ -406,8 +406,8 @@ class Patrol(Enemy):
                         players_last_pos[pid] = self.players_last_pos[pid]
         self.players_last_pos = players_last_pos
 
-VISION_DISTANCE_ENEMY_2 = 16*5
-VISION_FOV_ENEMY_2 = pi/4
+VISION_DISTANCE_ENEMY_2 = 16*8
+VISION_FOV_ENEMY_2 = 2*pi/3
 SPEED_MODIFIER_RAGE_ENEMY_2 = 2
 GRAVITY_ENEMY_2 = 5
 RAGE_COOLDOWN = 1 * 20 # seconds * ticks
