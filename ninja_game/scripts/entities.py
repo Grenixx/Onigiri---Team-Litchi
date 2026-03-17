@@ -168,7 +168,7 @@ class Player(PhysicsEntity):
         self.weapon.weapon_equiped.update(dt)
         self.jump_buffer_timer = max(0, self.jump_buffer_timer - dt)
 
-        if self.air_time > 2 :
+        if self.air_time > 4 :
             if not self.game.dead:
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60

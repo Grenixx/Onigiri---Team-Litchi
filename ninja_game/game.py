@@ -157,7 +157,8 @@ class Game:
         self.currentWeaponIndex = 1
 
         self.font = pygame.font.SysFont("consolas", 16)
-        self.debug = True
+        self.debug = False
+        self.player.weapon.weapon_equiped.toggle_debug()
 
     def loadcontrols(self):
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
