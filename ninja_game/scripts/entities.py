@@ -25,6 +25,7 @@ class PhysicsEntity:
 
         self.gravity = 600  # pixels/seconde²
         self.max_fall_speed = 300  # pixels/seconde
+        self.run_speed = 120  # pixels/seconde
 
         # Remove mask usage
     def rect(self):
@@ -38,7 +39,7 @@ class PhysicsEntity:
     def update(self, tilemap, movement=(0, 0), dt=0):
         self.collisions = {'up': False, 'down': False, 'right': False, 'left': False}
         
-        horizontal_speed = movement[0] * 120  # 120 pixels/seconde (run_speed)
+        horizontal_speed = movement[0] * self.run_speed
         
         frame_movement = (
             (horizontal_speed + self.velocity[0]) * dt,
@@ -154,7 +155,7 @@ class Player(PhysicsEntity):
         self.weapon.weapon_equiped.update(dt)
         self.jump_buffer_timer = max(0, self.jump_buffer_timer - dt)
 
-        if self.air_time > 2 :
+        if self.air_time > 4 :
             if not self.game.dead:
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60

@@ -139,7 +139,7 @@ class Tilemap:
 
     
     # 🌿 MODIFIÉ — ajout du paramètre dt
-    def render(self, surf, offset=(0, 0), dt=0):
+    def render(self, surf, offset=(0, 0), dt=0, show_spawners=False):
         for tile in self.offgrid_tiles:
             surf.blit(self.game.assets[tile['type']][tile['variant']], (tile['pos'][0] - offset[0], tile['pos'][1] - offset[1]))
             
@@ -148,7 +148,7 @@ class Tilemap:
                 loc = str(x) + ';' + str(y)
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
-                    if tile['type'] != 'spawners':
+                    if tile['type'] != 'spawners' or show_spawners:
                         surf.blit(self.game.assets[tile['type']][tile['variant']],
                                 (tile['pos'][0] * self.tile_size - offset[0],
                                 tile['pos'][1] * self.tile_size - offset[1]))

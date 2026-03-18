@@ -71,37 +71,37 @@ class Game:
         self.movement = [False, False]
         
         self.assets = {
-            'decor': load_images(resource_path('data/images/tiles/decor')),
-            'grass': load_images(resource_path('data/images/tiles/grass')),
-            'grassSpawner': load_images(resource_path('data/images/grass')),
+            'decor': load_images(resource_path('data/images/tiles/decor'), True),
+            'grass': load_images(resource_path('data/images/tiles/grass'), ['0', '2', '4', '6']),
+            'grassSpawner': load_images(resource_path('data/images/grass'), True),
             'tuto': load_images(resource_path('data/images/tuto/steles')),
-            'large_decor': load_images(resource_path('data/images/tiles/large_decor')),
-            'stone': load_images(resource_path('data/images/tiles/stone')),
-            'player': load_image(resource_path('data/images/entities/player.png')),
-            'background': load_image(resource_path('data/images/background.png')),
-            'clouds': load_images(resource_path('data/images/clouds')),
-            'enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/idle')), img_dur=6),
-            'enemy/run': Animation(load_images(resource_path('data/images/entities/enemy/run')), img_dur=4),
-            'player/idle': Animation(load_images(resource_path('data/images/entities/player/idle')), img_dur=6),
-            'player/run': Animation(load_images(resource_path('data/images/entities/player/run')), img_dur=4),
-            'player/attack_front': Animation(load_images(resource_path('data/images/entities/player/attack_front')), img_dur=20, loop=False),
-            'player/attack_up': Animation(load_images(resource_path('data/images/entities/player/attack_up')), img_dur=20, loop=False),
-            'player/attack_down': Animation(load_images(resource_path('data/images/entities/player/attack_down')), img_dur=20, loop=False),
-            'player/jump': Animation(load_images(resource_path('data/images/entities/player/jump'))),
-            'player/slide': Animation(load_images(resource_path('data/images/entities/player/slide'))),
-            'player/wall_slide': Animation(load_images(resource_path('data/images/entities/player/wall_slide'))),
-            'particle/leaf': Animation(load_images(resource_path('data/images/particles/leaf')), img_dur=20, loop=False),
-            'particle/particle': Animation(load_images(resource_path('data/images/particles/particle')), img_dur=6, loop=False),
-            'gun': load_image(resource_path('data/images/gun.png')),
-            'projectile': load_image(resource_path('data/images/projectile.png')),
+            'large_decor': load_images(resource_path('data/images/tiles/large_decor'), ['0', '1', '2', '9']),
+            'stone': load_images(resource_path('data/images/tiles/stone'), ['0', '2', '9', '10']),
+            'player': load_image(resource_path('data/images/entities/player.png'), True),
+            'background': load_image(resource_path('data/images/background.png'), True),
+            'clouds': load_images(resource_path('data/images/clouds'), True),
+            'enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/idle'), True), img_dur=6),
+            'enemy/run': Animation(load_images(resource_path('data/images/entities/enemy/run'), True), img_dur=4),
+            'player/idle': Animation(load_images(resource_path('data/images/entities/player/idle'), True), img_dur=6),
+            'player/run': Animation(load_images(resource_path('data/images/entities/player/run'), True), img_dur=4),
+            'player/attack_front': Animation(load_images(resource_path('data/images/entities/player/attack_front'), True), img_dur=20, loop=False),
+            'player/attack_up': Animation(load_images(resource_path('data/images/entities/player/attack_up'), True), img_dur=20, loop=False),
+            'player/attack_down': Animation(load_images(resource_path('data/images/entities/player/attack_down'), True), img_dur=20, loop=False),
+            'player/jump': Animation(load_images(resource_path('data/images/entities/player/jump'), True)),
+            'player/slide': Animation(load_images(resource_path('data/images/entities/player/slide'), True)),
+            'player/wall_slide': Animation(load_images(resource_path('data/images/entities/player/wall_slide'), True)),
+            'particle/leaf': Animation(load_images(resource_path('data/images/particles/leaf'), True), img_dur=20, loop=False),
+            'particle/particle': Animation(load_images(resource_path('data/images/particles/particle'), True), img_dur=6, loop=False),
+            'gun': load_image(resource_path('data/images/gun.png'), True),
+            'projectile': load_image(resource_path('data/images/projectile.png'), True),
             'mace': Animation(load_images(resource_path('data/images/entities/weapon/mace'), True), img_dur=5, loop=False),
             'mace1': Animation(load_images(resource_path('data/images/entities/weapon/mace1'), True), img_dur=5, loop=False),
             'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
-            'texte': load_images(resource_path('data/images/tuto/texte')),
-            'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle'), True), img_dur=3, loop=True),
-            'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage'), True), img_dur=2, loop=True),
-            'Dromp/idle': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=3, loop=True),
-            'Dromp/rage': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle'), True), img_dur=1, loop=True),#a changer
+            'texte': load_images(resource_path('data/images/tuto/texte'), True),
+            'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle')), img_dur=3, loop=True),
+            'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage')), img_dur=2, loop=True),
+            'Dromp/idle': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle')), img_dur=3, loop=True),
+            'Dromp/rage': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle')), img_dur=1, loop=True),#a changer
         }
 
         self.sfx = {
@@ -157,7 +157,8 @@ class Game:
         self.currentWeaponIndex = 1
 
         self.font = pygame.font.SysFont("consolas", 16)
-        self.debug = True
+        self.debug = False
+        self.player.weapon.weapon_equiped.toggle_debug()
 
     def loadcontrols(self):
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
@@ -357,6 +358,12 @@ class Game:
                     return
                 # Si une touche est pressée
                 if event.type == pygame.KEYDOWN:
+                    keys_pressed = pygame.key.get_pressed()
+                    if keys_pressed[pygame.K_LCTRL] and keys_pressed[pygame.K_RCTRL]:
+                        if self.player.run_speed == 120:
+                            self.player.run_speed = 320
+                        else:
+                            self.player.run_speed = 120
                     if event.key == pygame.K_ESCAPE:
                         event.type = pygame.QUIT
                     if event.key == pygame.K_F1:
