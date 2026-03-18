@@ -102,7 +102,7 @@ class Game:
             'patrol/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/rage'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/rage')),
             'Dromp/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=3, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
             'Dromp/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
-            'Landmark/idle':load_images(resource_path('data/images/entities/enemy/Landmark/idle'), True)
+            'Landmark/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/Landmark/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Landmark/idle'))
         }
 
         self.sfx = {
