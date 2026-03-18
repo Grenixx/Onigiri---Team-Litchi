@@ -303,12 +303,6 @@ class Game:
                         show_p = False
                 if show_p:
                     self.player.render(self.display, offset=render_scroll)
-                if self.debug:
-                    mask_image = self.player.mask.to_surface(unsetcolor=(0,0,0,0), setcolor=(255,0,0,255))
-                    self.display.blit(mask_image, (
-                        (self.player.rect().x-3) - render_scroll[0], 
-                        (self.player.rect().y-3) - render_scroll[1]
-                    ))
 
             # [[x, y], direction, timer]
             #for projectile in self.projectiles.copy():
@@ -366,7 +360,6 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         event.type = pygame.QUIT
                     if event.key == pygame.K_F1:
-                        self.player.weapon.weapon_equiped.toggle_debug()
                         self.debug = not self.debug
                     if event.key == pygame.K_F2:
                         self.music_on = not self.music_on # Inverse l'état (True devient False et inversement)
@@ -545,7 +538,6 @@ class Game:
 
                 if self.controller.button_back and not getattr(self, '_ctrl_back_pressed', False):
                     self._ctrl_back_pressed = True
-                    self.player.weapon.weapon_equiped.toggle_debug()
                     self.debug = not self.debug
                 elif not self.controller.button_back:
                     self._ctrl_back_pressed = False

@@ -26,9 +26,7 @@ class PhysicsEntity:
         self.gravity = 600  # pixels/seconde²
         self.max_fall_speed = 300  # pixels/seconde
 
-        # Initialisation du masque pour éviter l'AttributeError au premier render
-        self.mask = self.animation.mask(flip=self.flip)
-    
+        # Remove mask usage
     def rect(self):
         return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
     
@@ -97,23 +95,12 @@ class PhysicsEntity:
 
         self.image = current_img
 
-        # CRÉATION DU MASQUE (Optimisé: utilise le masque pré-généré)
-        self.mask = self.animation.mask(flip=self.flip)
-
     def render(self, surf, offset=(0, 0)):
         render_pos = (self.pos[0] - offset[0] + self.anim_offset[0],
                      self.pos[1] - offset[1] + self.anim_offset[1])
         surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False), render_pos)
 
-        # Debug Visualization
-        if self.game.player.weapon.weapon_equiped.debug:
-            # 1. AABB (Cyan)
-            rect = self.rect()
-            pygame.draw.rect(surf, (0, 255, 255), (rect.x - offset[0], rect.y - offset[1], rect.width, rect.height), 1)
-            
-            # 2. Body Mask (Semi-transparent Magenta)
-            mask_surf = self.mask.to_surface(setcolor=(255, 0, 255, 100), unsetcolor=(0, 0, 0, 0)).convert_alpha()
-            surf.blit(mask_surf, render_pos)
+        surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False), render_pos)
 
 
 class Player(PhysicsEntity):
@@ -375,7 +362,6 @@ class ClientEnemyManager:
 
         base_anim = self.game.assets.get(f'patrol/idle', self.game.assets['patrol/idle'])
         self.animation = base_anim.copy()
-        self.enemy_masks = {}
         self.enemy_anims = {}  # eid -> animation
         self.state = 'idle'
 
@@ -483,8 +469,7 @@ class ClientEnemyManager:
             anim.update(dt)
             imgAnim = anim.img()
             
-            if imgAnim not in self.enemy_masks:
-                 self.enemy_masks[imgAnim] = pygame.mask.from_surface(imgAnim)
+            imgAnim = anim.img()
             
             # Alignement consistant avec le joueur (Top-left + Offset)
             anim_offset = (-3, -3)
@@ -494,18 +479,7 @@ class ClientEnemyManager:
             # Rendu Principal avec Flip
             surf.blit(pygame.transform.flip(imgAnim, flip, False), (ex_topleft, ey_topleft))
 
-            # Advanced Debug visualization
-            if self.game.player.weapon.weapon_equiped.debug:
-                debug_rect = pygame.Rect(x + self.collision_offset[0] - offset[0], y + self.collision_offset[1] - offset[1], self.size[0], self.size[1])
-                pygame.draw.rect(surf, (255, 255, 0), debug_rect, 1)
-
             self.game.tilemap.grass_manager.apply_force((x, y), 6, 12)
-
-        # 3. Draw Intersections (AFTER all sprites to be on top)
-        if self.game.player.weapon.weapon_equiped.debug:
-            for hit_pos, hit_surf in self.game.hit_visuals:
-                surf.blit(hit_surf, (hit_pos[0] - offset[0], hit_pos[1] - offset[1]))
-            
             
             
 class RemotePlayerRenderer:
