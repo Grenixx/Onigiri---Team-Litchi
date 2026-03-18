@@ -38,16 +38,13 @@ def load_images(path, convert_alpha: list | bool = False):
     return images
 
 def load_animation_with_masks(path, img_dur=5, loop=True, convert_alpha=False, col_path=None):
-    """Charge une animation et permet de donner un chemin explicite col_path pour les masques"""
     path = os.path.normpath(path)
     images = load_images(path, convert_alpha)
     
     if col_path is None:
-        # Construit le chemin par défaut: dirname/col_basename
         dirname, basename = os.path.split(path)
         col_path = os.path.join(dirname, f"col_{basename}")
     else:
-        # Si fourni, on utilise directement ce qu'a défini l'utilisateur
         col_path = os.path.normpath(col_path)
     
     full_col_path = resource_path(os.path.join(BASE_IMG_PATH, col_path))
