@@ -191,4 +191,18 @@ class WeaponBase:
     def render(self, surf, offset=(0, 0)):
         if self.attack_timer > 0:
             img = self.get_image()
-            surf.blit(img, self.get_render_pos(offset))
+            render_pos = self.get_render_pos(offset)
+            surf.blit(img, render_pos)
+            
+            if getattr(self.owner.game, 'debug', False):
+                # Pour l'instant, l'arme n'utilise pas de masque au pixel près pour l'attaque, 
+                # sauf si tu ajoutes un col_mace, etc. On essaie de l'afficher si présent.
+                mask = self.animation.get_pygame_mask(self.owner.flip) if hasattr(self.animation, 'get_pygame_mask') else None
+                if mask:
+                    # En réalité le masque n'est pas tourné par l'angle de l'arme !
+                    # C'est juste indicatif que l'arme *a* un mask.
+                    mask_surf = mask.to_surface(setcolor=(255, 0, 255, 128), unsetcolor=(0, 0, 0, 0)).convert_alpha()
+                    surf.blit(mask_surf, render_pos)
+                else:
+                    rect = self.rect()
+                    pygame.draw.rect(surf, (0, 255, 255), (rect.x - offset[0], rect.y - offset[1], rect.width, rect.height), 1)

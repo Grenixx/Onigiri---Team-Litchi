@@ -9,7 +9,7 @@ import json
 import pygame
 from screeninfo import get_monitors
 
-from scripts.utils import load_image, load_images, Animation
+from scripts.utils import load_image, load_images, Animation, load_animation_with_masks
 from scripts.entities import PhysicsEntity, Player, ClientEnemyManager, RemotePlayerRenderer
 from scripts.weapon import Weapon
 from scripts.tilemap import Tilemap
@@ -98,10 +98,10 @@ class Game:
             'mace1': Animation(load_images(resource_path('data/images/entities/weapon/mace1'), True), img_dur=5, loop=False),
             'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
             'texte': load_images(resource_path('data/images/tuto/texte'), True),
-            'patrol/idle': Animation(load_images(resource_path('data/images/entities/enemy/patrol/idle')), img_dur=3, loop=True),
-            'patrol/rage': Animation(load_images(resource_path('data/images/entities/enemy/patrol/rage')), img_dur=2, loop=True),
-            'Dromp/idle': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle')), img_dur=3, loop=True),
-            'Dromp/rage': Animation(load_images(resource_path('data/images/entities/enemy/Dromp/idle')), img_dur=1, loop=True),#a changer
+            'patrol/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=3, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
+            'patrol/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/rage'), img_dur=2, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_patrol/rage')),
+            'Dromp/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=3, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
+            'Dromp/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=1, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
         }
 
         self.sfx = {

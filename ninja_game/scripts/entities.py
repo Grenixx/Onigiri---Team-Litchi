@@ -101,8 +101,14 @@ class PhysicsEntity:
                      self.pos[1] - offset[1] + self.anim_offset[1])
         surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False), render_pos)
 
-        surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False), render_pos)
-
+        if getattr(self.game, 'debug', False):
+            mask = self.animation.get_pygame_mask(self.flip)
+            if mask:
+                mask_surf = mask.to_surface(setcolor=(255, 0, 255, 128), unsetcolor=(0, 0, 0, 0)).convert_alpha()
+                surf.blit(mask_surf, render_pos)
+            else:
+                rect = self.rect()
+                pygame.draw.rect(surf, (0, 255, 255), (rect.x - offset[0], rect.y - offset[1], rect.width, rect.height), 1)
 
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
@@ -404,12 +410,32 @@ class ClientEnemyManager:
                 self.collision_offset = (0, 0)
             enemy_rect = pygame.Rect(ex + self.collision_offset[0], ey + self.collision_offset[1], self.size[0], self.size[1])
 
-                
+            # -----------------------------------------------------
+            # DETECTION DE COLLISION AVEC MASQUES OU AABB
+            # -----------------------------------------------------
+            enemy_mask = anim.get_pygame_mask(flip)
+            anim_offset = (-3, -3)
+            enemy_mask_x = ex + anim_offset[0]
+            enemy_mask_y = ey + anim_offset[1]
             
+            player_rect = player.rect()
+            
+            if enemy_mask:
+                # Masque plein de la taille de la hitbox du joueur comme fallback
+                player_mask = pygame.Mask(player_rect.size, fill=True)
+                offset_p = (int(player_rect.x - enemy_mask_x), int(player_rect.y - enemy_mask_y))
+                collide_joueur = enemy_mask.overlap(player_mask, offset_p) is not None
+                
+                # Masque plein pour l'arme (hitbox AABB)
+                w_mask = pygame.Mask(weapon_hitbox.size, fill=True)
+                offset_w = (int(weapon_hitbox.x - enemy_mask_x), int(weapon_hitbox.y - enemy_mask_y))
+                collide_arme = enemy_mask.overlap(w_mask, offset_w) is not None
+            else:
+                collide_joueur = player_rect.colliderect(enemy_rect)
+                collide_arme = weapon_hitbox.colliderect(enemy_rect)
 
             # 2. Collision Joueur (Dégâts reçus)
-            player_rect = player.rect()
-            if player_rect.colliderect(enemy_rect):
+            if collide_joueur:
                 offset_x = enemy_rect.x - player_rect.x
                 offset_y = enemy_rect.y - player_rect.y
                 if not self.game.dead and self.game.invincible_frame_time <= 0:
@@ -424,7 +450,7 @@ class ClientEnemyManager:
                         print(f"Player HP: {self.game.hp}")
 
             # 3. Collision Arme
-            if weapon_hitbox.colliderect(enemy_rect):
+            if collide_arme:
                   if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
                     for i in range(30):
@@ -438,7 +464,7 @@ class ClientEnemyManager:
                     if not (eid in self.game.net.damaging_eid):
                         to_damage.append(eid)
                 
-            if not is_attacking and not weapon_hitbox.colliderect(enemy_rect):
+            if not is_attacking and not collide_arme:
                 self.game.net.damaging_eid = []
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         #for eid in to_remove:
@@ -481,6 +507,15 @@ class ClientEnemyManager:
             surf.blit(pygame.transform.flip(imgAnim, flip, False), (ex_topleft, ey_topleft))
 
             self.game.tilemap.grass_manager.apply_force((x, y), 6, 12)
+
+            if getattr(self.game, 'debug', False):
+                enemy_mask = anim.get_pygame_mask(flip)
+                if enemy_mask:
+                    mask_surf = enemy_mask.to_surface(setcolor=(255, 0, 255, 128), unsetcolor=(0, 0, 0, 0)).convert_alpha()
+                    surf.blit(mask_surf, (ex_topleft, ey_topleft))
+                else:
+                    debug_rect = pygame.Rect(x + self.collision_offset[0] - offset[0], y + self.collision_offset[1] - offset[1], self.size[0], self.size[1])
+                    pygame.draw.rect(surf, (0, 255, 255), debug_rect, 1)
             
             
 class RemotePlayerRenderer:
@@ -555,11 +590,21 @@ class RemotePlayerRenderer:
 
         def render(self, surf, offset=(0,0)):
             img = pygame.transform.flip(self.animation.img(), self.flip, False)
-            surf.blit(img, (self.pos[0] - offset[0] - 3, self.pos[1] - offset[1] - 3))
+            render_pos = (self.pos[0] - offset[0] - 3, self.pos[1] - offset[1] - 3)
+            surf.blit(img, render_pos)
             
             # Render weapon
             # On utilise weapon_equiped.render comme le joueur local
             self.weapon.weapon_equiped.render(surf, offset)
+            
+            if getattr(self.game, 'debug', False):
+                mask = self.animation.get_pygame_mask(self.flip)
+                if mask:
+                    mask_surf = mask.to_surface(setcolor=(255, 0, 255, 128), unsetcolor=(0, 0, 0, 0)).convert_alpha()
+                    surf.blit(mask_surf, render_pos)
+                else:
+                    rect = self.rect()
+                    pygame.draw.rect(surf, (0, 255, 255), (rect.x - offset[0], rect.y - offset[1], rect.width, rect.height), 1)
 
             
 
