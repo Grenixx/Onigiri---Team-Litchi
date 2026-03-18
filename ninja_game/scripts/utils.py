@@ -30,7 +30,6 @@ def load_images(path, convert_alpha: list | bool = False):
     folder_path = resource_path(os.path.join(BASE_IMG_PATH, path))
     images = []
     for img_name in sorted(os.listdir(folder_path)):
-        print(img_name[:-4])
         if (type(convert_alpha) == bool and convert_alpha) or (type(convert_alpha) == list and img_name[:-4] in convert_alpha):
             images.append(load_image(os.path.join(path, img_name), True))
         else:

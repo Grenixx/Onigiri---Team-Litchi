@@ -408,6 +408,9 @@ class ClientEnemyManager:
             elif etype == "Dromp":
                 self.size = (64, 64)
                 self.collision_offset = (0, 0)
+            elif etype == "Landmark":
+                self.size = (0, 0)
+                self.collision_offset = (0, 0)
             enemy_rect = pygame.Rect(ex + self.collision_offset[0], ey + self.collision_offset[1], self.size[0], self.size[1])
 
             # -----------------------------------------------------

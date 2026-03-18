@@ -98,10 +98,11 @@ class Game:
             'mace1': Animation(load_images(resource_path('data/images/entities/weapon/mace1'), True), img_dur=5, loop=False),
             'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
             'texte': load_images(resource_path('data/images/tuto/texte'), True),
-            'patrol/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=3, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
-            'patrol/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/rage'), img_dur=2, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_patrol/rage')),
-            'Dromp/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=3, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
-            'Dromp/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=1, loop=True, convert_alpha=True, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
+            'patrol/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=3, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
+            'patrol/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/rage'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/rage')),
+            'Dromp/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=3, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
+            'Dromp/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
+            'Landmark/idle':load_images(resource_path('data/images/entities/enemy/Landmark/idle'), True)
         }
 
         self.sfx = {

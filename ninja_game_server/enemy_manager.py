@@ -12,6 +12,7 @@ class EnemyManager:
         self.enemies = {}
         self.next_enemy_id = 1
         self.players = []
+        self.landmark_variable = 0 # can be number of landmarks or eid to reduce the amount of landmarks
         self.reset(tilemap)
 
     def reset(self, tilemap) -> None:
@@ -26,13 +27,20 @@ class EnemyManager:
 
             if spawner['variant'] == 2: # Boss spawner
                 self.create_enemy(spawner['pos'], "patrol") # will be changed to spawn the boss
+            
             if spawner['variant'] == 3:
-                self.create_enemy(spawner['pos'], "walking_enemy")
+                self.create_enemy(spawner['pos'], "Dromp")
 
     def create_enemy(self, pos: list, enemy_type: str) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
-        enemy_types = {"blob": Blob, "patrol": Patrol, "walking_enemy": WalkingEnemy}
-        self.enemies[self.next_enemy_id] = enemy_types[enemy_type](self.next_enemy_id, pos, self)
+        enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp}
+        if enemy_type == "Landmark":
+            self.enemies[self.next_enemy_id] = Landmark(self.next_enemy_id, pos, self, 1, 'eid', self.landmark_variable)
+        else:
+            self.enemies[self.next_enemy_id] = enemy_types[enemy_type](self.next_enemy_id, pos, self)
+            if enemy_type == "Dromp":
+                if self.landmark_variable == 0:
+                    self.landmark_variable = self.next_enemy_id
         self.next_enemy_id += 1
 
     def update(self, players: dict) -> None:
@@ -47,6 +55,42 @@ class EnemyManager:
 
 KNOCKBACK_MIN_ANGLE = pi/6
 KNOCKBACK_DEPLETION = 0.5 # units / tick
+
+class Landmark: # The hole purpose is to make testing easier by showing some positions on screen
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, persistance: int, checking: str, checking_value: int):
+        if checking == 'eid' and checking_value != 0 and checking_value != enemy_manager.landmark_variable:
+            return
+        if checking == 'number' and enemy_manager.landmark_variable > checking_value:
+            for enemy_eid in enemy_manager.enemies.keys().sort():
+                if enemy_manager.landmark_variable <= checking_value:
+                    break
+                enemy = enemy_manager.enemies[enemy_eid]
+                if enemy.properties['type'] == "Landmark":
+                    enemy.kill()
+
+        self.eid = eid
+        self.properties = {
+            'x': pos[0],
+            'y': pos[1],
+            'vx': 0.0,
+            'vy': 0.0,
+            'target_player': None,
+            'flip': False,
+            'state': "idle",
+        }
+        self.enemy_manager = enemy_manager
+        self.persistance = persistance
+        self.properties['type'] = "Landmark"
+        print(f"Landmark created at {pos} with eid : {eid} !")
+    
+    def physics_process(self, dt: float):
+        if self.persistance <= 0:
+            self.kill()
+        self.persistance -= 1
+    
+    def kill(self):
+        self.enemy_manager.enemies.pop(self.eid)
+        print(f"Landmark deleted with eid : {self.eid} !")
 
 class Enemy:
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23), knockback_type: str = "any", knockback_strength: float | int = 8):
@@ -73,10 +117,12 @@ class Enemy:
         self.last_velocity = [0,0]
         self.last_collisions = [False, False]
 
-    def can_see_player(self, player: list) -> None:
+    def can_see_player(self, player: list, max_dist : float = None) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
         pos = [self.properties['x'], self.properties['y']]
         player_pos = list_copy(player)
+        if max_dist != None and distance_to(pos, player_pos) > max_dist:
+            return False
         """
         pos[0] += self.size[0] / 2
         pos[1] += self.size[1] / 2
@@ -89,7 +135,9 @@ class Enemy:
             self.enemy_manager.tilemap,
             distance_to([self.properties['x'], self.properties['y']], player_pos) - 10,
             4,
-            PHYSICS_TILES
+            PHYSICS_TILES,
+            False,
+            self
         )
 
     def create_enemy(self, pos: list, enemy_type: str) -> None:
@@ -203,7 +251,7 @@ class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 50)
         self.properties['type'] = "Blob"
-        print(f"Blob created at {pos} !")
+        print(f"Blob created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -276,6 +324,7 @@ MIN_WANDER_DIST = 2
 MIN_WANDER_SPEED = 1.5
 WANDER_SPEED_DECAY = 0.01
 MAX_DISTANCE_FROM_SPAWN = 16*12
+PATROL_MAX_SIGHT = 16*6
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -286,7 +335,7 @@ class Patrol(Enemy):
         self.wander_angle = None
         self.wander_dist = None
         self.wander_speed = self.speed
-        print(f"Patrol created at {pos} !")
+        print(f"Patrol created at {pos} with eid : {eid} !")
     
     def create_wander_pos(self, hit_result: list = [False, False]) -> None:
         """Creates a wandering position when the patrol doesn't see the player"""
@@ -374,7 +423,7 @@ class Patrol(Enemy):
             if dist > 4:
                 velocity = normalized(vector_to(pos, self.players_last_pos[closest_pid]))
                 velocity = [i * self.speed for i in velocity]
-            elif not self.can_see_player(players[closest_pid]):
+            elif not self.can_see_player(players[closest_pid], PATROL_MAX_SIGHT):
                 velocity = self.wander()
         else:
             velocity = self.wander()
@@ -397,7 +446,7 @@ class Patrol(Enemy):
 
         players_last_pos = {}
         for pid in players.keys():
-            if self.can_see_player(players[pid]):
+            if self.can_see_player(players[pid], PATROL_MAX_SIGHT):
                 if distance_to(players[pid], pos) < VISION_DISTANCE_PATROL and distance_to(players[pid], pos) > 1:
                     players_last_pos[pid] = [players[pid][0],players[pid][1]]
             else:
@@ -406,13 +455,13 @@ class Patrol(Enemy):
                         players_last_pos[pid] = self.players_last_pos[pid]
         self.players_last_pos = players_last_pos
 
-VISION_DISTANCE_ENEMY_2 = 16*8
-VISION_FOV_ENEMY_2 = 2*pi/3
-SPEED_MODIFIER_RAGE_ENEMY_2 = 2
-GRAVITY_ENEMY_2 = 5
-RAGE_COOLDOWN = 1 * 20 # seconds * ticks
+DROMP_VISION_DISTANCE = 16*8
+DROMP_VISION_FOV = 2*pi/3
+DROMP_SPEED_MODIFIER_RAGE = 2
+DROMP_GRAVITY = 5
+DROMP_RAGE_COOLDOWN = 1 * 20 # seconds * ticks
 
-class WalkingEnemy(Enemy):
+class Dromp(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 100, (64,59.5), "any")
         self.properties['type'] = "Dromp"
@@ -420,7 +469,7 @@ class WalkingEnemy(Enemy):
         self.properties['flip'] = self.orientation == 1
         self.rage_cooldown_timer = -1
         self.properties['state'] = 'idle'
-        print(f"Walking enemy created at {pos} !")
+        print(f"Dromp created at {pos} with eid : {eid} !")
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -430,10 +479,10 @@ class WalkingEnemy(Enemy):
         rage = False
         for pid in players.keys():
             dist = distance_to(pos, players[pid])
-            if dist <= VISION_DISTANCE_ENEMY_2:
+            if dist <= DROMP_VISION_DISTANCE:
                 agl = diff_angles(angle(sub_vecs(players[pid], pos)), angle([self.orientation, 0]))
-                if agl <= VISION_FOV_ENEMY_2:
-                    if self.can_see_player(players[pid]):
+                if agl <= DROMP_VISION_FOV:
+                    if self.can_see_player(players[pid], DROMP_VISION_DISTANCE):
                         rage = True
                         break
 
@@ -441,15 +490,15 @@ class WalkingEnemy(Enemy):
             self.properties['state'] = 'rage'
         elif self.properties['state'] == 'rage':
             if self.rage_cooldown_timer == -1:
-                self.rage_cooldown_timer = RAGE_COOLDOWN
+                self.rage_cooldown_timer = DROMP_RAGE_COOLDOWN
             elif self.rage_cooldown_timer > 0:
                 self.rage_cooldown_timer -= 1
             else:
                 self.properties['state'] = 'idle'
                 self.rage_cooldown_timer = -1
 
-        if self.does_collide(add_vecs(pos, [0, GRAVITY_ENEMY_2]))[1]:
-            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+        if self.does_collide(add_vecs(pos, [0, DROMP_GRAVITY]))[1]:
+            velocity = [self.orientation * self.speed, DROMP_GRAVITY]
             collide = self.does_collide(add_vecs(add_vecs(velocity, pos), self.knockback_velocity))
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
             if self.orientation == 1:
@@ -460,15 +509,15 @@ class WalkingEnemy(Enemy):
             if collide[0] or not self.enemy_manager.tilemap.solid_check(pos_check):
                 self.orientation *= -1
                 self.properties['flip'] = not self.properties['flip']
-            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+            velocity = [self.orientation * self.speed, DROMP_GRAVITY]
         else:
-            velocity = [self.orientation * self.speed / 4, GRAVITY_ENEMY_2]
+            velocity = [self.orientation * self.speed / 4, DROMP_GRAVITY]
 
         if self.properties['state'] == 'rage':
             if self.rage_cooldown_timer == -1:
-                velocity[0] *= SPEED_MODIFIER_RAGE_ENEMY_2
+                velocity[0] *= DROMP_SPEED_MODIFIER_RAGE
             else:
-                velocity[0] *= 1 + (SPEED_MODIFIER_RAGE_ENEMY_2 - 1) * easeOutCubic(self.rage_cooldown_timer / RAGE_COOLDOWN)
+                velocity[0] *= 1 + (DROMP_SPEED_MODIFIER_RAGE - 1) * easeOutCubic(self.rage_cooldown_timer / DROMP_RAGE_COOLDOWN)
 
         self.move_and_slide(velocity, delta)
 
@@ -588,7 +637,7 @@ def is_within(pos: list, pos1: list, pos2: list) -> bool:
     pos_r2 = [pos1[i] >= pos[i] and pos2[i] <= pos[i] for i in range(2)]
     return (pos_r1[0] and pos_r1[1]) or (pos_r2[0] and pos_r2[1])
 
-def raycast_collide(pos: list, angle: float, tilemap, dist_max: float = 1000, dist_check: float = 4, mask: list = [], return_pos: bool = False) -> bool | list:
+def raycast_collide(pos: list, angle: float, tilemap, dist_max: float = 1000, dist_check: float = 4, mask: list = [], return_pos: bool = False, enemy = None) -> bool | list:
     """
     Creates a raycast starting from 'pos' with a given 'angle', and checks whether it hits an element of the 'tilemap' belonging to the 'mask' (if 'mask' is not empty).
     The raycast uses a maximum distance 'dist_max' and a step distance 'dist_check'.
@@ -599,6 +648,7 @@ def raycast_collide(pos: list, angle: float, tilemap, dist_max: float = 1000, di
     dist = 0
     pos_check = pos
     while dist <= dist_max:
+        enemy.create_enemy(pos_check, "Landmark")
         check_type = tilemap.check_type((pos_check))
         if (mask == [] and check_type != None) or (check_type in mask):
             if return_pos:
