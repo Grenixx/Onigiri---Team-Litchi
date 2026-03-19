@@ -121,19 +121,20 @@ class Enemy:
         """Returns a boolean indicating whether the enemy can see the player"""
         pos = [self.properties['x'], self.properties['y']]
         player_pos = list_copy(player)
-        if max_dist != None and distance_to(pos, player_pos) > max_dist:
-            return False
-        """
+
         pos[0] += self.size[0] / 2
         pos[1] += self.size[1] / 2
         player_pos[0] += PLAYER_SIZE[0] / 2
         player_pos[1] += PLAYER_SIZE[1] / 2
-        """
+
+        if max_dist != None and distance_to(pos, player_pos) > max_dist:
+            return False
+        
         return not raycast_collide(
             pos,
-            angle(vector_to([self.properties['x'], self.properties['y']], player_pos)),
+            angle(vector_to(pos, player_pos)),
             self.enemy_manager.tilemap,
-            distance_to([self.properties['x'], self.properties['y']], player_pos) - 10,
+            distance_to(pos, player_pos) - 10,
             4,
             PHYSICS_TILES,
             False,
@@ -324,7 +325,7 @@ MIN_WANDER_DIST = 2
 MIN_WANDER_SPEED = 1.5
 WANDER_SPEED_DECAY = 0.01
 MAX_DISTANCE_FROM_SPAWN = 16*12
-PATROL_MAX_SIGHT = 16*6
+PATROL_MAX_SIGHT = 16*8
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -456,7 +457,7 @@ class Patrol(Enemy):
         self.players_last_pos = players_last_pos
 
 DROMP_VISION_DISTANCE = 16*8
-DROMP_VISION_FOV = 2*pi/3
+DROMP_VISION_FOV = pi/3
 DROMP_SPEED_MODIFIER_RAGE = 2
 DROMP_GRAVITY = 5
 DROMP_RAGE_COOLDOWN = 1 * 20 # seconds * ticks

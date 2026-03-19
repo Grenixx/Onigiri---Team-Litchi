@@ -35,7 +35,7 @@ class ClientNetwork:
 
                 while time.time() - start_time < 2:  # attente max 2 secondes
                     try:
-                        data, _ = self.sock.recvfrom(4096)
+                        data, _ = self.sock.recvfrom(1024*1024)
                         if len(data) == 8:
                             self.id, self.map_change_id = struct.unpack("II", data[0:8])
                             print(f"Connected with ID {self.id}")
@@ -56,7 +56,7 @@ class ClientNetwork:
     def listen(self):
         while self.running:
             try:
-                data, _ = self.sock.recvfrom(4096)
+                data, _ = self.sock.recvfrom(1024*1024)
                 if not data:
                     continue
 

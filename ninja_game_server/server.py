@@ -122,7 +122,7 @@ class GameServer:
         try:
             while True:
                 try:
-                    data, addr = self.sock.recvfrom(1024)
+                    data, addr = self.sock.recvfrom(1024*1024)
                     self.handle_message(data, addr)
                 except ConnectionResetError:
                     # Ignore les erreurs quand un client quitte brutalement

@@ -228,11 +228,11 @@ class Player(PhysicsEntity):
         # TRANSITION FIN DE DASH (Momentum kill)
         if was_dashing and self.dashing == 0:
             if self.dash_dir == 'down':
-                self.velocity[1] = 0
+                self.velocity[1] *= 1
             elif self.dash_dir == 'up':
-                self.velocity[1] = 0
+                self.velocity[1] *= 1
             else:
-                self.velocity[0] *= 0.2 # On casse l'inertie violemment
+                self.velocity[0] *= 1 # On casse l'inertie violemment
             self.dash_dir = None
             self.dash_cooldown_timer = self.dash_cooldown
                 
