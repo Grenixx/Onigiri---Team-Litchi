@@ -286,6 +286,7 @@ class Player(PhysicsEntity):
     def dash(self):
         if not self.dashing and self.dash_cooldown_timer <= 0:
             self.game.sfx['dash'].play()
+            self.game.invincible_frame_time = max(self.game.invincible_frame_time, 10) # ~10 frames d'invulnérabilité
             
             # Burst unique d'étincelles au début
             if self.is_pressed == 'down':
@@ -437,7 +438,7 @@ class ClientEnemyManager:
             if collide_joueur:
                 offset_x = enemy_rect.x - player_rect.x
                 offset_y = enemy_rect.y - player_rect.y
-                if not self.game.dead and self.game.invincible_frame_time <= 0:
+                if not self.game.dead and self.game.invincible_frame_time <= 0 and player.dashing == 0:
                     self.game.screenshake = max(16, self.game.screenshake)      
                     self.game.sfx['hit'].play()
                     self.game.hp-=25
