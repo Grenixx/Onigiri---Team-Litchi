@@ -6,6 +6,23 @@ from TilemapServer import PHYSICS_TILES
 
 PLAYER_SIZE = (14, 18)
 
+SPEED_BLOB = 1.5
+
+SPEED_PATROL = 1.5
+VISION_DISTANCE_PATROL = 16 * 8
+DIST_WANDER_PATROL = 8
+MIN_WANDER_DIST_PATROL = 2
+MIN_WANDER_SPEED_PATROL = 1.5
+WANDER_SPEED_DECAY_PATROL = 0.01
+MAX_DISTANCE_FROM_SPAWN_PATROL = 16 * 12
+
+SPEED_WALKING_ENEMY = 1
+VISION_DISTANCE_WALKING_ENEMY = 16 * 8
+VISION_FOV_WALKING_ENEMY = 2 * pi / 3
+SPEED_MODIFIER_RAGE_WALKING_ENEMY = 2
+GRAVITY_WALKING_ENEMY = 5
+RAGE_COOLDOWN_WALKING_ENEMY = 20 
+
 class EnemyManager:
     def __init__(self, tilemap):
         self.tilemap = tilemap
@@ -201,7 +218,7 @@ class Enemy:
 
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 50)
+        super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 50)
         self.properties['type'] = "Blob"
         print(f"Blob created at {pos} !")
     
@@ -270,16 +287,11 @@ class Blob(Enemy):
         self.properties['vx'] = velocity[0]
         self.properties['vy'] = velocity[1]
 
-VISION_DISTANCE_PATROL = 16*8
-DIST_WANDER = 8
-MIN_WANDER_DIST = 2
-MIN_WANDER_SPEED = 1.5
-WANDER_SPEED_DECAY = 0.01
-MAX_DISTANCE_FROM_SPAWN = 16*12
+# Constants for Patrol are now at the top of the file
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
+        super().__init__(eid, pos, enemy_manager, SPEED_PATROL, 150, (15, 10)) 
         self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
@@ -300,9 +312,9 @@ class Patrol(Enemy):
             #print(self.wander_angle)
         
         if self.wander_dist == None:
-            self.wander_dist = random.uniform(DIST_WANDER//2, DIST_WANDER)
+            self.wander_dist = random.uniform(DIST_WANDER_PATROL//2, DIST_WANDER_PATROL)
         else:
-            self.wander_dist = max(self.wander_dist + random.uniform(-DIST_WANDER//4, DIST_WANDER//4), MIN_WANDER_DIST)
+            self.wander_dist = max(self.wander_dist + random.uniform(-DIST_WANDER_PATROL//4, DIST_WANDER_PATROL//4), MIN_WANDER_DIST_PATROL)
         
         #self.wander_pos = [self.properties['x'] + random.choice((-1, 1)) * dist, self.properties['y'] + random.randint(int(-dist), int(dist))]
 
@@ -318,7 +330,7 @@ class Patrol(Enemy):
                 self.wander_angle = pi
         
         if hit_result == [False, False]:
-            if distance_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN:
+            if distance_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN_PATROL:
                 self.wander_angle = angle(sub_vecs(self.spawn_position, pos))
         self.wander_pos = add_vecs(vec_from_angle(self.wander_dist, self.wander_angle), pos)
         #print(self.wander_pos, self.properties['x'], self.properties['y'])
@@ -334,7 +346,7 @@ class Patrol(Enemy):
         velocity = [0,0]
         if distance_to(self.wander_pos, pos) > 1:
             velocity = normalized(vector_to(pos, self.wander_pos))
-            self.wander_speed = max(self.wander_speed - WANDER_SPEED_DECAY, MIN_WANDER_SPEED) # * delta
+            self.wander_speed = max(self.wander_speed - WANDER_SPEED_DECAY_PATROL, MIN_WANDER_SPEED_PATROL) # * delta
             velocity = [i * self.wander_speed for i in velocity]
             new_x = pos[0] + velocity[0] # * delta
             new_y = pos[1] + velocity[1] # * delta
@@ -406,15 +418,11 @@ class Patrol(Enemy):
                         players_last_pos[pid] = self.players_last_pos[pid]
         self.players_last_pos = players_last_pos
 
-VISION_DISTANCE_ENEMY_2 = 16*8
-VISION_FOV_ENEMY_2 = 2*pi/3
-SPEED_MODIFIER_RAGE_ENEMY_2 = 2
-GRAVITY_ENEMY_2 = 5
-RAGE_COOLDOWN = 1 * 20 # seconds * ticks
+# Constants for WalkingEnemy are now at the top of the file
 
 class WalkingEnemy(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 100, (64,59.5), "any")
+        super().__init__(eid, pos, enemy_manager, SPEED_WALKING_ENEMY, 100, (64,59.5), "any")
         self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == 1
@@ -430,9 +438,9 @@ class WalkingEnemy(Enemy):
         rage = False
         for pid in players.keys():
             dist = distance_to(pos, players[pid])
-            if dist <= VISION_DISTANCE_ENEMY_2:
+            if dist <= VISION_DISTANCE_WALKING_ENEMY:
                 agl = diff_angles(angle(sub_vecs(players[pid], pos)), angle([self.orientation, 0]))
-                if agl <= VISION_FOV_ENEMY_2:
+                if agl <= VISION_FOV_WALKING_ENEMY:
                     if self.can_see_player(players[pid]):
                         rage = True
                         break
@@ -441,15 +449,15 @@ class WalkingEnemy(Enemy):
             self.properties['state'] = 'rage'
         elif self.properties['state'] == 'rage':
             if self.rage_cooldown_timer == -1:
-                self.rage_cooldown_timer = RAGE_COOLDOWN
+                self.rage_cooldown_timer = RAGE_COOLDOWN_WALKING_ENEMY
             elif self.rage_cooldown_timer > 0:
                 self.rage_cooldown_timer -= 1
             else:
                 self.properties['state'] = 'idle'
                 self.rage_cooldown_timer = -1
 
-        if self.does_collide(add_vecs(pos, [0, GRAVITY_ENEMY_2]))[1]:
-            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+        if self.does_collide(add_vecs(pos, [0, GRAVITY_WALKING_ENEMY]))[1]:
+            velocity = [self.orientation * self.speed, GRAVITY_WALKING_ENEMY]
             collide = self.does_collide(add_vecs(add_vecs(velocity, pos), self.knockback_velocity))
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
             if self.orientation == 1:
@@ -460,15 +468,15 @@ class WalkingEnemy(Enemy):
             if collide[0] or not self.enemy_manager.tilemap.solid_check(pos_check):
                 self.orientation *= -1
                 self.properties['flip'] = not self.properties['flip']
-            velocity = [self.orientation * self.speed, GRAVITY_ENEMY_2]
+            velocity = [self.orientation * self.speed, GRAVITY_WALKING_ENEMY]
         else:
-            velocity = [self.orientation * self.speed / 4, GRAVITY_ENEMY_2]
+            velocity = [self.orientation * self.speed / 4, GRAVITY_WALKING_ENEMY]
 
         if self.properties['state'] == 'rage':
             if self.rage_cooldown_timer == -1:
-                velocity[0] *= SPEED_MODIFIER_RAGE_ENEMY_2
+                velocity[0] *= SPEED_MODIFIER_RAGE_WALKING_ENEMY
             else:
-                velocity[0] *= 1 + (SPEED_MODIFIER_RAGE_ENEMY_2 - 1) * easeOutCubic(self.rage_cooldown_timer / RAGE_COOLDOWN)
+                velocity[0] *= 1 + (SPEED_MODIFIER_RAGE_WALKING_ENEMY - 1) * easeOutCubic(self.rage_cooldown_timer / RAGE_COOLDOWN_WALKING_ENEMY)
 
         self.move_and_slide(velocity, delta)
 

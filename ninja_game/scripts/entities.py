@@ -174,11 +174,11 @@ class Player(PhysicsEntity):
                 self.velocity[0] = self.dash_speed if self.dashing > 0 else -self.dash_speed
             
             # Décélération à la fin du dash
-            if dash_progress < 0.2:
-                if self.dash_dir == 'down' or self.dash_dir == 'up':
-                    self.velocity[1] *= dash_progress * 5
-                else:
-                    self.velocity[0] *= dash_progress * 5
+            #if dash_progress < 0.2:
+            #    if self.dash_dir == 'down' or self.dash_dir == 'up':
+            #        self.velocity[1] *= dash_progress * 5
+            #    else:
+            #        self.velocity[0] *= dash_progress * 5
         
         # Transition fin de dash (Momentum kill)
         if was_dashing and self.dashing == 0:
