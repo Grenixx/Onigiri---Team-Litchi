@@ -384,12 +384,12 @@ class Game:
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = True
                     # On vérifie d'abord la touche, PUIS on tente de sauter.
-                    if event.key == self.controls["JUMP"]:
+                    if event.key == self.controls["JUMP"] or event.key == pygame.K_w:
                         if self.player.request_jump():
                             self.sfx['jump'].play()
-                    if event.key == self.controls["DASH"]:
+                    if event.key == self.controls["DASH"] or event.key == pygame.K_x:
                         self.player.dash()
-                    if event.key == self.controls["CHANGE_WEAPON"]:
+                    if event.key == self.controls["CHANGE_WEAPON"] or event.key == pygame.K_v:
                         self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
                         self.weapon_type = self.weaponDictionary[self.currentWeaponIndex]
                         self.player.weapon.set_weapon(self.weapon_type)
@@ -468,10 +468,10 @@ class Game:
             # 2. Directions (is_pressed)
             direction_vec = [0, 0]
             # Clavier
-            if keys[self.controls["UP"]]: direction_vec[1] -= 1
-            if keys[self.controls["DOWN"]]: direction_vec[1] += 1
-            if keys[self.controls["LEFT"]]: direction_vec[0] -= 1
-            if keys[self.controls["RIGHT"]]: direction_vec[0] += 1
+            if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction_vec[1] -= 1
+            if keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction_vec[1] += 1
+            if keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction_vec[0] -= 1
+            if keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction_vec[0] += 1
             
             # Manette (écrase seulement si stick actif)
             if self.controller.joystick:
