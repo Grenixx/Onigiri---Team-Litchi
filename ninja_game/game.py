@@ -425,11 +425,10 @@ class Game:
                 
                 def execute_attack(self):
                     direction = None
-                    keys = pygame.key.get_pressed()
-                    if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction = 'up'
-                    elif keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction = 'down'
-                    elif keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction = 'left'
-                    elif keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction = 'right'
+                    if self.player.input_axis[1] < 0: direction = 'up'
+                    elif self.player.input_axis[1] > 0: direction = 'down'
+                    elif self.player.input_axis[0] < 0: direction = 'left'
+                    elif self.player.input_axis[0] > 0: direction = 'right'
                     self.player.attack(direction)
                 # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -467,23 +466,27 @@ class Game:
             current_frame_movement = (final_move_right - final_move_left, 0)
 
             # 2. Directions (is_pressed)
-            direction = None
+            direction_vec = [0, 0]
             # Clavier
-            if keys[self.controls["UP"]]: direction = 'up'
-            elif keys[self.controls["DOWN"]]: direction = 'down'
-            elif keys[self.controls["LEFT"]]: direction = 'left'
-            elif keys[self.controls["RIGHT"]]: direction = 'right'
+            if keys[self.controls["UP"]]: direction_vec[1] -= 1
+            if keys[self.controls["DOWN"]]: direction_vec[1] += 1
+            if keys[self.controls["LEFT"]]: direction_vec[0] -= 1
+            if keys[self.controls["RIGHT"]]: direction_vec[0] += 1
             
             # Manette (écrase seulement si stick actif)
             if self.controller.joystick:
                 ls_x = self.controller.left_stick_x
                 ls_y = self.controller.left_stick_y
-                if ls_y < -0.5 or self.controller.dpad_up: direction = 'up'
-                elif ls_y > 0.5 or self.controller.dpad_down: direction = 'down'
-                elif ls_x < -0.5 or self.controller.dpad_left: direction = 'left'
-                elif ls_x > 0.5 or self.controller.dpad_right: direction = 'right'
+                if abs(ls_x) > 0.4 or abs(ls_y) > 0.4 or self.controller.dpad_up or self.controller.dpad_down or self.controller.dpad_left or self.controller.dpad_right:
+                    if self.controller.dpad_up: direction_vec[1] = -1
+                    elif self.controller.dpad_down: direction_vec[1] = 1
+                    elif abs(ls_y) > 0.4: direction_vec[1] = 1 if ls_y > 0 else -1
+                    
+                    if self.controller.dpad_left: direction_vec[0] = -1
+                    elif self.controller.dpad_right: direction_vec[0] = 1
+                    elif abs(ls_x) > 0.4: direction_vec[0] = 1 if ls_x > 0 else -1
             
-            self.player.is_pressed = direction
+            self.player.input_axis = direction_vec
 
             # --- PLAYER UPDATE (Après consolidation) ---
             if not self.dead:

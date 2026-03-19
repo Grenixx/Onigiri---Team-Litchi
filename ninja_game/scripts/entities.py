@@ -145,8 +145,11 @@ class Player(PhysicsEntity):
         self.dash_speed = 330      # Ajusté
         self.dash_cooldown = 0.4   # secondes
         self.dash_invisible_duration = 0.1 
-        self.dash_dir = None # Direction du dash actuel ('down' ou None)
+        self.dash_invisible_duration = 0.1 
+        self.dash_dir = [0, 0] # Vecteur de direction du dash
         self.dash_cooldown_timer = 0 # Cooldown entre deux dashs
+        self.input_axis = [0, 0] # Stockage de l'input [x, y] de game.py
+        self.can_dash = True # Celeste-style: un seul dash en l'air, refresh au sol
 
 
     def update(self, tilemap, movement=(0, 0), dt=0):
@@ -163,30 +166,21 @@ class Player(PhysicsEntity):
             self.dashing = min(0, self.dashing + dt)
             
         if self.dashing != 0:
-            dash_progress = abs(self.dashing) / self.dash_duration
-            if self.dash_dir == 'down':
-                self.velocity[1] = self.dash_speed
-                self.velocity[0] = 0
-            elif self.dash_dir == 'up':
-                self.velocity[1] = -self.dash_speed
-                self.velocity[0] = 0
-            else:
-                self.velocity[0] = self.dash_speed if self.dashing > 0 else -self.dash_speed
+            self.velocity[0] = self.dash_dir[0] * self.dash_speed
+            self.velocity[1] = self.dash_dir[1] * self.dash_speed
             
-            # Décélération à la fin du dash
-            #if dash_progress < 0.2:
-            #    if self.dash_dir == 'down' or self.dash_dir == 'up':
-            #        self.velocity[1] *= dash_progress * 5
-            #    else:
-            #        self.velocity[0] *= dash_progress * 5
         
         # Transition fin de dash (Momentum kill)
         if was_dashing and self.dashing == 0:
-            if self.dash_dir == 'down' or self.dash_dir == 'up':
-                self.velocity[1] = 0
-            else:
-                self.velocity[0] *= 0.2 
-            self.dash_dir = None
+            if self.dash_dir[1] < 0: # Dash vers le haut
+                self.velocity[1] = -100 # On garde un petit élan vers le haut (Celeste feel)
+            elif self.dash_dir[1] > 0: # Dash vers le bas
+                self.velocity[1] = 0 # On kill le momentum vertical
+            
+            if self.dash_dir[0] != 0:
+                self.velocity[0] = self.dash_dir[0] * 180 # On garde un peu d'élan horizontal
+            
+            self.dash_dir = [0, 0]
             self.dash_cooldown_timer = self.dash_cooldown
 
         # Gestion du wall slide speed AVANT l'update pour qu'il soit effectif tout de suite
@@ -195,12 +189,23 @@ class Player(PhysicsEntity):
 
         # On ignore le mouvement normal si on est en train de dasher
         actual_movement = (0, 0) if self.dashing != 0 else movement
+        
+        # Override de la gravité si dashing
+        if self.dashing != 0:
+            self.velocity[1] = self.dash_dir[1] * self.dash_speed
+        
         super().update(tilemap, movement=actual_movement, dt=dt) 
+        
+        # Post-update fix pour garder la vélocité constante pendant tout le dash (contrecarrer la gravité de PhysicsEntity)
+        if self.dashing != 0:
+            self.velocity[0] = self.dash_dir[0] * self.dash_speed
+            self.velocity[1] = self.dash_dir[1] * self.dash_speed
 
         # Maintenant que PhysicsEntity a mis à jour les collisions, on traite le reste
         if self.collisions['down']:
             self.air_time = 0
             self.jumps = True
+            self.can_dash = True # Refresh dash au sol
             if self.jump_buffer_timer > 0:
                 self.jump()
         else:
@@ -284,45 +289,33 @@ class Player(PhysicsEntity):
         return False
 
     def dash(self):
-        if not self.dashing and self.dash_cooldown_timer <= 0:
+        if self.can_dash and self.dash_cooldown_timer <= 0:
+            self.can_dash = False # On consomme le dash
             self.game.sfx['dash'].play()
             self.game.invincibility_time = max(self.game.invincibility_time, self.dash_duration) # Immunité pendant la durée du dash
             
             # Burst unique d'étincelles au début
-            if self.is_pressed == 'down':
-                # Dash vers le bas
-                self.dash_dir = 'down'
-                spark_angle = -math.pi / 2 # Tirer vers le HAUT
-                angle_width = 1.5
-                offset_y = -10
-                offset_x = 0
-            elif self.is_pressed == 'up':
-                # Dash vers le haut
-                self.dash_dir = 'up'
-                spark_angle = math.pi / 2 # Tirer vers le BAS
-                angle_width = 1.5
-                offset_y = 10
-                offset_x = 0
-            else:
-                # Dash horizontal
-                self.dash_dir = None
-                direction = -1 if self.flip else 1
-                spark_angle = math.pi if direction > 0 else 0
-                angle_width = 1.5
-                offset_y = random.randint(-2, 2)
-                offset_x = -5 if direction > 0 else 5
-
+            # Direction par défaut si aucun axe n'est pressé : le regard du joueur
+            dash_axis = list(self.input_axis)
+            if dash_axis == [0, 0]:
+                dash_axis = [-1 if self.flip else 1, 0]
+            
+            # Normalisation du vecteur pour les diagonales
+            mag = math.sqrt(dash_axis[0]**2 + dash_axis[1]**2)
+            self.dash_dir = [dash_axis[0]/mag, dash_axis[1]/mag]
+            
+            # Calcul des étincelles (opposé à la direction du dash)
+            spark_angle = math.atan2(self.dash_dir[1], self.dash_dir[0]) + math.pi
+            angle_width = 1.0
+            offset_x = -5 if self.dash_dir[0] > 0 else 5
+            offset_y = -5 if self.dash_dir[1] > 0 else 5
+            
             for i in range(15):
                 angle = spark_angle + (random.random() - 0.5) * angle_width
                 spawn_pos = list(self.rect().center)
-                spawn_pos[0] += offset_x
-                spawn_pos[1] += offset_y
                 self.game.sparks.append(Spark(spawn_pos, angle, 2 + random.random() * 1.5))
 
-            if self.flip:
-                self.dashing = -self.dash_duration
-            else:
-                self.dashing = self.dash_duration
+            self.dashing = self.dash_duration
     def request_jump(self):
         # Si on ne peut pas sauter immédiatement (car en l'air), on active le buffer.
         # 12 frames = 0.2s. C'est la fenêtre pendant laquelle le jeu se souviendra de l'appui.
