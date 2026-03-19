@@ -3,6 +3,10 @@ import struct
 import threading
 import time
 
+from game import DEBUG
+
+BANDWIDTH = {False: 4096, True: 1024**2}
+
 class ClientNetwork:
     def __init__(self, server_ip="127.0.0.1", server_port=5005):
         self.server = (server_ip, server_port)
@@ -35,7 +39,7 @@ class ClientNetwork:
 
                 while time.time() - start_time < 2:  # attente max 2 secondes
                     try:
-                        data, _ = self.sock.recvfrom(1024*1024)
+                        data, _ = self.sock.recvfrom(BANDWIDTH[DEBUG])
                         if len(data) == 8:
                             self.id, self.map_change_id = struct.unpack("II", data[0:8])
                             print(f"Connected with ID {self.id}")
@@ -56,7 +60,7 @@ class ClientNetwork:
     def listen(self):
         while self.running:
             try:
-                data, _ = self.sock.recvfrom(1024*1024)
+                data, _ = self.sock.recvfrom(BANDWIDTH[DEBUG])
                 if not data:
                     continue
 

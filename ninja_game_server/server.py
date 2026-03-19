@@ -7,6 +7,9 @@ import os #pour listdir les level les faire looper entre eux
 from TilemapServer import TilemapServer
 from enemy_manager import Blob, EnemyManager
 
+DEBUG = True
+BANDWIDTH = {False: 1024, True: 1024**2}
+
 # Message types:
 #  10 : Connexion
 #   1 : Déconnexion
@@ -122,7 +125,7 @@ class GameServer:
         try:
             while True:
                 try:
-                    data, addr = self.sock.recvfrom(1024*1024)
+                    data, addr = self.sock.recvfrom(BANDWIDTH[DEBUG])
                     self.handle_message(data, addr)
                 except ConnectionResetError:
                     # Ignore les erreurs quand un client quitte brutalement
