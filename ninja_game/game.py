@@ -286,12 +286,11 @@ class Game:
 
             # --- PLAYER RENDER ---
             if not self.dead:
-                show_p=True
+                white_flash = False
                 if self.invincible_frame_time > 0:
                     if (pygame.time.get_ticks() // 100) % 2 == 0:
-                        show_p = False
-                if show_p:
-                    self.player.render(self.display, offset=render_scroll)
+                        white_flash = True
+                self.player.render(self.display, offset=render_scroll, white=white_flash)
 
             # [[x, y], direction, timer]
             #for projectile in self.projectiles.copy():

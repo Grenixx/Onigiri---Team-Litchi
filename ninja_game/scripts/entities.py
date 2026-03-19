@@ -96,10 +96,15 @@ class PhysicsEntity:
 
         self.image = current_img
 
-    def render(self, surf, offset=(0, 0)):
+    def render(self, surf, offset=(0, 0), white=False):
         render_pos = (self.pos[0] - offset[0] + self.anim_offset[0],
                      self.pos[1] - offset[1] + self.anim_offset[1])
-        surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False), render_pos)
+        img = pygame.transform.flip(self.animation.img(), self.flip, False)
+        if white:
+            white_img = pygame.mask.from_surface(img).to_surface(setcolor=(255, 255, 255, 255), unsetcolor=(0, 0, 0, 0))
+            surf.blit(white_img, render_pos)
+        else:
+            surf.blit(img, render_pos)
 
         if getattr(self.game, 'debug', False):
             mask = self.animation.get_pygame_mask(self.flip)
@@ -247,11 +252,10 @@ class Player(PhysicsEntity):
 
 
     
-    def render(self, surf, offset=(0, 0)):
-        if abs(self.dashing) <= self.dash_duration - self.dash_invisible_duration:
-            super().render(surf, offset=offset)
-            # Puis on dessine l'arme par-dessus pour qu'elle soit devant
-            self.weapon.weapon_equiped.render(surf, offset)
+    def render(self, surf, offset=(0, 0), white=False):
+        super().render(surf, offset=offset, white=white)
+        # Puis on dessine l'arme par-dessus pour qu'elle soit devant
+        self.weapon.weapon_equiped.render(surf, offset)
             
     def jump(self):
         if self.wall_slide:
