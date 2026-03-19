@@ -446,14 +446,27 @@ class ClientEnemyManager:
             if collide_arme:
                   if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
+                    
+                    # --- NOUVEAUX EFFETS DE COMBAT DYNAMIQUE ---
+                    self.game.freeze_time = 0.06 # Très légère pause pour le feeling
+                    self.game.screenshake = max(8, self.game.screenshake)
+                    
+                    # POGO (Rebond sur les ennemis comme Hollow Knight)
+                    if current_weapon.attack_direction == 'down' and player.air_time > 0:
+                        player.velocity[1] = -230
+                        player.air_time = 0.08
+                        player.can_dash = True # Recharger le dash sur pogo (Celeste feel)
+                        player.dashing = 0 # Le pogo l'emporte sur le dash (Important !)
+
+                    # RECUL (Recoil horizontal)
+                    elif current_weapon.attack_direction in ['front', 'left', 'right']:
+                        recoil_dir = 1 if player.flip else -1
+                        player.velocity[0] = recoil_dir * 180
+
                     for i in range(30):
                         angle = random.random() * math.pi * 2
                         self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
                     
-                    #pas encore coder mais dcp quand il a plus de pv et que le client le sais deja go le supprimer intantanement et bien sur aussi envoyer 
-                    #une requete coter serv au cas ou et puis ces deja code faut juste fare gafffe a pas ccrash si la valeur est deja retirer coter serv
-                    
-                    #to_remove.append(eid)
                     if not (eid in self.game.net.damaging_eid):
                         to_damage.append(eid)
                 

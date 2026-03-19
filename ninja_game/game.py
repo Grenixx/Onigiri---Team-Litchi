@@ -159,6 +159,7 @@ class Game:
         self.font = pygame.font.SysFont("consolas", 16)
         self.debug = False
         self.player.weapon.weapon_equiped.toggle_debug()
+        self.freeze_time = 0
 
     def loadcontrols(self):
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
@@ -226,30 +227,36 @@ class Game:
         #self.sfx['ambience'].play(-1)
         
         while True:
-            dt = self.clock.tick(self.max_fps) / 1000  # dt en secondes
+            # Calcul du dt réel en secondes
+            real_dt = self.clock.tick(self.max_fps) / 1000
+            
+            # Gestion du Freeze-frame (Impact feel local)
+            if self.freeze_time > 0:
+                self.freeze_time -= real_dt
+                dt = 0 # Le temps s'arrête pour le joueur local et les ennemis
+            else:
+                dt = real_dt
             
             if self.invincibility_time > 0:
                 self.invincibility_time -= dt
 
-            # --- Check Server Level Change ---
             if self.net.map_change_id is not None:
                 new_map_id = self.net.map_change_id
                 self.net.map_change_id = None
                 self.level = new_map_id
                 self.load_level(self.level)
             
-            # --- RENDU ET AUTRES MISES À JOUR ---
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  #/5 # smooth cam
 
-            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - 32 - self.scroll[1]) #/5 # smooth cam
+            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2  - self.scroll[1]) #/5 # smooth cam
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
             self.remote_players = self.net.remote_players
 
             self.display.fill((0, 0, 0, 0))
             self.display_2.fill((0, 0, 0))
-            # --- BACKGROUND ---
+            
             shader_surface = self.shader_bg.render(camera=(render_scroll[0] * 0.2, render_scroll[1] * -0.2))
             self.display_2.blit(shader_surface, (0, 0))
             self.clouds.render(self.display_2, offset=render_scroll)
@@ -317,7 +324,8 @@ class Game:
             #                self.particles.append(Particle(self, 'particle', self.player.rect().center, velocity=[math.cos(angle + math.pi) * speed * 0.5, math.sin(angle + math.pi) * speed * 0.5], frame=random.randint(0, 7)))
                         
             # --- REMOTE PLAYERS ---
-            self.remote_players_renderer.render(self.display, offset=render_scroll, dt=dt)
+            # On utilise real_dt pour les autres joueurs pour éviter qu'ils se figent quand l'un de nous tape
+            self.remote_players_renderer.render(self.display, offset=render_scroll, dt=real_dt)
 
             self.display_2.blit(self.display, (0, 0))
 
