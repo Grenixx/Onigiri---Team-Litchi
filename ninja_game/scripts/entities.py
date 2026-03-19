@@ -39,6 +39,9 @@ class PhysicsEntity:
     def update(self, tilemap, movement=(0, 0), dt=0):
         self.collisions = {'up': False, 'down': False, 'right': False, 'left': False}
         
+        # On applique la gravité avant le calcul du mouvement pour une détection de collision plus stable
+        self.velocity[1] = min(self.max_fall_speed, self.velocity[1] + self.gravity * dt)
+        
         horizontal_speed = movement[0] * self.run_speed
         
         frame_movement = (
@@ -58,6 +61,10 @@ class PhysicsEntity:
                     self.collisions['left'] = True
                 self.pos[0] = entity_rect.x
         
+        # Reset de la vélocité horizontale si on tape un mur
+        if self.collisions['right'] or self.collisions['left']:
+            self.velocity[0] = 0
+
         self.pos[1] += frame_movement[1] 
         entity_rect = self.rect()
         for rect in tilemap.physics_rects_around(self.pos):
@@ -70,8 +77,9 @@ class PhysicsEntity:
                     self.collisions['up'] = True
                 self.pos[1] = entity_rect.y
 
+        if self.collisions['down'] or self.collisions['up']:
+            self.velocity[1] = 0
         
-                
         if movement[0] > 0:
             self.flip = False
         if movement[0] < 0:
@@ -79,15 +87,7 @@ class PhysicsEntity:
             
         self.last_movement = movement
         
-        #self.velocity[1] = min(5, self.velocity[1] + 0.1)
-        self.velocity[1] = min(self.max_fall_speed, self.velocity[1] + self.gravity * dt)
-
-        if self.collisions['down'] or self.collisions['up']:
-            self.velocity[1] = 0
-            
         self.animation.update(dt)
-        #self.pos[0] = round(self.pos[0])
-        #self.pos[1] = round(self.pos[1])
 
         current_img = self.animation.img()
 
@@ -145,47 +145,80 @@ class Player(PhysicsEntity):
 
 
     def update(self, tilemap, movement=(0, 0), dt=0):
-        # On ignore le mouvement normal si on est en train de dasher
-        # pour éviter d'additionner run_speed (120) + dash_speed (330)
-        actual_movement = (0, 0) if self.dashing != 0 else movement
-        
+        # Mise à jour des timers de cooldown/buffer
+        self.dash_cooldown_timer = max(0, self.dash_cooldown_timer - dt)
+        self.jump_buffer_timer = max(0, self.jump_buffer_timer - dt)
+        self.weapon.weapon_equiped.update(dt)
+
+        # Calcul de la vélocité du dash AVANT l'update physique pour éviter la latence d'une frame
         was_dashing = self.dashing != 0
+        if self.dashing > 0:
+            self.dashing = max(0, self.dashing - dt)
+        if self.dashing < 0:
+            self.dashing = min(0, self.dashing + dt)
+            
+        if self.dashing != 0:
+            dash_progress = abs(self.dashing) / self.dash_duration
+            if self.dash_dir == 'down':
+                self.velocity[1] = self.dash_speed
+                self.velocity[0] = 0
+            elif self.dash_dir == 'up':
+                self.velocity[1] = -self.dash_speed
+                self.velocity[0] = 0
+            else:
+                self.velocity[0] = self.dash_speed if self.dashing > 0 else -self.dash_speed
+            
+            # Décélération à la fin du dash
+            if dash_progress < 0.2:
+                if self.dash_dir == 'down' or self.dash_dir == 'up':
+                    self.velocity[1] *= dash_progress * 5
+                else:
+                    self.velocity[0] *= dash_progress * 5
+        
+        # Transition fin de dash (Momentum kill)
+        if was_dashing and self.dashing == 0:
+            if self.dash_dir == 'down' or self.dash_dir == 'up':
+                self.velocity[1] = 0
+            else:
+                self.velocity[0] *= 0.2 
+            self.dash_dir = None
+            self.dash_cooldown_timer = self.dash_cooldown
+
+        # Gestion du wall slide speed AVANT l'update pour qu'il soit effectif tout de suite
+        if self.wall_slide:
+            self.velocity[1] = min(self.velocity[1], self.wall_slide_speed)
+
+        # On ignore le mouvement normal si on est en train de dasher
+        actual_movement = (0, 0) if self.dashing != 0 else movement
         super().update(tilemap, movement=actual_movement, dt=dt) 
 
+        # Maintenant que PhysicsEntity a mis à jour les collisions, on traite le reste
         if self.collisions['down']:
             self.air_time = 0
+            self.jumps = True
+            if self.jump_buffer_timer > 0:
+                self.jump()
         else:
-            self.air_time += dt  # dt est en secondes
-
-        self.dash_cooldown_timer = max(0, self.dash_cooldown_timer - dt)
-        self.weapon.weapon_equiped.update(dt)
-        self.jump_buffer_timer = max(0, self.jump_buffer_timer - dt)
+            self.air_time += dt 
 
         if self.air_time > 4 :
             if not self.game.dead:
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60
         
-        if self.wall_slide:
-            self.air_time = 0.08
-        if self.collisions['down'] :
-            self.air_time = 0
-            # On redonne 2 sauts au joueur quand il touche le sol.
-            self.jumps = True
-            # --- JUMP BUFFER CHECK ---
-            # Si le buffer de saut est actif au moment où on atterrit, on saute.
-            if self.jump_buffer_timer > 0:
-                self.jump()
-             
-        self.wall_slide = False
-        if (self.collisions['right'] or self.collisions['left']) and self.air_time > 0 and not self.collisions['down']:
-            self.wall_slide = True
-            self.velocity[1] = min(self.velocity[1], self.wall_slide_speed)
-            if self.collisions['right']:
-                self.flip = False
-            else:
-                self.flip = True
-            self.set_action('wall_slide')
+        if self.collisions['right'] or self.collisions['left']:
+             if self.air_time > 0 and not self.collisions['down']:
+                self.wall_slide = True
+                self.air_time = 0.08
+                if self.collisions['right']:
+                    self.flip = False
+                else:
+                    self.flip = True
+                self.set_action('wall_slide')
+             else:
+                self.wall_slide = False
+        else:
+            self.wall_slide = False
         
         if not self.wall_slide and not self.action.startswith('attack'):
             if self.air_time > 0.1:
@@ -197,46 +230,8 @@ class Player(PhysicsEntity):
 
         if self.action.startswith('attack') and self.animation.done:
             self.set_action('idle')
-        
-        if self.dashing > 0:
-            self.dashing = max(0, self.dashing - dt)
-        if self.dashing < 0:
-            self.dashing = min(0, self.dashing + dt)
             
-        if self.dashing != 0:
-            dash_progress = abs(self.dashing) / self.dash_duration
-            
-            # Vitesse du dash
-            if self.dash_dir == 'down':
-                self.velocity[1] = self.dash_speed
-                self.velocity[0] = 0
-            elif self.dash_dir == 'up':
-                self.velocity[1] = -self.dash_speed
-                self.velocity[0] = 0
-            else:
-                self.velocity[0] = self.dash_speed if self.dashing > 0 else -self.dash_speed
-            
-            # Fin du dash : On décélère
-            if dash_progress < 0.2:
-                if self.dash_dir == 'down':
-                    self.velocity[1] *= dash_progress * 5
-                elif self.dash_dir == 'up':
-                    self.velocity[1] *= dash_progress * 5
-                else:
-                    self.velocity[0] *= dash_progress * 5
-        
-        # TRANSITION FIN DE DASH (Momentum kill)
-        if was_dashing and self.dashing == 0:
-            if self.dash_dir == 'down':
-                self.velocity[1] = 0
-            elif self.dash_dir == 'up':
-                self.velocity[1] = 0
-            else:
-                self.velocity[0] *= 0.2 # On casse l'inertie violemment
-            self.dash_dir = None
-            self.dash_cooldown_timer = self.dash_cooldown
-                
-                # Résistance de l'air (décélération horizontale)
+        # Résistance de l'air (décélération horizontale pour l'inertie)
         if self.velocity[0] > 0:
             self.velocity[0] = max(self.velocity[0] - self.air_resistance * dt, 0)
         elif self.velocity[0] < 0:

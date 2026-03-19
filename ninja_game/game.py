@@ -238,19 +238,7 @@ class Game:
                 self.level = new_map_id
                 self.load_level(self.level)
             
-            # --- PLAYER UPDATE A ÉTÉ DEPLACÉ PLUS BAS POUR LA CONSOLIDATION DES INPUTS ---
-
-            action_mapping = {
-                "idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4,
-                # Ajout des actions d'attaque
-                "attack_front": 5,
-                "attack_up": 6,
-                "attack_down": 7,
-            }
-
-            action_id = action_mapping[self.player.action]
-            flip_byte = 1 if self.player.flip else 0
-            self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, self.player.velocity[0], self.player.velocity[1])
+            # --- RENDU ET AUTRES MISES À JOUR ---
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  #/5 # smooth cam
 
@@ -500,7 +488,20 @@ class Game:
 
             # --- PLAYER UPDATE (Après consolidation) ---
             if not self.dead:
-                self.player.update(self.tilemap, (final_move_right - final_move_left, 0), dt=dt)
+                move_dir = (final_move_right - final_move_left)
+                self.player.update(self.tilemap, (move_dir, 0), dt=dt)
+
+                # --- SEND STATE TO SERVER ---
+                action_mapping = {
+                    "idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4,
+                    "attack_front": 5, "attack_up": 6, "attack_down": 7,
+                }
+                action_id = action_mapping.get(self.player.action, 0)
+                flip_byte = 1 if self.player.flip else 0
+                
+                # On envoie la vélocité TOTALE (course + inertie) pour que les autres joueurs extrapolent bien le mouvement
+                applied_vx = move_dir * self.player.run_speed + self.player.velocity[0]
+                self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, applied_vx, self.player.velocity[1])
 
             # --- ACTIONS MANETTE (Actions uniques / Latch) ---
             if self.controller.joystick:
