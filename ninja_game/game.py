@@ -212,10 +212,10 @@ class Game:
         self.scroll = [0, 0]
         self.dead = 0
         self.hp=100
-        self.invincible_frame_time = 0
+        self.invincibility_time = 0
         self.transition = -30
 
-        self.invincible_frame_time = 200
+        self.invincibility_time = 3.0 # ~200 frames at 60fps
 
         
     def run(self):
@@ -228,8 +228,8 @@ class Game:
         while True:
             dt = self.clock.tick(self.max_fps) / 1000  # dt en secondes
             
-            if self.invincible_frame_time > 0:
-                self.invincible_frame_time -= dt * 60
+            if self.invincibility_time > 0:
+                self.invincibility_time -= dt
 
             # --- Check Server Level Change ---
             if self.net.map_change_id is not None:
@@ -287,7 +287,7 @@ class Game:
             # --- PLAYER RENDER ---
             if not self.dead:
                 white_flash = False
-                if self.invincible_frame_time > 0:
+                if self.invincibility_time > 0:
                     if (pygame.time.get_ticks() // 100) % 2 == 0:
                         white_flash = True
                 self.player.render(self.display, offset=render_scroll, white=white_flash)
