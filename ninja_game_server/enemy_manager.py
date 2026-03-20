@@ -533,6 +533,37 @@ class Dromp(Enemy):
 def middle_pos_player(player):
     return add_vecs(player, mult_vec(PLAYER_SIZE, 0.5))
 
+
+class Boss(Enemy):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
+        self.properties['type'] = "Boss"
+        print(f"Boss created at {pos} with eid : {eid} !")
+    
+    def physics_process(self, delta: float) -> None:
+        """The physics engine of the enemy called every tick by EnemyManager.update()"""
+        pos = [self.properties['x'], self.properties['y']]
+        players = self.enemy_manager.players
+        
+        # --- Trouver la cible la plus proche ---
+        closest_dist = None
+        closest_pid = None
+        for pid in players.keys():
+            dist = distance_squared_to(pos, players)
+            if closest_dist == None or closest_dist > dist:
+                closest_dist,closest_pid = dist,pid
+        
+        velocity = [0,0]
+        if closest_pid: # if has target
+            dist = sqrt(closest_dist)
+            #self.properties['state'] = 'rage'
+            self.properties['target_player'] = closest_pid
+            velocity = normalized(vector_to(pos, self.players[closest_pid]))
+            velocity = [i * self.speed for i in velocity]
+
+        self.move_and_slide(velocity, delta)
+
+
 def sign(x: float | int) -> int:
     return round(x / abs(x))
 
