@@ -26,20 +26,12 @@ except ImportError as e:
     print("Erreur import LobbyManager:", e)
     LobbyManager = None
 
-# ==============================
-# --- Player Manager ---
-# ==============================
-
-# ==============================
-# --- Player Manager ---
-# ==============================
 class PlayerManager:
     def __init__(self):
         self.clients = {}   # addr -> id
         self.players = {}   # id -> (x, y, action:str, flip:bool)
         self.next_id = 1
         
-
     def add_player(self, addr):
         pid = self.next_id
         self.next_id += 1
