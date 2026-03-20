@@ -42,10 +42,7 @@ class Editor:
         self.tilemap = Tilemap(self, tile_size=16)
         
         self.level = 0
-        try:
-            self.tilemap.load(f'data/maps/{self.level}.json')
-        except FileNotFoundError:
-            pass
+        self.load_level(self.level)
         
         self.scroll = [0, 0]
         
@@ -57,6 +54,22 @@ class Editor:
         self.right_clicking = False
         self.shift = False
         self.ongrid = True
+        
+        # UI
+        self.font = pygame.font.SysFont('Arial', 16)
+        self.text_input_active = False
+        self.level_input = ""
+        
+    def load_level(self, level_id):
+        self.level = level_id
+        self.tilemap.tilemap = {}
+        self.tilemap.offgrid_tiles = []
+        self.scroll = [0, 0]
+        try:
+            self.tilemap.load(f'data/maps/{self.level}.json')
+            print(f"Loaded level {self.level}")
+        except FileNotFoundError:
+            print(f"New level {self.level} created (empty)")
         
     def run(self):
         while True:
@@ -100,6 +113,22 @@ class Editor:
             
             self.display.blit(current_tile_img, (5, 5))
             
+            # HUD
+            level_text = self.font.render(f"Level: {self.level}", False, (255, 255, 255))
+            self.display.blit(level_text, (5, 160))
+            
+            tile_text = self.font.render(f"Tile: {self.tile_list[self.tile_group]} #{self.tile_variant}", False, (255, 255, 255))
+            self.display.blit(tile_text, (5, 145))
+            
+            if self.text_input_active:
+                pygame.draw.rect(self.display, (0, 0, 0), (95, 160, 40, 20))
+                pygame.draw.rect(self.display, (255, 255, 255), (95, 160, 40, 20), 1)
+                input_text = self.font.render(self.level_input + "_", False, (255, 255, 255))
+                self.display.blit(input_text, (100, 160))
+            else:
+                help_text = self.font.render("[UP/DOWN] Level [L] Jump [O] Save", False, (150, 150, 150))
+                self.display.blit(help_text, (5, 175))
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -131,6 +160,20 @@ class Editor:
                         self.right_clicking = False
                         
                 if event.type == pygame.KEYDOWN:
+                    if self.text_input_active:
+                        if event.key == pygame.K_RETURN:
+                            if self.level_input:
+                                self.load_level(int(self.level_input))
+                            self.text_input_active = False
+                            self.level_input = ""
+                        elif event.key == pygame.K_BACKSPACE:
+                            self.level_input = self.level_input[:-1]
+                        elif event.unicode.isdigit():
+                            self.level_input += event.unicode
+                        elif event.key == pygame.K_ESCAPE:
+                            self.text_input_active = False
+                        continue # Skip other key inputs when typing
+
                     if event.key == pygame.K_q:
                         self.movement[0] = True
                     if event.key == pygame.K_d:
@@ -141,30 +184,19 @@ class Editor:
                         self.movement[3] = True
                     if event.key == pygame.K_g:
                         self.ongrid = not self.ongrid
+                    if event.key == pygame.K_l:
+                        self.text_input_active = True
+                        self.level_input = ""
                     if event.key == pygame.K_t:
                         self.tilemap.autotile()
                     if event.key == pygame.K_o:
                         self.tilemap.save(f'data/maps/{self.level}.json')
                         print(f'Map saved to data/maps/{self.level}.json')
                     if event.key == pygame.K_UP:
-                        self.level += 1
-                        self.tilemap.tilemap = {}
-                        self.tilemap.offgrid_tiles = []
-                        try:
-                            self.tilemap.load(f'data/maps/{self.level}.json')
-                            print(f"Loaded level {self.level}")
-                        except FileNotFoundError:
-                            print(f"New level {self.level} created (empty)")
+                        self.load_level(self.level + 1)
                     if event.key == pygame.K_DOWN:
                         if self.level > 0:
-                            self.level -= 1
-                            self.tilemap.tilemap = {}
-                            self.tilemap.offgrid_tiles = []
-                            try:
-                                self.tilemap.load(f'data/maps/{self.level}.json')
-                                print(f"Loaded level {self.level}")
-                            except FileNotFoundError:
-                                print(f"New level {self.level} created (empty)")
+                            self.load_level(self.level - 1)
 
                     if event.key == pygame.K_LSHIFT:
                         self.shift = True
