@@ -387,11 +387,11 @@ class Player(PhysicsEntity):
 
 
 class ClientEnemyManager:
-    """Classe gérant les ennemis ronds violets + collisions avec le joueur."""
+    """Classe gérant les ennemis client"""
     def __init__(self, game):
         self.game = game
         self.size = (18, 25) # (Largeur, Hauteur)
-        self.collision_offset = (5, 0) # (X, Y)
+        self.collision_offset = (5, 0) 
 
         base_anim = self.game.assets.get(f'patrol/idle', self.game.assets['patrol/idle'])
         self.animation = base_anim.copy()
@@ -483,16 +483,16 @@ class ClientEnemyManager:
                   if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
                     
-                    # --- NOUVEAUX EFFETS DE COMBAT DYNAMIQUE ---
+                
                     self.game.freeze_time = 0.06 # Très légère pause pour le feeling
                     self.game.screenshake = max(8, self.game.screenshake)
                     
-                    # POGO (Rebond sur les ennemis comme Hollow Knight)
+                    # POGO 
                     if current_weapon.attack_direction == 'down' and player.air_time > 0:
                         player.velocity[1] = -230
                         player.air_time = 0.08
-                        player.can_dash = True # Recharger le dash sur pogo (Celeste feel)
-                        player.dashing = 0 # Le pogo l'emporte sur le dash (Important !)
+                        player.can_dash = True 
+                        player.dashing = 0 
 
                     # RECUL (Recoil horizontal)
                     elif current_weapon.attack_direction in ['front', 'left', 'right']:
