@@ -110,7 +110,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         print(f"Landmark deleted with eid : {self.eid} !")
 
 class Enemy:
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple = (16, 23), knockback_type: str = "any", knockback_strength: float | int = 8):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple, knockback_type: str = "any", knockback_strength: float | int = 8, hitbox_offset = (0,0)):
         self.eid = eid
         self.properties = {
             'x': pos[0],
@@ -133,16 +133,12 @@ class Enemy:
         self.last_pos = pos
         self.last_velocity = [0,0]
         self.last_collisions = [False, False]
+        self.hitbox_offset = hitbox_offset
 
     def can_see_player(self, player: list, max_dist : float = None) -> None:
         """Returns a boolean indicating whether the enemy can see the player"""
-        pos = [self.properties['x'], self.properties['y']]
-        player_pos = list_copy(player)
-
-        pos[0] += self.size[0] / 2
-        pos[1] += self.size[1] / 2
-        player_pos[0] += PLAYER_SIZE[0] / 2
-        player_pos[1] += PLAYER_SIZE[1] / 2
+        pos = self.middle_pos()
+        player_pos = middle_pos_player(player)
 
         if max_dist != None and distance_to(pos, player_pos) > max_dist:
             return False
@@ -163,8 +159,8 @@ class Enemy:
 
     def unstuck(self): 
 
-        """deplace patrol si spawn dans mur"""
-        if not self.check_collision((self.properties['x'], self.properties['y'])):
+        """Moves the enemy if it spawns inside a wall"""
+        if not self.check_collision(self.pos()):
             return
 
         for r in range(2, 64, 4):
@@ -228,12 +224,13 @@ class Enemy:
         """
         self.properties['vx'] = velocity[0]
         self.properties['vy'] = velocity[1]
+        pos = self.pos()
         new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
-        pos_shift = sub_vecs([self.properties['x'], self.properties['y']], self.last_pos)
+        pos_shift = sub_vecs(pos, self.last_pos)
         collision = self.does_collide(new_pos)
         if (pos_shift[0] != 0 and collision[0] == True) or (pos_shift[1] != 0 and collision[1] == True):
-            self.properties['x'], self.properties['y'] = self.adjust_position([self.properties['x'], self.properties['y']], new_pos, 10)
-        self.last_pos = [self.properties['x'], self.properties['y']]
+            self.properties['x'], self.properties['y'] = self.adjust_position(pos, new_pos, 10)
+        self.last_pos = pos
         self.last_collisions = collision
         self.last_velocity = velocity
         if collision[0]:
@@ -253,7 +250,7 @@ class Enemy:
         self.hp -= damage_amount
         if self.hp <= 0:
             self.kill()
-        knockback_velocity = sub_vecs([self.properties['x'], self.properties['y']], self.enemy_manager.players[pid])
+        knockback_velocity = sub_vecs(self.pos(), self.enemy_manager.players[pid])
         if self.knockback_type == "any":
             knockback_velocity = mult_vec(normalized(knockback_velocity), self.knockback_strength)
             self.knockback_velocity = knockback_velocity
@@ -264,6 +261,19 @@ class Enemy:
     
     def kill(self):
         self.enemy_manager.enemies.pop(self.eid)
+    
+    def pos(self):
+        return [self.properties['x'], self.properties['y']]
+
+    def velo(self):
+        return [self.properties['vx'], self.properties['vy']]
+
+    def middle_pos(self):
+        if self.properties['type'] == "patrol":
+            return add_vecs(self.pos(), [15,15])
+        if self.properties['type'] == "Dromp":
+            return add_vecs(self.pos(), [32,40])
+        return add_vecs(self.pos(), mult_vec(self.size, 0.5))
 
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -273,8 +283,8 @@ class Blob(Enemy):
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        pos = [self.properties['x'], self.properties['y']]
-        velocity = [self.properties['vx'], self.properties['vy']]
+        pos = self.pos()
+        velocity = self.velo()
         players = self.enemy_manager.players
         tilemap = self.enemy_manager.tilemap
 
@@ -357,9 +367,9 @@ class Patrol(Enemy):
     
     def create_wander_pos(self, hit_result: list = [False, False]) -> None:
         """Creates a wandering position when the patrol doesn't see the player"""
-        pos = [self.properties['x'], self.properties['y']]
+        pos = self.pos()
         if self.wander_angle == None:
-            self.wander_angle = angle([self.properties['vx'], self.properties['vy']])
+            self.wander_angle = angle(self.velo())
             #print("first", self.wander_angle)
         else:
             self.wander_angle += random.uniform(-pi/6, pi/6)
@@ -393,7 +403,7 @@ class Patrol(Enemy):
         #print(f"angle : {self.wander_angle}")
 
     def wander(self) -> list:
-        pos = [self.properties['x'], self.properties['y']]
+        pos = self.pos()
         self.properties['state'] = 'idle'
         if not self.wander_pos:
             self.create_wander_pos()
@@ -417,7 +427,7 @@ class Patrol(Enemy):
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        pos = [self.properties['x'], self.properties['y']]
+        pos = self.pos()
         players = self.enemy_manager.players
         
         # --- Trouver la cible la plus proche ---
@@ -477,11 +487,11 @@ DROMP_VISION_DISTANCE = 16*8
 DROMP_VISION_FOV = pi/3
 DROMP_SPEED_MODIFIER_RAGE = 2
 DROMP_GRAVITY = 5
-DROMP_RAGE_COOLDOWN = 1 * 20 # seconds * ticks
+DROMP_RAGE_COOLDOWN = 5 * 20 # seconds * ticks
 
 class Dromp(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, SPEED_WALKING_ENEMY, 100, (64,59.5), "any")
+        super().__init__(eid, pos, enemy_manager, 1.5, 100, (64,59.5), "any")
         self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == 1
@@ -491,7 +501,7 @@ class Dromp(Enemy):
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        pos = [self.properties['x'], self.properties['y']]
+        pos = self.pos()
         players = self.enemy_manager.players
         
         rage = False
@@ -516,15 +526,13 @@ class Dromp(Enemy):
                 self.rage_cooldown_timer = -1
 
         if self.does_collide(add_vecs(pos, [0, DROMP_GRAVITY]))[1]:
-            velocity = [self.orientation * self.speed, DROMP_GRAVITY]
-            collide = self.does_collide(add_vecs(add_vecs(velocity, pos), self.knockback_velocity))
             pos_check = add_vecs([self.orientation * self.speed, 0], pos)
             if self.orientation == 1:
                 add = self.size[0] * self.orientation
             else:
                 add = 0
             pos_check = add_vecs(pos_check, [add, self.size[1] + 10])
-            if collide[0] or not self.enemy_manager.tilemap.solid_check(pos_check):
+            if self.last_collisions[0] or not self.enemy_manager.tilemap.solid_check(pos_check):
                 self.orientation *= -1
                 self.properties['flip'] = not self.properties['flip']
             velocity = [self.orientation * self.speed, DROMP_GRAVITY]
@@ -539,6 +547,8 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
+def middle_pos_player(player):
+    return add_vecs(player, mult_vec(PLAYER_SIZE, 0.5))
 
 
 class Boss(Enemy):
