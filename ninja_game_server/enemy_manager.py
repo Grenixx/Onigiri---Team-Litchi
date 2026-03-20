@@ -26,14 +26,14 @@ class EnemyManager:
                 self.create_enemy(spawner['pos'], "patrol")
 
             if spawner['variant'] == 2: # Boss spawner
-                self.create_enemy(spawner['pos'], "patrol") # will be changed to spawn the boss
+                self.create_enemy(spawner['pos'], "Boss") # will be changed to spawn the boss
             
             if spawner['variant'] == 3:
                 self.create_enemy(spawner['pos'], "Dromp")
 
     def create_enemy(self, pos: list, enemy_type: str) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
-        enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp}
+        enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp, "Boss": Boss, "Projectile": Projectile}
         if enemy_type == "Landmark":
             self.enemies[self.next_enemy_id] = Landmark(self.next_enemy_id, pos, self, 1, 'eid', self.landmark_variable)
         else:
@@ -538,11 +538,15 @@ class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
         self.properties['type'] = "Boss"
+        self.create_enemy(self.pos(), "Projectile")
         print(f"Boss created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        pos = self.pos()
+        
+
+
+        """pos = self.pos()
         players = self.enemy_manager.players
         
         # --- Trouver la cible la plus proche ---
@@ -552,7 +556,7 @@ class Boss(Enemy):
             dist = distance_squared_to(pos, players)
             if closest_dist == None or closest_dist > dist:
                 closest_dist,closest_pid = dist,pid
-        """
+        
         velocity = [0,0]
         if closest_pid: # if has target
             dist = sqrt(closest_dist)
@@ -599,6 +603,8 @@ class Projectile(Enemy):
                         self.properties['target_player'] = closest_pid
                         self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
                         self.velocity = [i * self.speed for i in self.velocity]
+        else:
+            self.is_target_pos_aquire -=1
             
 
         self.move_and_slide(self.velocity, delta)
