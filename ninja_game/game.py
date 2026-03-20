@@ -41,6 +41,13 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+def execute_attack(self):
+    direction = None
+    if self.player.input_axis[1] < 0: direction = 'up'
+    elif self.player.input_axis[1] > 0: direction = 'down'
+    elif self.player.input_axis[0] < 0: direction = 'left'
+    elif self.player.input_axis[0] > 0: direction = 'right'
+    self.player.attack(direction)
 
 class Game:
     def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1"):
@@ -431,13 +438,6 @@ class Game:
                     if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
                         pass 
                 
-                def execute_attack(self):
-                    direction = None
-                    if self.player.input_axis[1] < 0: direction = 'up'
-                    elif self.player.input_axis[1] > 0: direction = 'down'
-                    elif self.player.input_axis[0] < 0: direction = 'left'
-                    elif self.player.input_axis[0] > 0: direction = 'right'
-                    self.player.attack(direction)
                 # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Clic gauche
@@ -534,7 +534,8 @@ class Game:
                 # Attaque
                 if self.controller.button_x and not getattr(self, '_ctrl_attack_pressed', False):
                     self._ctrl_attack_pressed = True
-                    self.player.attack(direction) # Utilise la direction fusionnée
+                    
+                    execute_attack(self) # Utilise la direction fusionnée
                 elif not self.controller.button_x:
                     self._ctrl_attack_pressed = False
 
