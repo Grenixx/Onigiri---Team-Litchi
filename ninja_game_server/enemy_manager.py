@@ -364,7 +364,7 @@ class Patrol(Enemy):
         if self.wander_dist == None:
             self.wander_dist = random.uniform(DIST_WANDER_PATROL//2, DIST_WANDER_PATROL)
         else:
-            self.wander_dist = max(self.wander_dist + random.uniform(-DIST_WANDER_PATROL//4, DIST_WANDER_PATROL//4), MIN_WANDER_DIST_PATROL_PATROL)
+            self.wander_dist = max(self.wander_dist + random.uniform(-DIST_WANDER_PATROL//4, DIST_WANDER_PATROL//4), MIN_WANDER_DIST_PATROL)
         
         #self.wander_pos = [self.properties['x'] + random.choice((-1, 1)) * dist, self.properties['y'] + random.randint(int(-dist), int(dist))]
 
@@ -380,7 +380,7 @@ class Patrol(Enemy):
                 self.wander_angle = pi
         
         if hit_result == [False, False]:
-            if distance_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN_PATROL_PATROL:
+            if distance_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN_PATROL:
                 self.wander_angle = angle(sub_vecs(self.spawn_position, pos))
         self.wander_pos = add_vecs(vec_from_angle(self.wander_dist, self.wander_angle), pos)
         #print(self.wander_pos, self.properties['x'], self.properties['y'])
@@ -396,7 +396,7 @@ class Patrol(Enemy):
         velocity = [0,0]
         if distance_to(self.wander_pos, pos) > 1:
             velocity = normalized(vector_to(pos, self.wander_pos))
-            self.wander_speed = max(self.wander_speed - WANDER_SPEED_DECAY_PATROL_PATROL, MIN_WANDER_SPEED_PATROL_PATROL) # * delta
+            self.wander_speed = max(self.wander_speed - WANDER_SPEED_DECAY_PATROL, MIN_WANDER_SPEED_PATROL) # * delta
             velocity = [i * self.wander_speed for i in velocity]
             new_x = pos[0] + velocity[0] # * delta
             new_y = pos[1] + velocity[1] # * delta
