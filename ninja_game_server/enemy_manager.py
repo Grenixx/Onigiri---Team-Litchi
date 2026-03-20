@@ -585,7 +585,7 @@ class Projectile(Enemy):
             pos = self.pos()
             players = self.enemy_manager.players
 
-            if not self.is_target_pos_aquire:
+            if self.is_target_pos_aquire == None:
                 # --- Trouver la cible la plus proche ---
                 closest_dist = None
                 closest_pid = None
