@@ -569,7 +569,7 @@ class Boss(Enemy):
             dist = distance_squared_to(pos, players)
             if closest_dist == None or closest_dist > dist:
                 closest_dist,closest_pid = dist,pid
-        
+        """
         velocity = [0,0]
         if closest_pid: # if has target
             dist = sqrt(closest_dist)
@@ -579,6 +579,50 @@ class Boss(Enemy):
             velocity = [i * self.speed for i in velocity]
 
         self.move_and_slide(velocity, delta)
+        """
+
+class Projectile(Enemy):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
+        self.properties['type'] = "Projectile"
+        self.is_target_pos_aquire = None
+        self.velocity = [0,0]
+        print(f"Projectile created at {pos} with eid : {eid} !")
+    
+    def physics_process(self, delta: float) -> None:
+        """The physics engine of the enemy called every tick by EnemyManager.update()"""
+        pos = [self.properties['x'], self.properties['y']]
+        players = self.enemy_manager.players
+        
+        # Col = explosion et ou juste kill
+        if self.does_collide(pos):
+            print("you collided {eid}")
+            self.kill()
+
+        
+        
+        if not self.is_target_pos_aquire:
+            # --- Trouver la cible la plus proche ---
+            closest_dist = None
+            closest_pid = None
+            for pid in players.keys():
+                dist = distance_squared_to(pos, players)
+                if closest_dist == None or closest_dist > dist:
+                    closest_dist,closest_pid = dist,pid
+            if closest_pid != None:
+                is_target_pos_aquire = self.players[closest_pid]
+
+                
+                if closest_pid: # if has target
+                    dist = sqrt(closest_dist)
+                    #self.properties['state'] = 'rage'
+                    self.properties['target_player'] = closest_pid
+                    self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
+                    self.velocity = [i * self.speed for i in self.velocity]
+        
+
+        self.move_and_slide(self.velocity, delta)
+
 
 
 def sign(x: float | int) -> int:
