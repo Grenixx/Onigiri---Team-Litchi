@@ -39,6 +39,13 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+def execute_attack(self):
+    direction = None
+    if self.player.input_axis[1] < 0: direction = 'up'
+    elif self.player.input_axis[1] > 0: direction = 'down'
+    elif self.player.input_axis[0] < 0: direction = 'left'
+    elif self.player.input_axis[0] > 0: direction = 'right'
+    self.player.attack(direction)
 
 class Game:
     def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1"):
@@ -158,6 +165,7 @@ class Game:
         self.font = pygame.font.SysFont("consolas", 16)
         self.debug = False
         self.player.weapon.weapon_equiped.toggle_debug()
+        self.freeze_time = 0
 
     def loadcontrols(self):
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
@@ -211,10 +219,10 @@ class Game:
         self.scroll = [0, 0]
         self.dead = 0
         self.hp=100
-        self.invincible_frame_time = 0
+        self.invincibility_time = 0
         self.transition = -30
 
-        self.invincible_frame_time = 200
+        self.invincibility_time = 3.0 # ~200 frames at 60fps
 
         
     def run(self):
@@ -225,42 +233,36 @@ class Game:
         #self.sfx['ambience'].play(-1)
         
         while True:
-            dt = self.clock.tick(self.max_fps) / 1000  # dt en secondes
+            # Calcul du dt réel en secondes
+            real_dt = self.clock.tick(self.max_fps) / 1000
             
-            if self.invincible_frame_time > 0:
-                self.invincible_frame_time -= dt * 60
+            # Gestion du Freeze-frame (Impact feel local)
+            if self.freeze_time > 0:
+                self.freeze_time -= real_dt
+                dt = 0 # Le temps s'arrête pour le joueur local et les ennemis
+            else:
+                dt = real_dt
+            
+            if self.invincibility_time > 0:
+                self.invincibility_time -= dt
 
-            # --- Check Server Level Change ---
             if self.net.map_change_id is not None:
                 new_map_id = self.net.map_change_id
                 self.net.map_change_id = None
                 self.level = new_map_id
                 self.load_level(self.level)
             
-            # --- PLAYER UPDATE A ÉTÉ DEPLACÉ PLUS BAS POUR LA CONSOLIDATION DES INPUTS ---
-
-            action_mapping = {
-                "idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4,
-                # Ajout des actions d'attaque
-                "attack_front": 5,
-                "attack_up": 6,
-                "attack_down": 7,
-            }
-
-            action_id = action_mapping[self.player.action]
-            flip_byte = 1 if self.player.flip else 0
-            self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, self.player.velocity[0], self.player.velocity[1])
 
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  #/5 # smooth cam
 
-            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - 32 - self.scroll[1]) #/5 # smooth cam
+            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2  - self.scroll[1]) #/5 # smooth cam
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
             self.remote_players = self.net.remote_players
 
             self.display.fill((0, 0, 0, 0))
             self.display_2.fill((0, 0, 0))
-            # --- BACKGROUND ---
+            
             shader_surface = self.shader_bg.render(camera=(render_scroll[0] * 0.2, render_scroll[1] * -0.2))
             self.display_2.blit(shader_surface, (0, 0))
             self.clouds.render(self.display_2, offset=render_scroll)
@@ -297,12 +299,11 @@ class Game:
 
             # --- PLAYER RENDER ---
             if not self.dead:
-                show_p=True
-                if self.invincible_frame_time > 0:
+                white_flash = False
+                if self.invincibility_time > 0:
                     if (pygame.time.get_ticks() // 100) % 2 == 0:
-                        show_p = False
-                if show_p:
-                    self.player.render(self.display, offset=render_scroll)
+                        white_flash = True
+                self.player.render(self.display, offset=render_scroll, white=white_flash)
 
             # [[x, y], direction, timer]
             #for projectile in self.projectiles.copy():
@@ -329,7 +330,8 @@ class Game:
             #                self.particles.append(Particle(self, 'particle', self.player.rect().center, velocity=[math.cos(angle + math.pi) * speed * 0.5, math.sin(angle + math.pi) * speed * 0.5], frame=random.randint(0, 7)))
                         
             # --- REMOTE PLAYERS ---
-            self.remote_players_renderer.render(self.display, offset=render_scroll, dt=dt)
+            # On utilise real_dt pour les autres joueurs pour éviter qu'ils se figent quand l'un de nous tape
+            self.remote_players_renderer.render(self.display, offset=render_scroll, dt=real_dt)
 
             self.display_2.blit(self.display, (0, 0))
 
@@ -396,12 +398,12 @@ class Game:
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = True
                     # On vérifie d'abord la touche, PUIS on tente de sauter.
-                    if event.key == self.controls["JUMP"]:
+                    if event.key == self.controls["JUMP"] or event.key == pygame.K_w:
                         if self.player.request_jump():
                             self.sfx['jump'].play()
-                    if event.key == self.controls["DASH"]:
+                    if event.key == self.controls["DASH"] or event.key == pygame.K_x:
                         self.player.dash()
-                    if event.key == self.controls["CHANGE_WEAPON"]:
+                    if event.key == self.controls["CHANGE_WEAPON"] or event.key == pygame.K_v:
                         self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
                         self.weapon_type = self.weaponDictionary[self.currentWeaponIndex]
                         self.player.weapon.set_weapon(self.weapon_type)
@@ -435,14 +437,6 @@ class Game:
                     if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
                         pass 
                 
-                def execute_attack(self):
-                    direction = None
-                    keys = pygame.key.get_pressed()
-                    if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction = 'up'
-                    elif keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction = 'down'
-                    elif keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction = 'left'
-                    elif keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction = 'right'
-                    self.player.attack(direction)
                 # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Clic gauche
@@ -479,27 +473,44 @@ class Game:
             current_frame_movement = (final_move_right - final_move_left, 0)
 
             # 2. Directions (is_pressed)
-            direction = None
+            direction_vec = [0, 0]
             # Clavier
-            if keys[self.controls["UP"]]: direction = 'up'
-            elif keys[self.controls["DOWN"]]: direction = 'down'
-            elif keys[self.controls["LEFT"]]: direction = 'left'
-            elif keys[self.controls["RIGHT"]]: direction = 'right'
+            if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction_vec[1] -= 1
+            if keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction_vec[1] += 1
+            if keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction_vec[0] -= 1
+            if keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction_vec[0] += 1
             
             # Manette (écrase seulement si stick actif)
             if self.controller.joystick:
                 ls_x = self.controller.left_stick_x
                 ls_y = self.controller.left_stick_y
-                if ls_y < -0.5 or self.controller.dpad_up: direction = 'up'
-                elif ls_y > 0.5 or self.controller.dpad_down: direction = 'down'
-                elif ls_x < -0.5 or self.controller.dpad_left: direction = 'left'
-                elif ls_x > 0.5 or self.controller.dpad_right: direction = 'right'
+                if abs(ls_x) > 0.4 or abs(ls_y) > 0.4 or self.controller.dpad_up or self.controller.dpad_down or self.controller.dpad_left or self.controller.dpad_right:
+                    if self.controller.dpad_up: direction_vec[1] = -1
+                    elif self.controller.dpad_down: direction_vec[1] = 1
+                    elif abs(ls_y) > 0.4: direction_vec[1] = 1 if ls_y > 0 else -1
+                    
+                    if self.controller.dpad_left: direction_vec[0] = -1
+                    elif self.controller.dpad_right: direction_vec[0] = 1
+                    elif abs(ls_x) > 0.4: direction_vec[0] = 1 if ls_x > 0 else -1
             
-            self.player.is_pressed = direction
+            self.player.input_axis = direction_vec
 
             # --- PLAYER UPDATE (Après consolidation) ---
             if not self.dead:
-                self.player.update(self.tilemap, (final_move_right - final_move_left, 0), dt=dt)
+                move_dir = (final_move_right - final_move_left)
+                self.player.update(self.tilemap, (move_dir, 0), dt=dt)
+
+                # --- SEND STATE TO SERVER ---
+                action_mapping = {
+                    "idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4,
+                    "attack_front": 5, "attack_up": 6, "attack_down": 7,
+                }
+                action_id = action_mapping.get(self.player.action, 0)
+                flip_byte = 1 if self.player.flip else 0
+                
+                # On envoie la vélocité TOTALE (course + inertie) pour que les autres joueurs extrapolent bien le mouvement
+                applied_vx = move_dir * self.player.run_speed + self.player.velocity[0]
+                self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, applied_vx, self.player.velocity[1])
 
             # --- ACTIONS MANETTE (Actions uniques / Latch) ---
             if self.controller.joystick:
@@ -522,7 +533,8 @@ class Game:
                 # Attaque
                 if self.controller.button_x and not getattr(self, '_ctrl_attack_pressed', False):
                     self._ctrl_attack_pressed = True
-                    self.player.attack(direction) # Utilise la direction fusionnée
+                    
+                    execute_attack(self) # Utilise la direction fusionnée
                 elif not self.controller.button_x:
                     self._ctrl_attack_pressed = False
 
