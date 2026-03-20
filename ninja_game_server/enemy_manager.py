@@ -6,6 +6,8 @@ from TilemapServer import PHYSICS_TILES
 
 PLAYER_SIZE = (14, 18)
 
+LANDMARK_TYPE_CHECK = "eid"
+
 class EnemyManager:
     def __init__(self, tilemap):
         self.tilemap = tilemap
@@ -31,14 +33,19 @@ class EnemyManager:
             if spawner['variant'] == 3:
                 self.create_enemy(spawner['pos'], "Dromp")
 
-    def create_enemy(self, pos: list, enemy_type: str) -> None:
+    def create_enemy(self, pos: list, enemy_type: str, Landmark_eid: int = 0) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
         enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp, "Boss": Boss, "Projectile": Projectile}
         if enemy_type == "Landmark":
-            self.enemies[self.next_enemy_id] = Landmark(self.next_enemy_id, pos, self, 1, 'eid', self.landmark_variable)
+            LM = Landmark(self.next_enemy_id, pos, self, 200, LANDMARK_TYPE_CHECK, Landmark_eid)
+            try:
+                LM.eid
+                self.enemies[self.next_enemy_id] = LM
+            except:
+                return
         else:
             self.enemies[self.next_enemy_id] = enemy_types[enemy_type](self.next_enemy_id, pos, self)
-            if enemy_type == "Dromp":
+            if enemy_type == "patrol":
                 if self.landmark_variable == 0:
                     self.landmark_variable = self.next_enemy_id
         self.next_enemy_id += 1
@@ -57,7 +64,7 @@ KNOCKBACK_MIN_ANGLE = pi/6
 KNOCKBACK_DEPLETION = 0.5 # units / tick
 
 class Landmark: # The hole purpose is to make testing easier by showing some positions on screen
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, persistance: int, checking: str, checking_value: int):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, persistance: int, checking: str, checking_value: int): #checking value can be either eid or number of Landmark max
         if checking == 'eid' and checking_value != 0 and checking_value != enemy_manager.landmark_variable:
             return
         if checking == 'number' and enemy_manager.landmark_variable > checking_value:
@@ -136,8 +143,8 @@ class Enemy:
             False
         )
 
-    def create_enemy(self, pos: list, enemy_type: str) -> None:
-        self.enemy_manager.create_enemy(pos, enemy_type)
+    def create_enemy(self, pos: list, enemy_type: str, Landmark_eid: int = 0) -> None:
+        self.enemy_manager.create_enemy(pos, enemy_type, Landmark_eid)
 
     def unstuck(self): 
 
@@ -243,6 +250,9 @@ class Enemy:
     
     def kill(self):
         self.enemy_manager.enemies.pop(self.eid)
+        if LANDMARK_TYPE_CHECK == "eid":
+            if self.enemy_manager.landmark_variable == self.eid:
+                self.enemy_manager.landmark_variable = random.choice(self.enemy_manager.enemies.keys())
     
     def pos(self):
         return [self.properties['x'], self.properties['y']]
@@ -382,10 +392,17 @@ class Patrol(Enemy):
         if hit_result == [False, False]:
             if distance_to(pos, self.spawn_position) > MAX_DISTANCE_FROM_SPAWN_PATROL:
                 self.wander_angle = angle(sub_vecs(self.spawn_position, pos))
-        self.wander_pos = add_vecs(vec_from_angle(self.wander_dist, self.wander_angle), pos)
+        wander_pos = add_vecs(vec_from_angle(self.wander_dist, self.wander_angle), pos)
+        collide = self.check_collision(wander_pos)
+        if collide:
+            self.wander_angle = angle_modulo(self.wander_angle - pi)
+            wander_pos = add_vecs(vec_from_angle(self.wander_dist, self.wander_angle), pos)
         #print(self.wander_pos, self.properties['x'], self.properties['y'])
         #print(f"dist : {self.wander_dist}")
         #print(f"angle : {self.wander_angle}")
+        
+        self.wander_pos = wander_pos
+        self.create_enemy(self.wander_pos, "Landmark", self.eid)
 
     def wander(self) -> list:
         pos = self.pos()
@@ -478,7 +495,7 @@ DROMP_RAGE_COOLDOWN = 5 * 20 # seconds * ticks
 
 class Dromp(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, DROMP_SPEED, 100, (64,59.5), "any")
+        super().__init__(eid, pos, enemy_manager, DROMP_SPEED, 100, (47,59.5), "any")
         self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == 1
@@ -594,13 +611,12 @@ class Projectile(Enemy):
                     if closest_dist == None or closest_dist > dist:
                         closest_dist,closest_pid = dist,pid
                 if closest_pid:
-                    is_target_pos_aquire = players[closest_pid]
+                    self.is_target_pos_aquire = list_copy(players[closest_pid])
 
                     dist = sqrt(closest_dist)
                     self.properties['state'] = 'rage'
                     self.properties['target_player'] = closest_pid
-                    self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
-                    self.velocity = [i * self.speed for i in self.velocity]
+                    self.velocity = mult_vec(normalized(vector_to(pos, self.is_target_pos_aquire)), self.speed)
         else:
             self.time_before_launch -=1
             
