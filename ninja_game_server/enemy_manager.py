@@ -522,6 +522,8 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
+
+
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
@@ -537,20 +539,18 @@ class Boss(Enemy):
         closest_dist = None
         closest_pid = None
         for pid in players.keys():
-            if pid in self.players_last_pos.keys():
-                dist = distance_squared_to(pos, self.players_last_pos[pid])
-                if closest_dist == None or closest_dist > dist:
-                    closest_dist,closest_pid = dist,pid
+            dist = distance_squared_to(pos, players)
+            if closest_dist == None or closest_dist > dist:
+                closest_dist,closest_pid = dist,pid
         
         velocity = [0,0]
         if closest_pid: # if has target
             dist = sqrt(closest_dist)
             #self.properties['state'] = 'rage'
             self.properties['target_player'] = closest_pid
-            if dist > 4:
-                velocity = normalized(vector_to(pos, self.players_last_pos[closest_pid]))
-                velocity = [i * self.speed for i in velocity]
-    
+            velocity = normalized(vector_to(pos, self.players[closest_pid]))
+            velocity = [i * self.speed for i in velocity]
+
         self.move_and_slide(velocity, delta)
 
 
