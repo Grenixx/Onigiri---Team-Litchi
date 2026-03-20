@@ -362,9 +362,9 @@ class Patrol(Enemy):
             #print(self.wander_angle)
         
         if self.wander_dist == None:
-            self.wander_dist = random.uniform(DIST_WANDER_PATROL_PATROL//2, DIST_WANDER_PATROL_PATROL)
+            self.wander_dist = random.uniform(DIST_WANDER_PATROL//2, DIST_WANDER_PATROL)
         else:
-            self.wander_dist = max(self.wander_dist + random.uniform(-DIST_WANDER_PATROL_PATROL//4, DIST_WANDER_PATROL_PATROL//4), MIN_WANDER_DIST_PATROL_PATROL)
+            self.wander_dist = max(self.wander_dist + random.uniform(-DIST_WANDER_PATROL//4, DIST_WANDER_PATROL//4), MIN_WANDER_DIST_PATROL_PATROL)
         
         #self.wander_pos = [self.properties['x'] + random.choice((-1, 1)) * dist, self.properties['y'] + random.randint(int(-dist), int(dist))]
 
