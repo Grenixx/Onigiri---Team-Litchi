@@ -23,8 +23,6 @@ from scripts.controller import Controller
 from scripts.lighting import LightingSystem
 from scripts.shader_effect import ShaderEffect
 
-DEBUG = True
-
 ###
 # TIPS POUR MOI MEME pour les bugg lier au mouvement peut etre pour etduidier le gresillement je peux retirer l offset de la camera pour voir si c est la cam 
 # le prob ou ma gestion du mouve en elle meme

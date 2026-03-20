@@ -3,7 +3,7 @@ import struct
 import threading
 import time
 
-from game import DEBUG
+DEBUG = True
 
 BANDWIDTH = {False: 4096, True: 1024**2}
 
