@@ -108,6 +108,8 @@ class Game:
             'Dromp/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=3, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
             'Dromp/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
             'Landmark/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/Landmark/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Landmark/idle')),
+            'Projectile/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
+            'Projectile/rage':load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
             'Boss/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Boss/idle'))
         }
 

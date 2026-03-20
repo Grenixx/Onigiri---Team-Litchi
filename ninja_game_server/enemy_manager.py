@@ -571,8 +571,8 @@ class Boss(Enemy):
 PROJECTILE_MAX_DIST = 16*20
 
 class Projectile(Enemy):
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float):
-        super().__init__(eid, pos, enemy_manager, speed, 150, (15, 10))
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager, 1.5, 150, (15, 10))
         self.properties['type'] = "Projectile"
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
@@ -590,21 +590,19 @@ class Projectile(Enemy):
                 closest_dist = None
                 closest_pid = None
                 for pid in players.keys():
-                    dist = distance_squared_to(pos, players)
+                    dist = distance_squared_to(pos, players[pid])
                     if closest_dist == None or closest_dist > dist:
                         closest_dist,closest_pid = dist,pid
-                if closest_pid != None:
-                    is_target_pos_aquire = self.players[closest_pid]
+                if closest_pid:
+                    is_target_pos_aquire = players[closest_pid]
 
-                    
-                    if closest_pid: # if has target
-                        dist = sqrt(closest_dist)
-                        #self.properties['state'] = 'rage'
-                        self.properties['target_player'] = closest_pid
-                        self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
-                        self.velocity = [i * self.speed for i in self.velocity]
+                    dist = sqrt(closest_dist)
+                    self.properties['state'] = 'rage'
+                    self.properties['target_player'] = closest_pid
+                    self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
+                    self.velocity = [i * self.speed for i in self.velocity]
         else:
-            self.is_target_pos_aquire -=1
+            self.time_before_launch -=1
             
 
         self.move_and_slide(self.velocity, delta)

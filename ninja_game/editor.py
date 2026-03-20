@@ -126,7 +126,7 @@ class Editor:
                 input_text = self.font.render(self.level_input + "_", False, (255, 255, 255))
                 self.display.blit(input_text, (100, 160))
             else:
-                help_text = self.font.render("[UP/DOWN] Level [L] Jump [O] Save", False, (150, 150, 150))
+                help_text = self.font.render("[UP/DOWN] Level [L] Jump [N] New [O] Save", False, (150, 150, 150))
                 self.display.blit(help_text, (5, 175))
             
             for event in pygame.event.get():
@@ -159,6 +159,11 @@ class Editor:
                     if event.button == 3:
                         self.right_clicking = False
                         
+
+                if event.type == pygame.VIDEORESIZE:
+                    if not self.fullscreen:
+                        self.window_size = (event.w, event.h)
+
                 if event.type == pygame.KEYDOWN:
                     if self.text_input_active:
                         if event.key == pygame.K_RETURN:
@@ -189,9 +194,27 @@ class Editor:
                         self.level_input = ""
                     if event.key == pygame.K_t:
                         self.tilemap.autotile()
+                    if event.key == pygame.K_n:
+                        # Trouver le prochain numéro libre
+                        i = 0
+                        while os.path.exists(f'data/maps/{i}.json'):
+                            i += 1
+                        self.load_level(i)
+                        print(f"Created new level at index {self.level}")
                     if event.key == pygame.K_o:
-                        self.tilemap.save(f'data/maps/{self.level}.json')
-                        print(f'Map saved to data/maps/{self.level}.json')
+                        client_path = f'data/maps/{self.level}.json'
+                        server_path = f'../ninja_game_server/data/maps/{self.level}.json'
+                        
+                        # Sauvegarde Client
+                        self.tilemap.save(client_path)
+                        print(f'Map saved to {client_path}')
+                        
+                        # Sauvegarde Serveur (si le dossier existe)
+                        if os.path.exists('../ninja_game_server/data/maps'):
+                            self.tilemap.save(server_path)
+                            print(f'Map saved to {server_path}')
+                        else:
+                            print(f'Warning: Server map folder not found at {server_path}')
                     if event.key == pygame.K_UP:
                         self.load_level(self.level + 1)
                     if event.key == pygame.K_DOWN:
@@ -204,11 +227,7 @@ class Editor:
                         self.fullscreen = not self.fullscreen
 
                         if self.fullscreen:
-                            info = pygame.display.Info()
-                            self.screen = pygame.display.set_mode(
-                                (info.current_w, info.current_h),
-                                pygame.FULLSCREEN
-                            )
+                            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                         else:
                             self.screen = pygame.display.set_mode(
                                 self.window_size,
