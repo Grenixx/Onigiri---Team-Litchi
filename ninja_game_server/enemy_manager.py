@@ -564,8 +564,10 @@ class Boss(Enemy):
         self.move_and_slide(velocity, delta)
         """
 
+PROJECTILE_MAX_DIST = 16*20
+
 class Projectile(Enemy):
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, angle: float, speed: float):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float):
         super().__init__(eid, pos, enemy_manager, speed, 150, (15, 10))
         self.properties['type'] = "Projectile"
         self.is_target_pos_aquire = None
@@ -578,11 +580,6 @@ class Projectile(Enemy):
         if self.time_before_launch <= 0:
             pos = self.pos()
             players = self.enemy_manager.players
-            
-            # Col = explosion et ou juste kill
-            if self.does_collide(pos):
-                print("you collided {eid}")
-                self.kill()
 
             if not self.is_target_pos_aquire:
                 # --- Trouver la cible la plus proche ---
@@ -604,9 +601,12 @@ class Projectile(Enemy):
                         self.velocity = [i * self.speed for i in self.velocity]
             
 
-            self.move_and_slide(self.velocity, delta)
-        else:
-            self.time_before_launch -= 1
+        self.move_and_slide(self.velocity, delta)
+        
+        # Col = explosion et ou juste kill
+        if self.last_collisions[0] or self.last_collisions[1]:
+            print(f"you collided {self.eid}")
+            self.kill()
 
 
 def middle_pos_player(player):
@@ -805,10 +805,10 @@ def raycast_pos(pos: list, angle: float, tilemap, dist_max: float = 1000, dist_c
 # Easing functions
 
 def easeOutCubic(t: float) -> float:
-    return 1 - (1 - t)**3;
+    return 1 - (1 - t)**3
 
 def easeOutQuint(x: float) -> float:
-    return 1 - (1 - x)**5;
+    return 1 - (1 - x)**5
 
 
 """ todo:
