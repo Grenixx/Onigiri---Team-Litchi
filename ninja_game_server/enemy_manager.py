@@ -587,41 +587,43 @@ class Projectile(Enemy):
         self.properties['type'] = "Projectile"
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
+        self.time_before_launch = 60
         print(f"Projectile created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        pos = [self.properties['x'], self.properties['y']]
-        players = self.enemy_manager.players
-        
-        # Col = explosion et ou juste kill
-        if self.does_collide(pos):
-            print("you collided {eid}")
-            self.kill()
+        if self.time_before_launch <= 0:
+            pos = [self.properties['x'], self.properties['y']]
+            players = self.enemy_manager.players
+            
+            # Col = explosion et ou juste kill
+            if self.does_collide(pos):
+                print("you collided {eid}")
+                self.kill()
 
-        
-        
-        if not self.is_target_pos_aquire:
-            # --- Trouver la cible la plus proche ---
-            closest_dist = None
-            closest_pid = None
-            for pid in players.keys():
-                dist = distance_squared_to(pos, players)
-                if closest_dist == None or closest_dist > dist:
-                    closest_dist,closest_pid = dist,pid
-            if closest_pid != None:
-                is_target_pos_aquire = self.players[closest_pid]
+            if not self.is_target_pos_aquire:
+                # --- Trouver la cible la plus proche ---
+                closest_dist = None
+                closest_pid = None
+                for pid in players.keys():
+                    dist = distance_squared_to(pos, players)
+                    if closest_dist == None or closest_dist > dist:
+                        closest_dist,closest_pid = dist,pid
+                if closest_pid != None:
+                    is_target_pos_aquire = self.players[closest_pid]
 
-                
-                if closest_pid: # if has target
-                    dist = sqrt(closest_dist)
-                    #self.properties['state'] = 'rage'
-                    self.properties['target_player'] = closest_pid
-                    self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
-                    self.velocity = [i * self.speed for i in self.velocity]
-        
+                    
+                    if closest_pid: # if has target
+                        dist = sqrt(closest_dist)
+                        #self.properties['state'] = 'rage'
+                        self.properties['target_player'] = closest_pid
+                        self.velocity = normalized(vector_to(pos, is_target_pos_aquire))
+                        self.velocity = [i * self.speed for i in self.velocity]
+            
 
-        self.move_and_slide(self.velocity, delta)
+            self.move_and_slide(self.velocity, delta)
+        else:
+            self.time_before_launch -= 1
 
 
 
