@@ -400,10 +400,14 @@ class ClientEnemyManager:
 
     def set_state_for_enemy(self, eid, etype, state):
         if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state:
-            print(f'{etype}/{state}')
-            base_anim = self.game.assets.get(f'{etype}/{state}')
-            self.enemy_anims[eid] = base_anim.copy()
-            self.enemy_anims[eid].state = state
+            asset_key = f'{etype}/{state}'
+            if asset_key in self.game.assets:
+                base_anim = self.game.assets[asset_key]
+                self.enemy_anims[eid] = base_anim.copy()
+                self.enemy_anims[eid].state = state
+            else:
+                # For types without specific animations (like Explosion)
+                self.enemy_anims[eid] = None
 
     def update(self, dt=1/60):
         """Vérifie les collisions entre joueurs/armes et les ennemis."""
@@ -434,6 +438,28 @@ class ClientEnemyManager:
             elif etype == "Dromp":
                 self.size = (64, 64)
                 self.collision_offset = (0, 0)
+            elif etype == "Explosion":
+                self.size = (0, 0)
+                self.collision_offset = (0, 0)
+                
+                # Effets visuels à l'apparition de l'explosion
+                if eid not in self.enemy_anims:
+                    self.game.screenshake = max(12, self.game.screenshake)
+                    for i in range(20):
+                        angle = random.random() * math.pi * 2
+                        speed = 1.5 + random.random() * 2.5
+                        self.game.sparks.append(Spark((ex, ey), angle, speed, color=(255, 50, 50)))
+                
+                # Dégâts de zone
+                player_pos = self.game.player.rect().center
+                dist = math.sqrt((ex - player_pos[0])**2 + (ey - player_pos[1])**2)
+                if dist < 35: # Rayon de l'explosion
+                    if not self.game.dead and self.game.invincibility_time <= 0 and player.dashing == 0:
+                        self.game.screenshake = max(24, self.game.screenshake)      
+                        self.game.sfx['hit'].play()
+                        self.game.hp -= 30
+                        self.game.invincibility_time = 1.0 # 1 seconde d'invincibilité
+                        print(f"Player hit by explosion! HP: {self.game.hp}")
             elif etype == "Landmark":
                 self.size = (0, 0)
                 self.collision_offset = (0, 0)
@@ -442,7 +468,7 @@ class ClientEnemyManager:
             # -----------------------------------------------------
             # DETECTION DE COLLISION AVEC MASQUES OU AABB
             # -----------------------------------------------------
-            enemy_mask = anim.get_pygame_mask(flip)
+            enemy_mask = anim.get_pygame_mask(flip) if anim else None
             anim_offset = (-3, -3)
             enemy_mask_x = ex + anim_offset[0]
             enemy_mask_y = ey + anim_offset[1]
@@ -462,6 +488,11 @@ class ClientEnemyManager:
             else:
                 collide_joueur = player_rect.colliderect(enemy_rect)
                 collide_arme = weapon_hitbox.colliderect(enemy_rect)
+
+            # Skip collision checks that are already handled or not needed for certain types
+            if etype == "Explosion":
+                collide_joueur = False
+                collide_arme = False
 
             # 2. Collision Joueur (Dégâts reçus)
             if collide_joueur:
@@ -535,29 +566,33 @@ class ClientEnemyManager:
             self.set_state_for_enemy(eid, etype, state)
             anim = self.enemy_anims[eid]
             
-            anim.update(dt)
-            imgAnim = anim.img()
-            
-            imgAnim = anim.img()
-            
-            # Alignement consistant avec le joueur (Top-left + Offset)
-            anim_offset = (-3, -3)
-            ex_topleft = x - offset[0] + anim_offset[0]
-            ey_topleft = y - offset[1] + anim_offset[1]
+            if anim:
+                anim.update(dt)
+                imgAnim = anim.img()
+                
+                # Alignement consistant avec le joueur (Top-left + Offset)
+                anim_offset = (-3, -3)
+                ex_topleft = x - offset[0] + anim_offset[0]
+                ey_topleft = y - offset[1] + anim_offset[1]
 
-            # Rendu Principal avec Flip
-            surf.blit(pygame.transform.flip(imgAnim, flip, False), (ex_topleft, ey_topleft))
+                # Rendu Principal avec Flip
+                surf.blit(pygame.transform.flip(imgAnim, flip, False), (ex_topleft, ey_topleft))
 
             self.game.tilemap.grass_manager.apply_force((x, y), 6, 12)
 
             if getattr(self.game, 'debug', False):
-                enemy_mask = anim.get_pygame_mask(flip)
+                if etype == "Explosion":
+                    # Zone visuelle au debug pour l'explosion
+                    pygame.draw.circle(surf, (255, 0, 0), (int(x - offset[0]), int(y - offset[1])), 35, 1)
+                
+                enemy_mask = anim.get_pygame_mask(flip) if anim else None
                 if enemy_mask:
                     mask_surf = enemy_mask.to_surface(setcolor=(255, 0, 255, 128), unsetcolor=(0, 0, 0, 0)).convert_alpha()
                     surf.blit(mask_surf, (ex_topleft, ey_topleft))
                 else:
                     debug_rect = pygame.Rect(x + self.collision_offset[0] - offset[0], y + self.collision_offset[1] - offset[1], self.size[0], self.size[1])
-                    pygame.draw.rect(surf, (0, 255, 255), debug_rect, 1)
+                    if self.size[0] > 0:
+                        pygame.draw.rect(surf, (0, 255, 255), debug_rect, 1)
             
             
 class RemotePlayerRenderer:
