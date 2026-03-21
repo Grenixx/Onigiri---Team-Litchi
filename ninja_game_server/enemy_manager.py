@@ -589,7 +589,7 @@ PROJECTILE_MAX_DIST = 16*20
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 150, (15, 10))
+        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 10)) #1 pv pr le one shoot
         self.properties['type'] = "Projectile"
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
