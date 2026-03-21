@@ -35,7 +35,7 @@ class EnemyManager:
 
     def create_enemy(self, pos: list, enemy_type: str, Landmark_eid: int = 0) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
-        enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp, "Boss": Boss, "Projectile": Projectile, "Explosion": ExplosiveZone}
+        enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp, "Boss": Boss, "Projectile": Projectile}
         if enemy_type == "Landmark":
             LM = Landmark(self.next_enemy_id, pos, self, 200, LANDMARK_TYPE_CHECK, Landmark_eid)
             try:
@@ -625,21 +625,7 @@ class Projectile(Enemy):
         
         # Col = explosion et ou juste kill
         if self.last_collisions[0] or self.last_collisions[1]:
-            print(f"Projectile {self.eid} collided and exploded")
-            self.enemy_manager.create_enemy(self.pos(), "Explosion")
-            self.kill()
-
-
-class ExplosiveZone(Enemy):
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 0, 1, (60, 60))
-        self.properties['type'] = "Explosion"
-        self.duration = 15 # ticks (1/4 second at 60fps)
-        print(f"Explosion created at {pos} with eid : {eid} !")
-
-    def physics_process(self, delta: float) -> None:
-        self.duration -= 1
-        if self.duration <= 0:
+            print(f"you collided {self.eid}")
             self.kill()
 
 
