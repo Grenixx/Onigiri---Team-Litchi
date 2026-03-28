@@ -9,7 +9,6 @@ class Spark:
         self.speed = speed
         
     def update(self, dt=1.0):
-        # On normalise sur 60 FPS (si dt est en secondes, dt*60 donne le facteur par rapport à une frame à 60FPS)
         frame_factor = dt * 60 
         
         self.pos[0] += math.cos(self.angle) * self.speed * frame_factor

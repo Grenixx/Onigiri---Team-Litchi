@@ -23,14 +23,10 @@ from scripts.controller import Controller
 from scripts.lighting import LightingSystem
 from scripts.shader_effect import ShaderEffect
 
-
-
 def resource_path(relative_path):
-    """Permet de trouver les fichiers quand le script est compilé en exe"""
     import sys
     import os
     try:
-        #PyInstaller support
         base_path = sys._MEIPASS
     except AttributeError:
         base_path = os.path.abspath(".")
@@ -46,11 +42,10 @@ def execute_attack(self):
 
 class Game:
     def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1"):
-        """Initialise le jeu, les paramètres d'affichage, les assets et la connexion réseau."""
         self.max_fps = max_fps
         pygame.init()
 
-        self.controls=self.loadcontrols() 
+        self.controls = self.loadcontrols() 
         pygame.display.set_caption('Onigiri')
         if resolution == [0, 0]:
             monitors = get_monitors()
@@ -59,7 +54,6 @@ class Game:
                     monitor = m
                     break
             resolution = [monitor.width, monitor.height]
-        print(f"Initialising game with width: {resolution[0]} and height: {resolution[1]}")
         self.screen = pygame.display.set_mode(resolution)
         
         self.base_resolution = (320, 180)
@@ -70,7 +64,6 @@ class Game:
         self.display_2 = pygame.Surface(SCALE)
 
         self.clock = pygame.time.Clock()
-        
         self.movement = [False, False]
         
         self.assets = {
@@ -129,46 +122,33 @@ class Game:
         self.sfx['dash'].set_volume(self.SFX_Volume)
         self.sfx['jump'].set_volume(self.SFX_Volume)
 
-        
         self.clouds = Clouds(self.assets['clouds'], count=5)
-        
         self.player = Player(self, (50, 50), (8, 15))
-
         self.enemies_renderer = ClientEnemyManager(self)
         self.remote_players_renderer = RemotePlayerRenderer(self)
-        
         self.tilemap = Tilemap(self, tile_size=16)
-        
         self.level = 0        
         self.load_level(self.level)
-        
         self.screenshake = 0
-
         self.net = ClientNetwork(ip, 5005)
         self.net.connect()
         self.remote_players = {}
-        
         self.ctx = moderngl.create_standalone_context()
         self.shader_bg = ShaderBackground(SCALE[0], SCALE[1], "data/shaders/1.0 tuto.frag", ctx=self.ctx)
         self.scream_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/4.0.frag", ctx=self.ctx)
         self.transition_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/3.9transi.frag", ctx=self.ctx)
         self.scream_active = False 
-
         self.controller = Controller()
-
         self.lighting = LightingSystem(self.display.get_size())
-
         self.weapon_type = 'mace' 
         self.weaponDictionary = {1: 'slashTriangle', 2: 'mace1', 3: 'mace'}
         self.currentWeaponIndex = 1
-
         self.font = pygame.font.SysFont("consolas", 16)
         self.debug = False
         self.player.weapon.weapon_equiped.toggle_debug()
         self.freeze_time = 0
 
     def loadcontrols(self):
-        """Charge les préférences de contrôle depuis le fichier JSON."""
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
         try:
             path = resource_path('user_prefs.json')
@@ -182,134 +162,97 @@ class Game:
             print(f"Erreur chargement contrôles: {e}")
             return default_keys
 
-
     def set_zoom(self, zoom_value):
-        """Ajuste le niveau de zoom et redimensionne les surfaces d'affichage."""
         self.zoom = max(0.5, min(zoom_value, 2.0))
-        
         new_width = int(self.base_resolution[0] / self.zoom)
         new_height = int(self.base_resolution[1] / self.zoom)
         SCALE = (new_width, new_height)
-        
         self.display = pygame.Surface(SCALE, pygame.SRCALPHA)
         self.display_2 = pygame.Surface(SCALE)
-        
         self.shader_bg.resize(SCALE[0], SCALE[1])
         self.scream_shader.resize(SCALE[0], SCALE[1])
         self.transition_shader.resize(SCALE[0], SCALE[1])
-
         self.lighting.size = SCALE
 
     def load_level(self, map_id):
-        """Charge une carte par son ID et réinitialise les entités du niveau."""
         self.tilemap.load('data/maps/' + str(map_id) + '.json')
-        
         self.leaf_spawners = []
         for tree in self.tilemap.extract([('large_decor', 2)], keep=True):
             self.leaf_spawners.append(pygame.Rect(4 + tree['pos'][0], 4 + tree['pos'][1], 23, 13))
-            
         for spawner in self.tilemap.extract([('spawners', i) for i in range(10)]):
             if spawner['variant'] == 0:
                 self.player.pos = spawner['pos']
                 self.player.air_time = 0
-            
         self.projectiles = []
         self.particles = []
         self.sparks = []
-        
         self.scroll = [0, 0]
         self.dead = 0
-        self.hp=100
+        self.hp = 100
         self.invincibility_time = 0
         self.transition = -30
-
         self.invincibility_time = 3.0 
 
-        
     def run(self):
-        """Boucle principale du jeu."""
         pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
         pygame.mixer.music.set_volume(self.MUSIC_Volume)
         pygame.mixer.music.play(-1)
-        
         while True:
             real_dt = self.clock.tick(self.max_fps) / 1000
-            
             if self.freeze_time > 0:
                 self.freeze_time -= real_dt
                 dt = 0 
             else:
                 dt = real_dt
-            
             if self.invincibility_time > 0:
                 self.invincibility_time -= dt
-
             if self.net.map_change_id is not None:
                 new_map_id = self.net.map_change_id
                 self.net.map_change_id = None
                 self.level = new_map_id
                 self.load_level(self.level)
-            
-
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  
-
             self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2  - self.scroll[1]) 
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
-
             self.remote_players = self.net.remote_players
-
             self.display.fill((0, 0, 0, 0))
             self.display_2.fill((0, 0, 0))
-            
             shader_surface = self.shader_bg.render(camera=(render_scroll[0] * 0.2, render_scroll[1] * -0.2))
             self.display_2.blit(shader_surface, (0, 0))
             self.clouds.render(self.display_2, offset=render_scroll)
-
-
             self.screenshake = max(0, self.screenshake - 1)
-
             if self.transition < 0:
                 if dt < 0.2:  
                     self.transition += dt * 60 
                     if self.transition > 0:
                         self.transition = 0
-            
-            if self.dead :
+            if self.dead:
                 self.dead += dt * 60
                 if self.dead >= 10:
                     self.transition = min(30, self.transition + dt * 60)
                 if self.dead > 40:
                     self.load_level(self.level)
-            
             for rect in self.leaf_spawners:
                 if random.random() * 49999 < rect.width * rect.height:
                     pos = (rect.x + random.random() * rect.width, rect.y + random.random() * rect.height)
                     self.particles.append(Particle(self, 'leaf', pos, velocity=[-0.1, 0.3], frame=random.randint(0, 20)))
-            
             self.tilemap.render(self.display, offset=render_scroll)
-            self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll,
-                rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
-
+            self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
             self.enemies_renderer.update(dt)
             self.enemies_renderer.render(self.display, offset=render_scroll, dt=dt)
-
             if not self.dead:
                 white_flash = False
                 if self.invincibility_time > 0:
                     if (pygame.time.get_ticks() // 100) % 2 == 0:
                         white_flash = True
                 self.player.render(self.display, offset=render_scroll, white=white_flash)
-
             self.remote_players_renderer.render(self.display, offset=render_scroll, dt=real_dt)
-
             self.display_2.blit(self.display, (0, 0))
-
             for spark in self.sparks.copy():
                 kill = spark.update(dt) 
                 spark.render(self.display_2, offset=render_scroll)
                 if kill:
                     self.sparks.remove(spark)
-
             for particle in self.particles.copy():
                 kill = particle.update()
                 particle.render(self.display_2, offset=render_scroll)
@@ -317,7 +260,6 @@ class Game:
                     particle.pos[0] += math.sin(pygame.time.get_ticks() * 0.035) * 0.3
                 if kill:
                     self.particles.remove(particle)
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.net.disconnect()
@@ -335,7 +277,6 @@ class Game:
                         self.debug = not self.debug
                     if event.key == pygame.K_F2:
                         self.music_on = not self.music_on 
-                        
                         if self.music_on:
                             self.MUSIC_Volume = 0.5  
                             self.SFX_Volume = 0.5
@@ -345,7 +286,6 @@ class Game:
                             self.sfx['hit'].set_volume(self.SFX_Volume)
                             self.sfx['dash'].set_volume(self.SFX_Volume)
                             self.sfx['jump'].set_volume(self.SFX_Volume)
-                            print("Musique activée")
                         else:
                             self.MUSIC_Volume = 0  
                             self.SFX_Volume = 0
@@ -355,7 +295,6 @@ class Game:
                             self.sfx['hit'].set_volume(self.SFX_Volume)
                             self.sfx['dash'].set_volume(self.SFX_Volume)
                             self.sfx['jump'].set_volume(self.SFX_Volume)
-                            print("Musique coupée")
                     if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = True
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
@@ -377,38 +316,27 @@ class Game:
                         uv_y = (p_pos[1] - render_scroll[1]) / self.display.get_height()
                         self.scream_shader.trigger((uv_x, 1.0 - uv_y))
                         self.scream_active = True
-
                     if event.key == pygame.K_KP_PLUS or event.key == pygame.K_PLUS:
                          self.set_zoom(self.zoom + 0.1)
                     if event.key == pygame.K_KP_MINUS or event.key == pygame.K_MINUS:
                          self.set_zoom(self.zoom - 0.1)
-                            
                 if event.type == pygame.MOUSEWHEEL:
                     self.set_zoom(self.zoom + event.y * 0.1)
-
                 if event.type == pygame.KEYUP or event.type == pygame.K_SPACE:
                     if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = False
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = False
-                    if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
-                        pass 
-                
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  
                         execute_attack(self)
                 if event.type == pygame.KEYDOWN:
                     if event.key == self.controls["ATTACK"]: 
                         execute_attack(self)
-                
-
             self.controller.update()
-
             keys = pygame.key.get_pressed()
-            
             kb_left = self.movement[0]
             kb_right = self.movement[1]
-            
             ctrl_left = False
             ctrl_right = False
             if self.controller.joystick:
@@ -416,17 +344,13 @@ class Game:
                     ctrl_left = True
                 elif self.controller.left_stick_x > 0.4 or self.controller.dpad_right:
                     ctrl_right = True
-            
             final_move_left = kb_left or ctrl_left
             final_move_right = kb_right or ctrl_right
-            current_frame_movement = (final_move_right - final_move_left, 0)
-
             direction_vec = [0, 0]
             if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction_vec[1] -= 1
             if keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction_vec[1] += 1
             if keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction_vec[0] -= 1
             if keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction_vec[0] += 1
-            
             if self.controller.joystick:
                 ls_x = self.controller.left_stick_x
                 ls_y = self.controller.left_stick_y
@@ -434,27 +358,18 @@ class Game:
                     if self.controller.dpad_up: direction_vec[1] = -1
                     elif self.controller.dpad_down: direction_vec[1] = 1
                     elif abs(ls_y) > 0.4: direction_vec[1] = 1 if ls_y > 0 else -1
-                    
                     if self.controller.dpad_left: direction_vec[0] = -1
                     elif self.controller.dpad_right: direction_vec[0] = 1
                     elif abs(ls_x) > 0.4: direction_vec[0] = 1 if ls_x > 0 else -1
-            
             self.player.input_axis = direction_vec
-
             if not self.dead:
                 move_dir = (final_move_right - final_move_left)
                 self.player.update(self.tilemap, (move_dir, 0), dt=dt)
-
-                action_mapping = {
-                    "idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4,
-                    "attack_front": 5, "attack_up": 6, "attack_down": 7,
-                }
+                action_mapping = {"idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4, "attack_front": 5, "attack_up": 6, "attack_down": 7}
                 action_id = action_mapping.get(self.player.action, 0)
                 flip_byte = 1 if self.player.flip else 0
-                
                 applied_vx = move_dir * self.player.run_speed + self.player.velocity[0]
                 self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, applied_vx, self.player.velocity[1])
-
             if self.controller.joystick:
                 if self.controller.button_a and not getattr(self, '_ctrl_jump_pressed', False):
                     self._ctrl_jump_pressed = True
@@ -462,21 +377,17 @@ class Game:
                         self.sfx['jump'].play()
                 elif not self.controller.button_a:
                     self._ctrl_jump_pressed = False
-                
                 dash_input = self.controller.button_b or self.controller.left_trigger > 0.3 or self.controller.right_trigger > 0.3
                 if dash_input and not getattr(self, '_ctrl_dash_pressed', False):
                     self._ctrl_dash_pressed = True
                     self.player.dash()
                 elif not dash_input:
                     self._ctrl_dash_pressed = False
-
                 if self.controller.button_x and not getattr(self, '_ctrl_attack_pressed', False):
                     self._ctrl_attack_pressed = True
-                    
                     execute_attack(self) 
                 elif not self.controller.button_x:
                     self._ctrl_attack_pressed = False
-
                 if (self.controller.button_y or self.controller.button_rb) and not getattr(self, '_ctrl_weapon_pressed', False):
                     self._ctrl_weapon_pressed = True
                     self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
@@ -484,62 +395,40 @@ class Game:
                     self.player.weapon.set_weapon(self.weapon_type)
                 elif not (self.controller.button_y or self.controller.button_rb):
                     self._ctrl_weapon_pressed = False
-
                 if self.controller.button_start and not getattr(self, '_ctrl_start_pressed', False):
                     self._ctrl_start_pressed = True
                     self.net.send_map_change_request()
                 elif not self.controller.button_start:
                     self._ctrl_start_pressed = False
-
                 if self.controller.button_back and not getattr(self, '_ctrl_back_pressed', False):
                     self._ctrl_back_pressed = True
                     self.debug = not self.debug
                 elif not self.controller.button_back:
                     self._ctrl_back_pressed = False
-
             if self.transition != 0:
                 progress = (30 - abs(self.transition)) / 30.0
-                
                 self.transition_shader.prog["u_progress"] = progress
                 if "u_camera" in self.transition_shader.prog:
                     self.transition_shader.prog["u_camera"] = (render_scroll[0], -render_scroll[1])
-                
                 trans_surf = self.transition_shader.render(self.display_2)
                 self.display_2.blit(trans_surf, (0, 0))
-
-            
             self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
-
             if self.scream_active:
                 scream_surf = self.scream_shader.render(self.display_2)
                 self.display_2.blit(scream_surf, (0, 0))
-                
                 if time.time() - self.scream_shader.start_time - self.scream_shader.trigger_time > 1.2:
                     self.scream_active = False
-
-            # --- AFFICHAGE FINAL ---
-            screenshake_offset = (
-                random.random() * self.screenshake - self.screenshake / 2,
-                random.random() * self.screenshake - self.screenshake / 2
-            )
-            self.screen.blit(
-                pygame.transform.scale(self.display_2, self.screen.get_size()),
-                screenshake_offset
-            )
-
-            # --- AFFICHAGE DES FPS ---
+            screenshake_offset = (random.random() * self.screenshake - self.screenshake / 2, random.random() * self.screenshake - self.screenshake / 2)
+            self.screen.blit(pygame.transform.scale(self.display_2, self.screen.get_size()), screenshake_offset)
             if self.debug:
                 fps = int(self.clock.get_fps())
                 fps_color = (0, 255, 0) if fps >= 55 else (255, 255, 0) if fps >= 30 else (255, 0, 0)
                 fps_text = self.font.render(f"FPS: {fps}", True, fps_color)
                 self.screen.blit(fps_text, (10, 10))
-
                 ping = int(self.net.ping)
                 ping_color = (0, 255, 0) if ping < 80 else (255, 255, 0) if ping < 150 else (255, 0, 0)
                 ping_text = self.font.render(f"Ping: {ping} ms", True, ping_color)
                 self.screen.blit(ping_text, (10, 30))
-
-
             pygame.display.update()
 
 if __name__ == "__main__":
