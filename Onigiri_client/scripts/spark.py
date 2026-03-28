@@ -19,25 +19,32 @@ class Spark:
         return not self.speed
     
     def render(self, surf, offset=(0, 0)):
-        """
-        Le glow est fonctionel juste pas utile pour l instant (jpref sans mais j'ai quand meme coder pour plus tard héhé)
-        """
-        # 1. Dessin de la lueur (Glow)
-        # On crée une petite surface pour la lueur additive
-        #glow_size = int(self.speed * 8)
-        #if glow_size > 0:
-        #    glow_surf = pygame.Surface((glow_size * 2, glow_size * 2), pygame.SRCALPHA)
-            # Couleur lueur (orange/jaune pâle)
-        #    pygame.draw.circle(glow_surf, (255, 100, 50, 60), (glow_size, glow_size), glow_size)
-            # On blit en mode ADD sur la surface principale
-        #    surf.blit(glow_surf, (self.pos[0] - glow_size - offset[0], self.pos[1] - glow_size - offset[1]), special_flags=pygame.BLEND_RGB_ADD)
+        # 1. Glow suivant la forme du polygone (Spark Shape)
+        # On calcule une taille de surface suffisante pour contenir la forme (proportionnelle à speed)
+        size = int(self.speed * 5) + 1
+        if size > 1:
+            glow_surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
+            
+            # Points de la lueur (un peu plus larges que le spark normal)
+            # sl = scale longueur, st = scale épaisseur
+            # On dessine 2 couches pour un effet plus doux
+            for sl, st, color in [(4.0, 1.2, (255, 100, 50, 150)), (3.5, 0.8, (255, 200, 100, 200))]:
+                pts = [
+                    (size + math.cos(self.angle) * self.speed * sl, size + math.sin(self.angle) * self.speed * sl),
+                    (size + math.cos(self.angle + math.pi * 0.5) * self.speed * st, size + math.sin(self.angle + math.pi * 0.5) * self.speed * st),
+                    (size + math.cos(self.angle + math.pi) * self.speed * sl, size + math.sin(self.angle + math.pi) * self.speed * sl),
+                    (size + math.cos(self.angle - math.pi * 0.5) * self.speed * st, size + math.sin(self.angle - math.pi * 0.5) * self.speed * st),
+                ]
+                pygame.draw.polygon(glow_surf, color, pts)
+            
+            # Blit avec mode ADD pour l'effet incandescent sur la forme même du spark
+            surf.blit(glow_surf, (self.pos[0] - size - offset[0], self.pos[1] - size - offset[1]), special_flags=pygame.BLEND_RGB_ADD)
 
-        # 2. Dessin du cœur de l'étincelle (Polygon)
+        # 2. Dessin du cœur de l'étincelle (base)
         render_points = [
             (self.pos[0] + math.cos(self.angle) * self.speed * 3 - offset[0], self.pos[1] + math.sin(self.angle) * self.speed * 3 - offset[1]),
             (self.pos[0] + math.cos(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset[0], self.pos[1] + math.sin(self.angle + math.pi * 0.5) * self.speed * 0.5 - offset[1]),
             (self.pos[0] + math.cos(self.angle + math.pi) * self.speed * 3 - offset[0], self.pos[1] + math.sin(self.angle + math.pi) * self.speed * 3 - offset[1]),
             (self.pos[0] + math.cos(self.angle - math.pi * 0.5) * self.speed * 0.5 - offset[0], self.pos[1] + math.sin(self.angle - math.pi * 0.5) * self.speed * 0.5 - offset[1]),
         ]
-        
         pygame.draw.polygon(surf, (255, 255, 255), render_points)
