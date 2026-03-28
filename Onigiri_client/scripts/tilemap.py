@@ -119,14 +119,17 @@ class Tilemap:
 
     def render(self, surf, offset=(0, 0), dt=0, show_spawners=False):
         for tile in self.offgrid_tiles:
-            surf.blit(self.game.assets[tile['type']][tile['variant']], (tile['pos'][0] - offset[0], tile['pos'][1] - offset[1]))
+            pos = (tile['pos'][0] - offset[0], tile['pos'][1] - offset[1])
+            surf.blit(self.game.assets[tile['type']][tile['variant']], pos)
+
         for x in range(offset[0] // self.tile_size, (offset[0] + surf.get_width()) // self.tile_size + 1):
             for y in range(offset[1] // self.tile_size, (offset[1] + surf.get_height()) // self.tile_size + 1):
                 loc = str(x) + ';' + str(y)
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
                     if tile['type'] != 'spawners' or show_spawners:
-                        surf.blit(self.game.assets[tile['type']][tile['variant']],
-                                (tile['pos'][0] * self.tile_size - offset[0],
-                                tile['pos'][1] * self.tile_size - offset[1]))
+                        pos = (tile['pos'][0] * self.tile_size - offset[0],
+                                tile['pos'][1] * self.tile_size - offset[1])
+                        surf.blit(self.game.assets[tile['type']][tile['variant']], pos)
+
         self.grass_manager.update_render(surf, dt=dt, offset=offset)

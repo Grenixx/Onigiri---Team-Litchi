@@ -20,7 +20,6 @@ from scripts.spark import Spark
 from scripts.shader_bg import ShaderBackground
 from scripts.client_network import ClientNetwork
 from scripts.controller import Controller  
-from scripts.lighting import LightingSystem
 from scripts.shader_effect import ShaderEffect
 
 def resource_path(relative_path):
@@ -139,7 +138,8 @@ class Game:
         self.transition_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/3.9transi.frag", ctx=self.ctx)
         self.scream_active = False 
         self.controller = Controller()
-        self.lighting = LightingSystem(self.display.get_size())
+        
+        # -------------------------
         self.weapon_type = 'mace' 
         self.weaponDictionary = {1: 'slashTriangle', 2: 'mace1', 3: 'mace'}
         self.currentWeaponIndex = 1
@@ -172,7 +172,6 @@ class Game:
         self.shader_bg.resize(SCALE[0], SCALE[1])
         self.scream_shader.resize(SCALE[0], SCALE[1])
         self.transition_shader.resize(SCALE[0], SCALE[1])
-        self.lighting.size = SCALE
 
     def load_level(self, map_id):
         self.tilemap.load('data/maps/' + str(map_id) + '.json')
@@ -236,7 +235,7 @@ class Game:
                 if random.random() * 49999 < rect.width * rect.height:
                     pos = (rect.x + random.random() * rect.width, rect.y + random.random() * rect.height)
                     self.particles.append(Particle(self, 'leaf', pos, velocity=[-0.1, 0.3], frame=random.randint(0, 20)))
-            self.tilemap.render(self.display, offset=render_scroll)
+            self.tilemap.render(self.display, offset=render_scroll, dt=dt)
             self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
             self.enemies_renderer.update(dt)
             self.enemies_renderer.render(self.display, offset=render_scroll, dt=dt)
@@ -248,6 +247,8 @@ class Game:
                 self.player.render(self.display, offset=render_scroll, white=white_flash)
             self.remote_players_renderer.render(self.display, offset=render_scroll, dt=real_dt)
             self.display_2.blit(self.display, (0, 0))
+            
+            # --- APPLY GLOW REMOVED ---
             for spark in self.sparks.copy():
                 kill = spark.update(dt) 
                 spark.render(self.display_2, offset=render_scroll)

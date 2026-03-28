@@ -305,11 +305,12 @@ class GrassTile:
         for blade in blades:
             self.ga.render_blade(surf, blade[1], (blade[0][0] + self.padding, blade[0][1] + self.padding), max(-90, min(90, blade[2] + self.true_rotation)))
 
-        # return surf and shadow_surf if applicable
+        # return surf and optional components
+        outputs = [surf]
         if render_shadow:
-            return surf, shadow_surf
-        else:
-            return surf
+                outputs.append(shadow_surf)
+        
+        return outputs if len(outputs) > 1 else surf
 
     # draw the shadow image for the tile
     def render_shadow(self, surf, offset=(0, 0)):
@@ -320,16 +321,17 @@ class GrassTile:
     def render(self, surf, dt, offset=(0, 0)):
         # render a new grass tile image if using custom uncached data otherwise use cached data if possible
         if self.custom_blade_data:
-            surf.blit(self.render_tile(), (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
+            results = self.render_tile()
+            surf.blit(results[0] if isinstance(results, list) else results, (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
 
         else:
             # check if a new cached image needs to be generated and use the cached data if not (also cache shadow if necessary)
-            if (self.render_data not in self.gm.grass_cache) and (self.gm.ground_shadow[0] and (self.base_id not in self.gm.shadow_cache)):
-                grass_img, shadow_img = self.render_tile(render_shadow=True)
-                self.gm.grass_cache[self.render_data] = grass_img
-                self.gm.shadow_cache[self.base_id] = shadow_img
-            elif self.render_data not in self.gm.grass_cache:
-                self.gm.grass_cache[self.render_data] = self.render_tile()
+            if (self.render_data not in self.gm.grass_cache):
+                results = self.render_tile(render_shadow=self.gm.ground_shadow[0])
+                if self.gm.ground_shadow[0]:
+                    self.gm.grass_cache[self.render_data], self.gm.shadow_cache[self.base_id] = results
+                else:
+                    self.gm.grass_cache[self.render_data] = results
 
             # render image from the cache
             surf.blit(self.gm.grass_cache[self.render_data], (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))

@@ -100,3 +100,5 @@ class Animation:
         index = max(0, min(index, len(self.masks) - 1))
         target_list = self.pygame_masks_flipped if flip else self.pygame_masks
         return target_list[index]
+
+
