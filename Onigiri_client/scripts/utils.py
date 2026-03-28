@@ -9,6 +9,43 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+def get_glow_mask(surf, color=None):
+    # This function creates a copy of the surface where only the specified color remains.
+    # Everything else becomes black (transparent to the lighting system).
+    # If color is None, it targets the brightest pixels in the image.
+    glow_mask = pygame.Surface(surf.get_size(), pygame.SRCALPHA)
+    glow_mask.fill((0, 0, 0, 0))
+    
+    pixels = pygame.PixelArray(surf)
+    mask_pixels = pygame.PixelArray(glow_mask)
+    
+    if color:
+        tr, tg, tb = color[:3]
+        tolerance = 45
+    
+    for x in range(surf.get_width()):
+        for y in range(surf.get_height()):
+            p_color = surf.unmap_rgb(pixels[x,y])
+            if p_color.a < 10: continue # Skip transparent
+            
+            should_glow = False
+            if color:
+                if (abs(p_color.r - tr) < tolerance and 
+                    abs(p_color.g - tg) < tolerance and 
+                    abs(p_color.b - tb) < tolerance):
+                    should_glow = True
+            else:
+                # Default "shimmer" mode: glow any bright pixel (highlights)
+                if (p_color.r + p_color.g + p_color.b) > 400: # Bright pixels
+                    should_glow = True
+            
+            if should_glow:
+                mask_pixels[x, y] = pixels[x, y]
+                
+    del pixels
+    del mask_pixels
+    return glow_mask
+
 BASE_IMG_PATH = 'data/images/'
 
 def load_image(path, convert_alpha=False):

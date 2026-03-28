@@ -138,7 +138,16 @@ class Game:
         self.transition_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/3.9transi.frag", ctx=self.ctx)
         self.scream_active = False 
         self.controller = Controller()
+        self.emissive_surface = pygame.Surface(SCALE, pygame.SRCALPHA)
+        self.bloom_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/bloom.frag", ctx=self.ctx)
         
+        # --- GLOW SYSTEM SETUP ---
+        self.glow_assets = {}
+        # Make the 'grass' tile tops glow (Red)
+        if 'grass' in self.assets:
+            from scripts.utils import get_glow_mask
+            # Targeting the red pixels (255, 0, 0) with some tolerance
+            self.glow_assets['grass'] = [get_glow_mask(img, (255, 0, 0)) for img in self.assets['grass']]
         # -------------------------
         self.weapon_type = 'mace' 
         self.weaponDictionary = {1: 'slashTriangle', 2: 'mace1', 3: 'mace'}
@@ -172,6 +181,8 @@ class Game:
         self.shader_bg.resize(SCALE[0], SCALE[1])
         self.scream_shader.resize(SCALE[0], SCALE[1])
         self.transition_shader.resize(SCALE[0], SCALE[1])
+        self.bloom_shader.resize(SCALE[0], SCALE[1])
+        self.emissive_surface = pygame.Surface(SCALE, pygame.SRCALPHA)
 
     def load_level(self, map_id):
         self.tilemap.load('data/maps/' + str(map_id) + '.json')
@@ -216,6 +227,7 @@ class Game:
             self.remote_players = self.net.remote_players
             self.display.fill((0, 0, 0, 0))
             self.display_2.fill((0, 0, 0))
+            self.emissive_surface.fill((0, 0, 0, 0))
             shader_surface = self.shader_bg.render(camera=(render_scroll[0] * 0.2, render_scroll[1] * -0.2))
             self.display_2.blit(shader_surface, (0, 0))
             self.clouds.render(self.display_2, offset=render_scroll)
@@ -235,8 +247,8 @@ class Game:
                 if random.random() * 49999 < rect.width * rect.height:
                     pos = (rect.x + random.random() * rect.width, rect.y + random.random() * rect.height)
                     self.particles.append(Particle(self, 'leaf', pos, velocity=[-0.1, 0.3], frame=random.randint(0, 20)))
-            self.tilemap.render(self.display, offset=render_scroll, dt=dt)
-            self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
+            self.tilemap.render(self.display, offset=render_scroll, dt=dt, emissive_surf=self.emissive_surface, glow_assets=self.glow_assets)
+            self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10, emissive_surf=self.emissive_surface)
             self.enemies_renderer.update(dt)
             self.enemies_renderer.render(self.display, offset=render_scroll, dt=dt)
             if not self.dead:
@@ -248,7 +260,10 @@ class Game:
             self.remote_players_renderer.render(self.display, offset=render_scroll, dt=real_dt)
             self.display_2.blit(self.display, (0, 0))
             
-            # --- APPLY GLOW REMOVED ---
+            # --- APPLY BLOOM ---
+            bloom_surf = self.bloom_shader.render(self.emissive_surface)
+            self.display_2.blit(bloom_surf, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+            # -------------------
             for spark in self.sparks.copy():
                 kill = spark.update(dt) 
                 spark.render(self.display_2, offset=render_scroll)

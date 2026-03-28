@@ -117,10 +117,14 @@ class Tilemap:
                 density = random.randint(3, 7)
                 self.grass_manager.place_tile(pos, density, [0, 1, 2])
 
-    def render(self, surf, offset=(0, 0), dt=0, show_spawners=False):
+    def render(self, surf, offset=(0, 0), dt=0, show_spawners=False, emissive_surf=None, glow_assets=None):
         for tile in self.offgrid_tiles:
             pos = (tile['pos'][0] - offset[0], tile['pos'][1] - offset[1])
             surf.blit(self.game.assets[tile['type']][tile['variant']], pos)
+            
+            # Draw glow if present
+            if emissive_surf and glow_assets and tile['type'] in glow_assets:
+                emissive_surf.blit(glow_assets[tile['type']][tile['variant']], pos)
 
         for x in range(offset[0] // self.tile_size, (offset[0] + surf.get_width()) // self.tile_size + 1):
             for y in range(offset[1] // self.tile_size, (offset[1] + surf.get_height()) // self.tile_size + 1):
@@ -131,5 +135,9 @@ class Tilemap:
                         pos = (tile['pos'][0] * self.tile_size - offset[0],
                                 tile['pos'][1] * self.tile_size - offset[1])
                         surf.blit(self.game.assets[tile['type']][tile['variant']], pos)
+                        
+                        # Draw glow if present
+                        if emissive_surf and glow_assets and tile['type'] in glow_assets:
+                             emissive_surf.blit(glow_assets[tile['type']][tile['variant']], pos)
 
-        self.grass_manager.update_render(surf, dt=dt, offset=offset)
+        self.grass_manager.update_render(surf, dt=dt, offset=offset, emissive_surf=emissive_surf)

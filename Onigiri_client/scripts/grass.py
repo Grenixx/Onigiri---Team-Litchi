@@ -107,6 +107,7 @@ class GrassManager:
         self.grass_id = 0
         self.grass_cache = {}
         self.shadow_cache = {}
+        self.glow_cache = {}
         self.formats = {}
 
         # tile data
@@ -159,7 +160,7 @@ class GrassManager:
                     self.grass_tiles[pos].apply_force(location, radius, dropoff)
 
     # an update and render combination function
-    def update_render(self, surf, dt, offset=(0, 0), rot_function=None):
+    def update_render(self, surf, dt, offset=(0, 0), rot_function=None, emissive_surf=None):
         visible_tile_range = (int(surf.get_width() // self.tile_size) + 1, int(surf.get_height() // self.tile_size) + 1)
         base_pos = (int(offset[0] // self.tile_size), int(offset[1] // self.tile_size))
 
@@ -179,7 +180,7 @@ class GrassManager:
         # render the grass tiles
         for pos in render_list:
             tile = self.grass_tiles[pos]
-            tile.render(surf, dt, offset=offset)
+            tile.render(surf, dt, offset=offset, emissive_surf=emissive_surf)
             if rot_function:
                 tile.set_rotation(rot_function(tile.loc[0], tile.loc[1]))
 
@@ -195,8 +196,13 @@ class GrassAssets:
             img = pygame.image.load(img_path).convert()
             img.set_colorkey((0, 0, 0))
             self.blades.append(img)
+            
+        # EXTRACTION DU GLOW POUR LA GRASS ROUGE
+        from scripts.utils import get_glow_mask
+        # On cible tout ce qui est vraiment "rouge" dans les herbes rouges
+        self.glow_blades = [get_glow_mask(img, (255, 0, 0)) for img in self.blades]
 
-    def render_blade(self, surf, blade_id, location, rotation):
+    def render_blade(self, surf, blade_id, location, rotation, glow_surf=None):
         # rotate the blade
         rot_img = pygame.transform.rotate(self.blades[blade_id], rotation)
 
@@ -208,6 +214,11 @@ class GrassAssets:
 
         # render the blade
         surf.blit(rot_img, (location[0] - rot_img.get_width() // 2, location[1] - rot_img.get_height() // 2))
+        
+        # AJOUT DU GLOW SUR LA SURFACE ÉMISSIVE
+        if glow_surf:
+            rot_glow = pygame.transform.rotate(self.glow_blades[blade_id], rotation)
+            glow_surf.blit(rot_glow, (location[0] - rot_glow.get_width() // 2, location[1] - rot_glow.get_height() // 2))
 
 # the grass tile object that contains data for the blades
 class GrassTile:
@@ -282,10 +293,15 @@ class GrassTile:
         self.update_render_data()
 
     # render the tile's image based on its current state and return the data
-    def render_tile(self, render_shadow=False):
+    def render_tile(self, render_shadow=False, render_glow=False):
         # make a new padded surface (to fit blades spilling out of the tile)
         surf = pygame.Surface((self.size + self.padding * 2, self.size + self.padding * 2))
         surf.set_colorkey((0, 0, 0))
+        
+        glow_surf = None
+        if render_glow:
+            glow_surf = pygame.Surface(surf.get_size(), pygame.SRCALPHA)
+            glow_surf.fill((0, 0, 0, 0))
 
         # use custom_blade_data if it's active (uncached). otherwise use the base data (cached).
         if self.custom_blade_data:
@@ -303,12 +319,14 @@ class GrassTile:
 
         # render each blade using the asset manager
         for blade in blades:
-            self.ga.render_blade(surf, blade[1], (blade[0][0] + self.padding, blade[0][1] + self.padding), max(-90, min(90, blade[2] + self.true_rotation)))
+            self.ga.render_blade(surf, blade[1], (blade[0][0] + self.padding, blade[0][1] + self.padding), max(-90, min(90, blade[2] + self.true_rotation)), glow_surf=glow_surf)
 
         # return surf and optional components
         outputs = [surf]
         if render_shadow:
                 outputs.append(shadow_surf)
+        if render_glow:
+                outputs.append(glow_surf)
         
         return outputs if len(outputs) > 1 else surf
 
@@ -318,23 +336,27 @@ class GrassTile:
             surf.blit(self.gm.shadow_cache[self.base_id], (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
 
     # draw the grass itself
-    def render(self, surf, dt, offset=(0, 0)):
+    def render(self, surf, dt, offset=(0, 0), emissive_surf=None):
         # render a new grass tile image if using custom uncached data otherwise use cached data if possible
         if self.custom_blade_data:
-            results = self.render_tile()
-            surf.blit(results[0] if isinstance(results, list) else results, (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
+            results = self.render_tile(render_glow=True)
+            surf.blit(results[0], (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
+            if emissive_surf:
+                emissive_surf.blit(results[1], (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
 
         else:
-            # check if a new cached image needs to be generated and use the cached data if not (also cache shadow if necessary)
+            # check if a new cached image needs to be generated and use the cached data if not (also cache shadow/glow if necessary)
             if (self.render_data not in self.gm.grass_cache):
-                results = self.render_tile(render_shadow=self.gm.ground_shadow[0])
+                results = self.render_tile(render_shadow=self.gm.ground_shadow[0], render_glow=True)
                 if self.gm.ground_shadow[0]:
-                    self.gm.grass_cache[self.render_data], self.gm.shadow_cache[self.base_id] = results
+                    self.gm.grass_cache[self.render_data], self.gm.shadow_cache[self.base_id], self.gm.glow_cache[self.render_data] = results
                 else:
-                    self.gm.grass_cache[self.render_data] = results
+                    self.gm.grass_cache[self.render_data], self.gm.glow_cache[self.render_data] = results
 
             # render image from the cache
             surf.blit(self.gm.grass_cache[self.render_data], (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
+            if emissive_surf and self.render_data in self.gm.glow_cache:
+                emissive_surf.blit(self.gm.glow_cache[self.render_data], (self.loc[0] - offset[0] - self.padding, self.loc[1] - offset[1] - self.padding))
 
         # attempt to move blades back to their base position
         if self.custom_blade_data:
