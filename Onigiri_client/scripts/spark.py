@@ -22,7 +22,7 @@ class Spark:
         if size > 1:
             glow_surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
             
-            for sl, st, color in [(4.0, 1.2, (255, 100, 50, 150)), (3.5, 0.8, (255, 200, 100, 200))]:
+            for sl, st, color in [(4.0, 1.2, (255, 255, 255, 120)), (3.5, 0.8, (255, 255, 255, 180))]:
                 pts = [
                     (size + math.cos(self.angle) * self.speed * sl, size + math.sin(self.angle) * self.speed * sl),
                     (size + math.cos(self.angle + math.pi * 0.5) * self.speed * st, size + math.sin(self.angle + math.pi * 0.5) * self.speed * st),

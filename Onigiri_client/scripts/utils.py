@@ -3,7 +3,6 @@ import pygame
 import sys
 
 def resource_path(relative_path):
-    """PyInstaller support"""
     try:
         base_path = sys._MEIPASS
     except AttributeError:
@@ -13,7 +12,6 @@ def resource_path(relative_path):
 BASE_IMG_PATH = 'data/images/'
 
 def load_image(path, convert_alpha=False):
-    """path doit être relatif à BASE_IMG_PATH"""
     full_path = resource_path(os.path.join(BASE_IMG_PATH, path))
     img = pygame.image.load(full_path, "RGBA")
     

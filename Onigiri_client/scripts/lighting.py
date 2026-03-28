@@ -5,7 +5,6 @@ import random
 import sys, os
 
 def resource_path(relative_path):
-    """PyInstaller support"""
     try:
         base_path = sys._MEIPASS
     except AttributeError:
