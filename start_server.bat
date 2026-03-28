@@ -1,3 +1,3 @@
-cd ninja_game_server\
+cd Onigiri_server\
 @echo off
 python server.py %*
