@@ -61,7 +61,6 @@ class PhysicsEntity:
                     self.collisions['left'] = True
                 self.pos[0] = entity_rect.x
         
-        # Reset de la vélocité horizontale si on tape un mur
         if self.collisions['right'] or self.collisions['left']:
             self.velocity[0] = 0
 
@@ -217,7 +216,11 @@ class Player(PhysicsEntity):
             self.game.dead += dt * 60
         
         if self.collisions['right'] or self.collisions['left']:
-             if self.air_time > 0 and not self.collisions['down']:
+            self.can_dash = True
+            if self.dashing != 0:
+                self.dashing = 0
+                self.dash_dir = [0, 0]
+            if self.air_time > 0 and not self.collisions['down']:
                 self.wall_slide = True
                 self.air_time = 0.08
                 if self.collisions['right']:
@@ -225,7 +228,7 @@ class Player(PhysicsEntity):
                 else:
                     self.flip = True
                 self.set_action('wall_slide')
-             else:
+            else:
                 self.wall_slide = False
         else:
             self.wall_slide = False

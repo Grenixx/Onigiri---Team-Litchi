@@ -3,6 +3,7 @@ import pygame
 import sys
 
 def resource_path(relative_path):
+    """PyInstaller support"""
     try:
         base_path = sys._MEIPASS
     except AttributeError:
@@ -16,8 +17,6 @@ def load_image(path, convert_alpha=False):
     full_path = resource_path(os.path.join(BASE_IMG_PATH, path))
     img = pygame.image.load(full_path, "RGBA")
     
-    # On force le colorkey noir AVANT le convert_alpha pour les masques
-    
     if convert_alpha:
         img.set_colorkey((0, 0, 0))
         img = img.convert_alpha()
@@ -26,7 +25,6 @@ def load_image(path, convert_alpha=False):
 
 
 def load_images(path, convert_alpha: list | bool = False):
-    """path doit être relatif à BASE_IMG_PATH"""
     folder_path = resource_path(os.path.join(BASE_IMG_PATH, path))
     images = []
     for img_name in sorted(os.listdir(folder_path)):

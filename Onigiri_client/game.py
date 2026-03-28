@@ -23,17 +23,14 @@ from scripts.controller import Controller
 from scripts.lighting import LightingSystem
 from scripts.shader_effect import ShaderEffect
 
-###
-# TIPS POUR MOI MEME pour les bugg lier au mouvement peut etre pour etduidier le gresillement je peux retirer l offset de la camera pour voir si c est la cam 
-# le prob ou ma gestion du mouve en elle meme
-###
+
 
 def resource_path(relative_path):
     """Permet de trouver les fichiers quand le script est compilé en exe"""
     import sys
     import os
     try:
-        #PyInstaller stocke les fichiers dans _MEIPASS on a besoind d un fonc pour y acceder heheeee
+        #PyInstaller support
         base_path = sys._MEIPASS
     except AttributeError:
         base_path = os.path.abspath(".")
@@ -49,10 +46,11 @@ def execute_attack(self):
 
 class Game:
     def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1"):
+        """Initialise le jeu, les paramètres d'affichage, les assets et la connexion réseau."""
         self.max_fps = max_fps
         pygame.init()
 
-        self.controls=self.loadcontrols() #chargement des touches du fichier de config user_prefs.json 
+        self.controls=self.loadcontrols() 
         pygame.display.set_caption('Onigiri')
         if resolution == [0, 0]:
             monitors = get_monitors()
@@ -121,11 +119,10 @@ class Game:
             'ambience': pygame.mixer.Sound(resource_path('data/sfx/ambience.wav')),
         }
 
-        self.MUSIC_Volume = 0  ############# Volume global #############
+        self.MUSIC_Volume = 0  
         self.SFX_Volume = 0  
         self.music_on = False  
 
-        # Ajuster les volumes
         self.sfx['ambience'].set_volume(self.SFX_Volume)
         self.sfx['shoot'].set_volume(self.SFX_Volume)
         self.sfx['hit'].set_volume(self.SFX_Volume)
@@ -155,13 +152,13 @@ class Game:
         self.shader_bg = ShaderBackground(SCALE[0], SCALE[1], "data/shaders/1.0 tuto.frag", ctx=self.ctx)
         self.scream_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/4.0.frag", ctx=self.ctx)
         self.transition_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/3.9transi.frag", ctx=self.ctx)
-        self.scream_active = False # Désactivé par défaut, on le déclenche sur commande
+        self.scream_active = False 
 
         self.controller = Controller()
 
         self.lighting = LightingSystem(self.display.get_size())
 
-        self.weapon_type = 'mace' # On commence avec la masse
+        self.weapon_type = 'mace' 
         self.weaponDictionary = {1: 'slashTriangle', 2: 'mace1', 3: 'mace'}
         self.currentWeaponIndex = 1
 
@@ -171,6 +168,7 @@ class Game:
         self.freeze_time = 0
 
     def loadcontrols(self):
+        """Charge les préférences de contrôle depuis le fichier JSON."""
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
         try:
             path = resource_path('user_prefs.json')
@@ -178,7 +176,6 @@ class Game:
                 with open(path, 'r') as f:
                     data = json.load(f)
                     user_keys = data.get('controls', {})
-                    # On fusionne avec les défauts pour éviter les clés manquantes
                     return {k: user_keys.get(k, default_keys[k]) for k in default_keys}
             return default_keys
         except Exception as e:
@@ -187,6 +184,7 @@ class Game:
 
 
     def set_zoom(self, zoom_value):
+        """Ajuste le niveau de zoom et redimensionne les surfaces d'affichage."""
         self.zoom = max(0.5, min(zoom_value, 2.0))
         
         new_width = int(self.base_resolution[0] / self.zoom)
@@ -203,13 +201,13 @@ class Game:
         self.lighting.size = SCALE
 
     def load_level(self, map_id):
+        """Charge une carte par son ID et réinitialise les entités du niveau."""
         self.tilemap.load('data/maps/' + str(map_id) + '.json')
         
         self.leaf_spawners = []
         for tree in self.tilemap.extract([('large_decor', 2)], keep=True):
             self.leaf_spawners.append(pygame.Rect(4 + tree['pos'][0], 4 + tree['pos'][1], 23, 13))
             
-        #ca les prend puis supr donc on doit rajouter TOUT les spawner pour eviter de les blit comme des decors
         for spawner in self.tilemap.extract([('spawners', i) for i in range(10)]):
             if spawner['variant'] == 0:
                 self.player.pos = spawner['pos']
@@ -225,24 +223,21 @@ class Game:
         self.invincibility_time = 0
         self.transition = -30
 
-        self.invincibility_time = 3.0 # ~200 frames at 60fps
+        self.invincibility_time = 3.0 
 
         
     def run(self):
+        """Boucle principale du jeu."""
         pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
         pygame.mixer.music.set_volume(self.MUSIC_Volume)
         pygame.mixer.music.play(-1)
         
-        #self.sfx['ambience'].play(-1)
-        
         while True:
-            # Calcul du dt réel en secondes
             real_dt = self.clock.tick(self.max_fps) / 1000
             
-            # Gestion du Freeze-frame (Impact feel local)
             if self.freeze_time > 0:
                 self.freeze_time -= real_dt
-                dt = 0 # Le temps s'arrête pour le joueur local et les ennemis
+                dt = 0 
             else:
                 dt = real_dt
             
@@ -256,9 +251,9 @@ class Game:
                 self.load_level(self.level)
             
 
-            self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  #/5 # smooth cam
+            self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0])  
 
-            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2  - self.scroll[1]) #/5 # smooth cam
+            self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2  - self.scroll[1]) 
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
             self.remote_players = self.net.remote_players
@@ -274,8 +269,8 @@ class Game:
             self.screenshake = max(0, self.screenshake - 1)
 
             if self.transition < 0:
-                if dt < 0.2:  # Pour éviter que ca soit a 0.45 frame 1 car le dt s init a de grande valeur au lancement
-                    self.transition += dt * 60 #60 c est la speed
+                if dt < 0.2:  
+                    self.transition += dt * 60 
                     if self.transition > 0:
                         self.transition = 0
             
@@ -291,16 +286,13 @@ class Game:
                     pos = (rect.x + random.random() * rect.width, rect.y + random.random() * rect.height)
                     self.particles.append(Particle(self, 'leaf', pos, velocity=[-0.1, 0.3], frame=random.randint(0, 20)))
             
-            # --- TILEMAP / GRASS ---
             self.tilemap.render(self.display, offset=render_scroll)
             self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll,
                 rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
 
-            # --- ENEMIES ---
             self.enemies_renderer.update(dt)
             self.enemies_renderer.render(self.display, offset=render_scroll, dt=dt)
 
-            # --- PLAYER RENDER ---
             if not self.dead:
                 white_flash = False
                 if self.invincibility_time > 0:
@@ -308,37 +300,10 @@ class Game:
                         white_flash = True
                 self.player.render(self.display, offset=render_scroll, white=white_flash)
 
-            # [[x, y], direction, timer]
-            #for projectile in self.projectiles.copy():
-            #    projectile[0][0] += projectile[1]
-            #    projectile[2] += 1
-            #    img = self.assets['projectile']
-            #    self.display.blit(img, (projectile[0][0] - img.get_width() / 2 - render_scroll[0], projectile[0][1] - img.get_height() / 2 - render_scroll[1]))
-            #    if self.tilemap.solid_check(projectile[0]):
-            #        self.projectiles.remove(projectile)
-            #    for i in range(4):
-            #            self.sparks.append(Spark(projectile[0], random.random() - 0.5 + (math.pi if projectile[1] > 0 else 0), 2 + random.random()))
-            #    elif projectile[2] > 360:
-            #        self.projectiles.remove(projectile)
-            #    elif abs(self.player.dashing) < 50:
-            #        if self.player.rect().collidepoint(projectile[0]):
-            #            self.projectiles.remove(projectile)
-            #            self.dead += dt * 60
-            #            self.sfx['hit'].play()
-            #            self.screenshake = max(16, self.screenshake)
-            #            for i in range(30):
-            #                angle = random.random() * math.pi * 2
-            #                speed = random.random() * 5
-            #                self.sparks.append(Spark(self.player.rect().center, angle, 2 + random.random()))
-            #                self.particles.append(Particle(self, 'particle', self.player.rect().center, velocity=[math.cos(angle + math.pi) * speed * 0.5, math.sin(angle + math.pi) * speed * 0.5], frame=random.randint(0, 7)))
-                        
-            # --- REMOTE PLAYERS ---
-            # On utilise real_dt pour les autres joueurs pour éviter qu'ils se figent quand l'un de nous tape
             self.remote_players_renderer.render(self.display, offset=render_scroll, dt=real_dt)
 
             self.display_2.blit(self.display, (0, 0))
 
-            # --- VFX (Drawing on display_2 for additive glow visibility) ---
             for spark in self.sparks.copy():
                 kill = spark.update(dt) 
                 spark.render(self.display_2, offset=render_scroll)
@@ -354,13 +319,9 @@ class Game:
                     self.particles.remove(particle)
 
             for event in pygame.event.get():
-                # Si l'utilisateur ferme la fenêtre
-                # Si l'utilisateur ferme la fenêtre
                 if event.type == pygame.QUIT:
                     self.net.disconnect()
-                    # On quitte la boucle de jeu pour revenir au menu
                     return
-                # Si une touche est pressée
                 if event.type == pygame.KEYDOWN:
                     keys_pressed = pygame.key.get_pressed()
                     if keys_pressed[pygame.K_LCTRL] and keys_pressed[pygame.K_RCTRL]:
@@ -373,7 +334,7 @@ class Game:
                     if event.key == pygame.K_F1:
                         self.debug = not self.debug
                     if event.key == pygame.K_F2:
-                        self.music_on = not self.music_on # Inverse l'état (True devient False et inversement)
+                        self.music_on = not self.music_on 
                         
                         if self.music_on:
                             self.MUSIC_Volume = 0.5  
@@ -395,12 +356,10 @@ class Game:
                             self.sfx['dash'].set_volume(self.SFX_Volume)
                             self.sfx['jump'].set_volume(self.SFX_Volume)
                             print("Musique coupée")
-                    # Mouvement horizontal
                     if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = True
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = True
-                    # On vérifie d'abord la touche, PUIS on tente de sauter.
                     if event.key == self.controls["JUMP"] or event.key == pygame.K_w:
                         if self.player.request_jump():
                             self.sfx['jump'].play()
@@ -413,16 +372,12 @@ class Game:
                     if event.key == pygame.K_n:
                         self.net.send_map_change_request()
                     if event.key == pygame.K_j:
-                        # Déclenche l'effet à la position du joueur
-                        # On convertit les coordonnées écran en 0.0-1.0 (UV)
                         p_pos = (self.player.rect().center)
                         uv_x = (p_pos[0] - render_scroll[0]) / self.display.get_width()
                         uv_y = (p_pos[1] - render_scroll[1]) / self.display.get_height()
-                        # ModernGL a Y inversé par rapport à Pygame pour les textures
                         self.scream_shader.trigger((uv_x, 1.0 - uv_y))
                         self.scream_active = True
 
-                    # Zoom dezoom :D
                     if event.key == pygame.K_KP_PLUS or event.key == pygame.K_PLUS:
                          self.set_zoom(self.zoom + 0.1)
                     if event.key == pygame.K_KP_MINUS or event.key == pygame.K_MINUS:
@@ -431,7 +386,6 @@ class Game:
                 if event.type == pygame.MOUSEWHEEL:
                     self.set_zoom(self.zoom + event.y * 0.1)
 
-                # Si une touche est relâchée
                 if event.type == pygame.KEYUP or event.type == pygame.K_SPACE:
                     if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = False
@@ -440,27 +394,21 @@ class Game:
                     if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_d, pygame.K_a, pygame.K_SPACE, pygame.K_s]:
                         pass 
                 
-                # Si un bouton de la souris est pressé
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:  # Clic gauche
+                    if event.button == 1:  
                         execute_attack(self)
                 if event.type == pygame.KEYDOWN:
-                    if event.key == self.controls["ATTACK"]: # Touche définie pour l'attaque
+                    if event.key == self.controls["ATTACK"]: 
                         execute_attack(self)
                 
 
-            # --- MISE À JOUR INPUTS MANETTE ---
             self.controller.update()
 
-            # --- CONSOLIDATION DES MOUVEMENTS ET DIRECTIONS (Clavier + Manette) ---
             keys = pygame.key.get_pressed()
             
-            # 1. Mouvements Horizontaux
-            # Clavier (via events movement[0]/[1])
             kb_left = self.movement[0]
             kb_right = self.movement[1]
             
-            # Manette
             ctrl_left = False
             ctrl_right = False
             if self.controller.joystick:
@@ -469,21 +417,16 @@ class Game:
                 elif self.controller.left_stick_x > 0.4 or self.controller.dpad_right:
                     ctrl_right = True
             
-            # Fusion : On bouge si l'un OU l'autre est pressé
             final_move_left = kb_left or ctrl_left
             final_move_right = kb_right or ctrl_right
-            # On met temporairement les mouvements fusionnés dans movement pour que PhysicsEntity les utilise
             current_frame_movement = (final_move_right - final_move_left, 0)
 
-            # 2. Directions (is_pressed)
             direction_vec = [0, 0]
-            # Clavier
             if keys[self.controls["UP"]] or keys[pygame.K_UP]: direction_vec[1] -= 1
             if keys[self.controls["DOWN"]] or keys[pygame.K_DOWN]: direction_vec[1] += 1
             if keys[self.controls["LEFT"]] or keys[pygame.K_LEFT]: direction_vec[0] -= 1
             if keys[self.controls["RIGHT"]] or keys[pygame.K_RIGHT]: direction_vec[0] += 1
             
-            # Manette (écrase seulement si stick actif)
             if self.controller.joystick:
                 ls_x = self.controller.left_stick_x
                 ls_y = self.controller.left_stick_y
@@ -498,12 +441,10 @@ class Game:
             
             self.player.input_axis = direction_vec
 
-            # --- PLAYER UPDATE (Après consolidation) ---
             if not self.dead:
                 move_dir = (final_move_right - final_move_left)
                 self.player.update(self.tilemap, (move_dir, 0), dt=dt)
 
-                # --- SEND STATE TO SERVER ---
                 action_mapping = {
                     "idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4,
                     "attack_front": 5, "attack_up": 6, "attack_down": 7,
@@ -511,13 +452,10 @@ class Game:
                 action_id = action_mapping.get(self.player.action, 0)
                 flip_byte = 1 if self.player.flip else 0
                 
-                # On envoie la vélocité TOTALE (course + inertie) pour que les autres joueurs extrapolent bien le mouvement
                 applied_vx = move_dir * self.player.run_speed + self.player.velocity[0]
                 self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, applied_vx, self.player.velocity[1])
 
-            # --- ACTIONS MANETTE (Actions uniques / Latch) ---
             if self.controller.joystick:
-                # Saut
                 if self.controller.button_a and not getattr(self, '_ctrl_jump_pressed', False):
                     self._ctrl_jump_pressed = True
                     if self.player.request_jump():
@@ -525,7 +463,6 @@ class Game:
                 elif not self.controller.button_a:
                     self._ctrl_jump_pressed = False
                 
-                # Dash
                 dash_input = self.controller.button_b or self.controller.left_trigger > 0.3 or self.controller.right_trigger > 0.3
                 if dash_input and not getattr(self, '_ctrl_dash_pressed', False):
                     self._ctrl_dash_pressed = True
@@ -533,15 +470,13 @@ class Game:
                 elif not dash_input:
                     self._ctrl_dash_pressed = False
 
-                # Attaque
                 if self.controller.button_x and not getattr(self, '_ctrl_attack_pressed', False):
                     self._ctrl_attack_pressed = True
                     
-                    execute_attack(self) # Utilise la direction fusionnée
+                    execute_attack(self) 
                 elif not self.controller.button_x:
                     self._ctrl_attack_pressed = False
 
-                # Arme
                 if (self.controller.button_y or self.controller.button_rb) and not getattr(self, '_ctrl_weapon_pressed', False):
                     self._ctrl_weapon_pressed = True
                     self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
@@ -550,7 +485,6 @@ class Game:
                 elif not (self.controller.button_y or self.controller.button_rb):
                     self._ctrl_weapon_pressed = False
 
-                # Start / Back
                 if self.controller.button_start and not getattr(self, '_ctrl_start_pressed', False):
                     self._ctrl_start_pressed = True
                     self.net.send_map_change_request()
@@ -564,40 +498,22 @@ class Game:
                     self._ctrl_back_pressed = False
 
             if self.transition != 0:
-                # Calcul du progrès (0.0 fermé, 1.0 ouvert)
                 progress = (30 - abs(self.transition)) / 30.0
                 
-                # Mise à jour des uniformes
                 self.transition_shader.prog["u_progress"] = progress
                 if "u_camera" in self.transition_shader.prog:
-                    # On envoie la position PIXEL EXACTE (juste inversée en Y pour OpenGL)
-                    # Le shader se chargera d'appliquer le facteur 0.5 pour le parallax
                     self.transition_shader.prog["u_camera"] = (render_scroll[0], -render_scroll[1])
                 
-                # Application du shader de transition sur display_2
                 trans_surf = self.transition_shader.render(self.display_2)
                 self.display_2.blit(trans_surf, (0, 0))
 
             
-            #self.tilemap.grass_manager.update_render(self.display,1/60, offset=self.scroll)
-            #gd.grass_manager.update_render(display, 1 / 60, offset=gd.scroll.copy(), rot_function=lambda x, y: int(math.sin(x / 100 + global_time / 40) * 30) / 10)
             self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
 
-            """
-            # --- APPLICATION DE L’ÉCLAIRAGE APRÈS TOUT ---
-            light_sources = [
-                (self.player.rect().centerx - render_scroll[0],
-                self.player.rect().centery - render_scroll[1],
-                300, (220, 240, 255))
-            ]
-            self.lighting.render(self.display_2, light_sources, pygame.time.get_ticks())
-            """
-            # --- POST-PROCESSING ---
             if self.scream_active:
                 scream_surf = self.scream_shader.render(self.display_2)
                 self.display_2.blit(scream_surf, (0, 0))
                 
-                # On désactive l'effet après 1 seconde (durée fixée dans le shader) pour économiser des ressources si non utilisé
                 if time.time() - self.scream_shader.start_time - self.scream_shader.trigger_time > 1.2:
                     self.scream_active = False
 

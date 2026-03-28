@@ -2,21 +2,8 @@ import socket
 import struct
 import time
 import miniupnpc
-import os #pour listdir les level les faire looper entre eux
-
-from TilemapServer import TilemapServer
-from enemy_manager import Blob, EnemyManager
-
-DEBUG = True
-BANDWIDTH = {False: 1024, True: 1024**2}
-
-# Message types:
-#  10 : Connexion
-import socket
-import struct
-import time
-import miniupnpc
-import os #pour listdir les level les faire looper entre eux
+import os 
+import sys
 
 from TilemapServer import TilemapServer
 from enemy_manager import Blob, EnemyManager

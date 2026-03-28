@@ -5,6 +5,7 @@ import random
 import sys, os
 
 def resource_path(relative_path):
+    """PyInstaller support"""
     try:
         base_path = sys._MEIPASS
     except AttributeError:
@@ -18,18 +19,11 @@ class LightingSystem:
         self.light_mask.set_colorkey((0, 0, 0))
         self.light_mask.set_alpha(255)
 
-        # Pré-calcul des tailles de masques
         self.light_masks = [pygame.transform.smoothscale(self.light_mask, (r, r)) for r in range(10, 400)]
 
-        # Couleur de fond (ambiance)
         self.ambient_color = (10, 10, 20)
 
     def render(self, display, light_sources, global_time=0):
-        """
-        display: surface cible
-        light_sources: liste [(x, y, radius, color)]
-        """
-        # Surface d'éclairage
         light_surface = pygame.Surface(self.size).convert()
         light_surface.fill(self.ambient_color)
 
@@ -40,7 +34,6 @@ class LightingSystem:
             else:
                 x, y, radius, color = source
 
-            # Effet de pulsation très léger et fluide
             pulse = math.sin(global_time * 0.002 + (x + y) * 0.0001) * 0.05 + 0.95
             current_radius = int(radius * pulse)
             current_radius = max(10, min(current_radius, len(self.light_masks) - 1))
@@ -51,5 +44,5 @@ class LightingSystem:
             light_surface.blit(glow, (x - glow.get_width() // 2, y - glow.get_height() // 2),
                                special_flags=pygame.BLEND_RGBA_ADD)
 
-        # Mélange final
+
         display.blit(light_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
