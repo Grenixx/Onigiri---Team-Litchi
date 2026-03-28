@@ -8,6 +8,17 @@ import sys
 from TilemapServer import TilemapServer
 from enemy_manager import Blob, EnemyManager
 
+# Message types:
+#   0 : Mise à jour du joueur (Client -> Serveur)
+#   1 : Déconnexion (Client -> Serveur)
+#   2 : Mise à jour du monde (Serveur -> Client)
+#   3 : Suppression d’un ennemi (Client -> Serveur)
+#   4 : Changement de carte (Serveur -> Client)
+#   5 : Requête changement de carte (Client -> Serveur)
+#   8 : Dégâts infligés à un ennemi (Client -> Serveur)
+#   9 : Ping / Pong
+#  10 : Connexion (Handshake)
+
 DEBUG = True
 BANDWIDTH = {False: 1024, True: 1024**2}
 
@@ -20,8 +31,8 @@ except ImportError as e:
 
 class PlayerManager:
     def __init__(self):
-        self.clients = {}   
-        self.players = {}   
+        self.clients = {}   # addr -> id
+        self.players = {}   # id -> (x, y, action:str, flip:bool)
         self.next_id = 1
         
     def add_player(self, addr):
