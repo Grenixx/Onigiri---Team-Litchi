@@ -5,7 +5,10 @@ Puis dans Onigiri_client lancer game.py
 Dependencies: 
 pip install pygame moderngl numpy miniupnpc screeninfo
 
-C:\Users\enzom\Downloads\Onigiri\Onigiri_client>pyinstaller --onefile --add-data "data;data" --add-data "scripts;scripts" game.py
+cd Onigiri_server
+pyinstaller --onefile server.py
+Copy-Item -Recurse -Force "data" "dist\data"
 
-Pour compiler en exe il faut allez dans Onigiri_client puis lancer la commande suivante :
+cd ../Onigiri_client
 pyinstaller --onefile --add-data "data;data" --add-data "scripts;scripts" game.py
+c est les commandes . j avais des bugs psk mon dossier data etait pas au meme niveau que server.exe
