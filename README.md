@@ -10,5 +10,6 @@ pyinstaller --onefile server.py
 Copy-Item -Recurse -Force "data" "dist\data"
 
 cd ../Onigiri_client
+
 pyinstaller --onefile --add-data "data;data" --add-data "scripts;scripts" game.py
 c est les commandes . j avais des bugs psk mon dossier data etait pas au meme niveau que server.exe
