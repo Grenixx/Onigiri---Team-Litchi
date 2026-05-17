@@ -1,12 +1,16 @@
-Yo c est Enzo 
-Pour lancer le jeu faut lancer un server le plus recent dans Onigiri_server
+Salut c'est team litchi 
+Pour lancer le jeu a partire du source code faut lancer le server dans Onigiri_server
 Puis dans Onigiri_client lancer game.py
 
-Dependencies: 
+Sinon depuis les exec lancer juste le server puis le client
+
+Pour compiler les exec server et client :
 pip install pygame moderngl numpy miniupnpc screeninfo
 
 cd Onigiri_server
+
 pyinstaller --onefile server.py
+
 Copy-Item -Recurse -Force "data" "dist\data"
 
 cd ../Onigiri_client
