@@ -155,7 +155,6 @@ class Game:
         self.font = pygame.font.SysFont("consolas", 16)
         self.debug = False
         self.player.weapon.weapon_equiped.toggle_debug()
-        self.freeze_time = 0
 
     def loadcontrols(self):
         default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
@@ -201,7 +200,13 @@ class Game:
         self.hp = 100
         self.invincibility_time = 0
         self.transition = -30
-        self.invincibility_time = 3.0 
+        self.invincibility_time = 1.6 
+
+        self.hitstop_timer = 0
+
+        keys = self.tilemap.tilemap.keys() #recup les tiles de la map
+        max_y = [int(k.split(';')[1]) for k in keys] #calcul la tiles inferieur
+        self.void_y_threshold = (max(max_y) + 2) * self.tilemap.tile_size #calcul la position minimal
 
     def run(self):
         pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
@@ -209,11 +214,13 @@ class Game:
         pygame.mixer.music.play(-1)
         while True:
             real_dt = self.clock.tick(self.max_fps) / 1000
-            if self.freeze_time > 0:
-                self.freeze_time -= real_dt
-                dt = 0 
-            else:
-                dt = real_dt
+            dt = real_dt
+            
+            #if self.freeze_time > 0:
+            #    self.freeze_time -= real_dt
+            #    dt = 0 
+            #else:
+            #    dt = real_dt
             if self.invincibility_time > 0:
                 self.invincibility_time -= dt
             if self.net.map_change_id is not None:
@@ -386,6 +393,11 @@ class Game:
                 flip_byte = 1 if self.player.flip else 0
                 applied_vx = move_dir * self.player.run_speed + self.player.velocity[0]
                 self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, applied_vx, self.player.velocity[1])
+
+                if self.hitstop_timer > 0:
+                    self.hitstop_timer -= 1
+                    self.clock.tick(self.max_fps)
+                    continue
             if self.controller.joystick:
                 if self.controller.button_a and not getattr(self, '_ctrl_jump_pressed', False):
                     self._ctrl_jump_pressed = True

@@ -182,6 +182,7 @@ class Player(PhysicsEntity):
             self.dash_dir = [0, 0]
             self.dash_cooldown_timer = self.dash_cooldown
 
+        
         # Gestion du wall slide speed AVANT l'update pour qu'il soit effectif tout de suite
         if self.wall_slide:
             self.velocity[1] = min(self.velocity[1], self.wall_slide_speed)
@@ -210,7 +211,7 @@ class Player(PhysicsEntity):
         else:
             self.air_time += dt 
 
-        if self.air_time > 4 :
+        if self.pos[1] >= self.game.void_y_threshold:
             if not self.game.dead:
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60
@@ -485,7 +486,10 @@ class ClientEnemyManager:
             if collide_arme:
                   if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
-                    
+                    if  current_weapon.attack_timer > 0 and self.game.dead == 0 and current_weapon.already_hitstop==0:
+                        self.game.hitstop_timer = 4
+                        current_weapon.already_hitstop = 1
+                        
                 
                     self.game.freeze_time = 0.06 # Très légère pause pour le feeling
                     self.game.screenshake = max(8, self.game.screenshake)
@@ -631,6 +635,9 @@ class RemotePlayerRenderer:
             self.set_action(action)
             self.animation.update(dt)
             self.weapon.update(dt)
+
+            
+
 
 
         def render(self, surf, offset=(0,0)):

@@ -35,7 +35,7 @@ class WeaponBase:
         self.attack_duration = 15
         self.attack_direction = "front"
         self.angle = 0
-        self.damage_number = 50 
+        self.damage_number = self.damage_per_weapon(weapon_type) 
         self.animation = self.load_animation(weapon_type)
         self.offset_amount = 14 
         self.current_rect = pygame.Rect(0, 0, 0, 0)
@@ -73,7 +73,9 @@ class WeaponBase:
         self.attack_direction = direction
         self.attack_timer = len(self.animation.images) * self.animation.img_duration
         self.animation.frame = 0
-        self.animation.done = False 
+        self.animation.done = False
+        self.already_hitstop = 0
+
 
     def get_cached_data(self):
         frame_idx = int(self.animation.frame / self.animation.img_duration)
@@ -137,3 +139,12 @@ class WeaponBase:
                 else:
                     rect = self.rect()
                     pygame.draw.rect(surf, (0, 255, 255), (rect.x - offset[0], rect.y - offset[1], rect.width, rect.height), 1)
+
+    def damage_per_weapon(self, weapon_type):
+        if weapon_type=="slashTriangle":
+            return 25
+        if weapon_type=="mace1": #pour ne pas one shoter les patrols
+            return 49
+        if weapon_type=="mace":
+            return 80
+        

@@ -271,7 +271,7 @@ SPEED_BLOB = 1.5
 
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 50)
+        super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 25) #hp 50->25 pour etre one shoter par tous
         self.properties['type'] = "Blob"
         print(f"Blob created at {pos} with eid : {eid} !")
     
@@ -351,7 +351,7 @@ PATROL_MAX_SIGHT_PATROL = 16*8
 
 class Patrol(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, SPEED_PATROL, 150, (15, 10)) 
+        super().__init__(eid, pos, enemy_manager, SPEED_PATROL, 50, (15, 10)) #hp 150->50 pour etre one shoter que par la grosse mace (mace)
         self.properties['type'] = "patrol"
         self.players_last_pos = {}
         self.wander_pos = []
@@ -495,7 +495,7 @@ DROMP_RAGE_COOLDOWN = 5 * 20 # seconds * ticks
 
 class Dromp(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, DROMP_SPEED, 100, (47,59.5), "any")
+        super().__init__(eid, pos, enemy_manager, DROMP_SPEED, 160, (47,59.5), "any") #hp 100->180 pour etre two shoter par la grosse masse lente
         self.properties['type'] = "Dromp"
         self.orientation = random.choice([-1, 1])
         self.properties['flip'] = self.orientation == 1
