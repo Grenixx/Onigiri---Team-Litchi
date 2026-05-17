@@ -427,7 +427,7 @@ class ClientEnemyManager:
         for eid in current_eids - active_eids:
             del self.enemy_anims[eid]
 
-        for eid, (ex, ey, flip, etype, state) in list(self.game.net.enemies.items()):
+        for eid, (ex, ey, flip, etype, state, hp) in list(self.game.net.enemies.items()):
             self.set_state_for_enemy(eid, etype, state)
             anim = self.enemy_anims[eid]
             
@@ -535,7 +535,7 @@ class ClientEnemyManager:
 
 
     def render(self, surf, offset=(0, 0), dt=1):
-        """Affiche les ennemis ronds violets à l’écran."""
+        """Affiche les ennemis ronds violets à l'écran."""
 
         #surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False),
         #          (self.pos[0] - offset[0] + self.anim_offset[0],
@@ -546,7 +546,7 @@ class ClientEnemyManager:
         for eid in current_eids - active_eids:
             del self.enemy_anims[eid]
 
-        for eid, (x, y, flip, etype, state) in self.game.net.enemies.items():
+        for eid, (x, y, flip, etype, state, hp) in self.game.net.enemies.items():
             self.set_state_for_enemy(eid, etype, state)
             anim = self.enemy_anims[eid]
             
@@ -562,6 +562,24 @@ class ClientEnemyManager:
 
             # Rendu Principal avec Flip
             surf.blit(pygame.transform.flip(imgAnim, flip, False), (ex_topleft, ey_topleft))
+
+
+            bar_width = 25
+            bar_height = 2
+            max_hp_par_type = {"patrol": 50, "Blob": 25, "Dromp": 160, "Boss": 1500}
+            position_x_centre = ex_topleft + (imgAnim.get_width() - bar_width) // 2
+            position_y = ey_topleft - 3
+            
+            # barre de couleur pour hp
+            ratio = max(0.0, min(1.0, hp / max_hp_par_type.get(etype, 50)))
+            largeur_remplie = int(bar_width * ratio)
+            red = (max(0, min(255, int(255 * ratio))), 0, 0)
+
+            pygame.draw.rect(surf, (0, 0, 0), (position_x_centre, position_y, bar_width, bar_height))
+            if largeur_remplie > 0:
+                pygame.draw.rect(surf, red, (position_x_centre, position_y, largeur_remplie, bar_height))
+
+
 
             self.game.tilemap.grass_manager.apply_force((x, y), 6, 12)
 

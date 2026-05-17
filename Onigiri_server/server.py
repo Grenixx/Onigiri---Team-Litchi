@@ -34,6 +34,7 @@ class PlayerManager:
         self.clients = {}   # addr -> id
         self.players = {}   # id -> (x, y, action:str, flip:bool)
         self.next_id = 1
+
         
     def add_player(self, addr):
         pid = self.next_id
@@ -198,11 +199,12 @@ class GameServer:
             type_bytes += b'\x00' * (15 - len(type_bytes))
             payload += (
                 struct.pack(
-                    "Iff?",
+                    "<Iff?H", #H->pour hp
                     eid,
                     e.properties['x'],
                     e.properties['y'],
-                    e.properties['flip']
+                    e.properties['flip'],
+                    max(0, int(getattr(e, 'hp', 0)))
                 )
                 + type_bytes
                 + state_bytes

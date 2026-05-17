@@ -410,13 +410,6 @@ class Game:
                     dt=real_dt
 
 
-
-
-
-
-
-
-
             if self.controller.joystick:
                 if self.controller.button_a and not getattr(self, '_ctrl_jump_pressed', False):
                     self._ctrl_jump_pressed = True

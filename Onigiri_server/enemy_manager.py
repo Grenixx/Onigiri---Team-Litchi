@@ -68,7 +68,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         if checking == 'eid' and checking_value != 0 and checking_value != enemy_manager.landmark_variable:
             return
         if checking == 'number' and enemy_manager.landmark_variable > checking_value:
-            for enemy_eid in enemy_manager.enemies.keys().sort():
+            for enemy_eid in sorted(list(enemy_manager.enemies.keys())):
                 if enemy_manager.landmark_variable <= checking_value:
                     break
                 enemy = enemy_manager.enemies[enemy_eid]
@@ -96,7 +96,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         self.persistance -= 1
     
     def kill(self):
-        self.enemy_manager.enemies.pop(self.eid)
+        self.enemy_manager.enemies.pop(self.eid, None)
         print(f"Landmark deleted with eid : {self.eid} !")
 
 class Enemy:
@@ -249,10 +249,13 @@ class Enemy:
                 self.knockback_velocity = knockback_velocity
     
     def kill(self):
-        self.enemy_manager.enemies.pop(self.eid)
+        self.enemy_manager.enemies.pop(self.eid, None)
         if LANDMARK_TYPE_CHECK == "eid":
             if self.enemy_manager.landmark_variable == self.eid:
-                self.enemy_manager.landmark_variable = random.choice(self.enemy_manager.enemies.keys())
+                if self.enemy_manager.enemies:
+                    self.enemy_manager.landmark_variable = random.choice(list(self.enemy_manager.enemies.keys()))
+                else:
+                    self.enemy_manager.landmark_variable = 0
     
     def pos(self):
         return [self.properties['x'], self.properties['y']]
@@ -553,7 +556,7 @@ class Dromp(Enemy):
 
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 150, (15, 10))
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (15, 10)) #hp 150->1500 completement wtf
         self.properties['type'] = "Boss"
         self.create_enemy(self.pos(), "Projectile")
         print(f"Boss created at {pos} with eid : {eid} !")
