@@ -394,10 +394,29 @@ class Game:
                 applied_vx = move_dir * self.player.run_speed + self.player.velocity[0]
                 self.net.send_state(self.player.pos[0], self.player.pos[1], action_id, flip_byte, self.currentWeaponIndex, applied_vx, self.player.velocity[1])
 
+                """  animation de hit  """
+                
                 if self.hitstop_timer > 0:
                     self.hitstop_timer -= 1
-                    self.clock.tick(self.max_fps)
-                    continue
+                    dt =0
+                    self.screenshake = max(self.screenshake, 15)
+                    """  flash blanc lors d'un hit """
+                    white_surf = pygame.Surface(self.display_2.get_size())
+                    white_surf.fill((255, 255, 255))
+                    white_surf.set_alpha(100)
+                    self.display_2.blit(white_surf, (0, 0))
+
+                else:
+                    dt=real_dt
+
+
+
+
+
+
+
+
+
             if self.controller.joystick:
                 if self.controller.button_a and not getattr(self, '_ctrl_jump_pressed', False):
                     self._ctrl_jump_pressed = True

@@ -250,7 +250,7 @@ class Player(PhysicsEntity):
             
             # Vitesse du dash
             if self.dash_dir == 'down':
-                self.velocity[1] = self.dash_speed
+                self.velocity[1] = self.dassh_speed
                 self.velocity[0] = 0
             elif self.dash_dir == 'up':
                 self.velocity[1] = -self.dash_speed
@@ -487,7 +487,15 @@ class ClientEnemyManager:
                   if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
                     if  current_weapon.attack_timer > 0 and self.game.dead == 0 and current_weapon.already_hitstop==0:
-                        self.game.hitstop_timer = 4
+                        if current_weapon.weapon_type == "slashTriangle":
+                            self.game.hitstop_timer = 2
+                            self.game.screenshake = 15
+                        elif current_weapon.weapon_type == "mace1":
+                            self.game.hitstop_timer = 3
+                            self.game.screenshake = 24
+                        elif current_weapon.weapon_type == "mace":
+                            self.game.hitstop_timer = 4
+                            self.game.screenshake = 33
                         current_weapon.already_hitstop = 1
                         
                 
