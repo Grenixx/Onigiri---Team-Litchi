@@ -404,7 +404,7 @@ class ClientEnemyManager:
 
     def set_state_for_enemy(self, eid, etype, state):
         if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state:
-            print(f'{etype}/{state}')
+            #print(f'{etype}/{state}')
             base_anim = self.game.assets.get(f'{etype}/{state}')
             self.enemy_anims[eid] = base_anim.copy()
             self.enemy_anims[eid].state = state
