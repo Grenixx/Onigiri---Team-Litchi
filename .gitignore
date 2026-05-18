@@ -6,3 +6,4 @@
 /Onigiri_game_server/__pycache__
 /Onigiri_game/user_prefs.json
 *.pyc
+ninja_game/user_prefs.json
