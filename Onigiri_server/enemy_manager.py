@@ -463,7 +463,7 @@ class Patrol(Enemy):
         #print(f"angle : {self.wander_angle}")
         
         self.wander_pos = wander_pos
-        self.create_enemy(self.wander_pos, "Landmark", self.eid)
+        #self.create_enemy(self.wander_pos, "Landmark", self.eid)
 
     def wander(self) -> list:
         pos = self.pos()
