@@ -216,7 +216,7 @@ class Player(PhysicsEntity):
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60
         
-        if self.collisions['right'] or self.collisions['left']:
+        if self.collisions['right'] or self.collisions['left'] and self.air_time > 0.05:
             self.can_dash = True
             if self.dashing != 0:
                 self.dashing = 0
