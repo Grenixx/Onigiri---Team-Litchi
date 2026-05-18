@@ -250,7 +250,7 @@ class Player(PhysicsEntity):
             
             # Vitesse du dash
             if self.dash_dir == 'down':
-                self.velocity[1] = self.dassh_speed
+                self.velocity[1] = self.dash_speed
                 self.velocity[0] = 0
             elif self.dash_dir == 'up':
                 self.velocity[1] = -self.dash_speed

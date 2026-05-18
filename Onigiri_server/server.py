@@ -8,6 +8,9 @@ import sys
 from TilemapServer import TilemapServer
 from enemy_manager import Blob, EnemyManager
 
+DEBUG = True
+BANDWIDTH = {False: 1024, True: 1024**2}
+
 # Message types:
 #   0 : Mise à jour du joueur (Client -> Serveur)
 #   1 : Déconnexion (Client -> Serveur)
@@ -36,7 +39,6 @@ class PlayerManager:
         self.clients = {}   # addr -> id
         self.players = {}   # id -> (x, y, action:str, flip:bool)
         self.next_id = 1
-
         
     def add_player(self, addr):
         pid = self.next_id
