@@ -477,6 +477,7 @@ class ClientEnemyManager:
                     self.game.hp-=25
                     if self.game.hp<=0:
                         self.game.dead += dt * 60
+                        self.game.net.send_clear_taunt()
                         print("Player is dead")
                     else :
                         self.game.invincibility_time = 1.0 # 1 seconde d'invincibilité après un coup
@@ -484,41 +485,48 @@ class ClientEnemyManager:
 
             # 3. Collision Arme
             if collide_arme:
-                  if is_attacking and not (eid in self.game.net.damaging_eid):
-                    hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
-                    if  current_weapon.attack_timer > 0 and self.game.dead == 0 and current_weapon.already_hitstop==0:
+                if is_attacking and not (eid in self.game.net.damaging_eid):
+                    # On ne traite la collision que si l'arme n'a pas déjà touché un ennemi pendant ce swing.
+                    if current_weapon.already_hitstop == 0:
+                        hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
+                        
+                        # On active le "hitstop" (freeze de l'écran) et on marque le coup comme ayant touché.
                         if current_weapon.weapon_type == "slashTriangle":
                             self.game.hitstop_timer = 2
                             self.game.screenshake = 15
+                            self.game.recoil=50
                         elif current_weapon.weapon_type == "mace1":
                             self.game.hitstop_timer = 3
                             self.game.screenshake = 24
+                            self.game.recoil=100
+                            current_weapon.play_hit_animation()
                         elif current_weapon.weapon_type == "mace":
                             self.game.hitstop_timer = 4
                             self.game.screenshake = 33
+                            self.game.recoil=150
+                            current_weapon.play_hit_animation()
                         current_weapon.already_hitstop = 1
-                        
-                
-                    self.game.freeze_time = 0.06 # Très légère pause pour le feeling
-                    self.game.screenshake = max(8, self.game.screenshake)
-                    
-                    # POGO 
-                    if current_weapon.attack_direction == 'down' and player.air_time > 0:
-                        player.velocity[1] = -230
-                        player.air_time = 0.08
-                        player.can_dash = True 
-                        player.dashing = 0 
 
-                    # RECUL (Recoil horizontal)
-                    elif current_weapon.attack_direction in ['front', 'left', 'right']:
-                        recoil_dir = 1 if player.flip else -1
-                        player.velocity[0] = recoil_dir * 180
+                        self.game.freeze_time = 0.06 #pause pour le feeling
+                        self.game.screenshake = max(8, self.game.screenshake)
 
-                    for i in range(30):
-                        angle = random.random() * math.pi * 2
-                        self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
-                    
-                    if not (eid in self.game.net.damaging_eid):
+                        # POGO
+                        if current_weapon.attack_direction == 'down' and player.air_time > 0:
+                            player.velocity[1] = -230
+                            player.air_time = 0.08
+                            player.can_dash = True
+                            player.dashing = 0
+
+                        # RECUL
+                        elif current_weapon.attack_direction in ['front', 'left', 'right']:
+                            recoil_dir = 1 if player.flip else -1
+                            player.velocity[0] = recoil_dir * self.game.recoil
+
+
+                        for i in range(30):
+                            angle = random.random() * math.pi * 2
+                            self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
+
                         to_damage.append(eid)
                 
             if not is_attacking and not collide_arme:

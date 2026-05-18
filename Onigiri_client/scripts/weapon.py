@@ -36,7 +36,14 @@ class WeaponBase:
         self.attack_direction = "front"
         self.angle = 0
         self.damage_number = self.damage_per_weapon(weapon_type) 
-        self.animation = self.load_animation(weapon_type)
+
+        self.attack_animation = self.load_animation(weapon_type)
+        self.hit_animation = None
+        if weapon_type in ['mace', 'mace1']:
+            if self.owner.game.assets.get(weapon_type + '_stop'):
+                self.hit_animation = self.load_animation(weapon_type + '_stop')
+
+        self.animation = self.attack_animation
         self.offset_amount = 14 
         self.current_rect = pygame.Rect(0, 0, 0, 0)
         self.cache = {} 
@@ -70,12 +77,22 @@ class WeaponBase:
             direction = "left" if self.owner.flip else "right"
         if direction == "down" and not self.owner.air_time > 0.09:
             direction = "left" if self.owner.flip else "right"
+        
+        # On réinitialise toujours à l'animation d'attaque normale
+        self.animation = self.attack_animation
+
         self.attack_direction = direction
         self.attack_timer = len(self.animation.images) * self.animation.img_duration
         self.animation.frame = 0
         self.animation.done = False
         self.already_hitstop = 0
 
+    def play_hit_animation(self):
+        if self.hit_animation:
+            self.animation = self.hit_animation
+            self.animation.frame = 0
+            self.animation.done = False
+            self.attack_timer = len(self.animation.images) * self.animation.img_duration
 
     def get_cached_data(self):
         frame_idx = int(self.animation.frame / self.animation.img_duration)

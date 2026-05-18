@@ -18,6 +18,8 @@ from enemy_manager import Blob, EnemyManager
 #   8 : Dégâts infligés à un ennemi (Client -> Serveur)
 #   9 : Ping / Pong
 #  10 : Connexion (Handshake)
+#  11 : Taunt
+#  12 : Clear taunt
 
 DEBUG = True
 BANDWIDTH = {False: 1024, True: 1024**2}
@@ -119,6 +121,24 @@ class GameServer:
 
     def handle_message(self, data, addr):
         msg_type = data[0]
+        if msg_type == 11:  # Taunt
+            if addr in self.players.clients:
+                pid = self.players.clients[addr]
+                for eid, enemy in self.EnemyManager.enemies.items():
+                    enemy.properties['target_player'] = pid
+                    enemy.properties['taunt_target'] = pid
+            return
+
+        if msg_type == 12:  # Clear taunt
+            if addr in self.players.clients:
+                pid = self.players.clients[addr]
+                for eid, enemy in self.EnemyManager.enemies.items():
+                    if enemy.properties.get('taunt_target') == pid:
+                        enemy.properties['taunt_target'] = None
+                        if enemy.properties['target_player'] == pid:
+                            enemy.properties['target_player'] = None
+            return
+
         if msg_type == 10: 
             if addr not in self.players.clients:
                 pid = self.players.add_player(addr)
@@ -133,6 +153,8 @@ class GameServer:
             for e in self.EnemyManager.enemies.values():
                 if e.properties['target_player'] == pid:
                     e.properties['target_player'] = None
+                if e.properties.get('taunt_target') == pid:
+                    e.properties['taunt_target'] = None
             return
         if msg_type == 0 and addr in self.players.clients and len(data) >= 10:
             self.players.update_player(addr, data[1:])

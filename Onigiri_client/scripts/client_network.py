@@ -13,6 +13,8 @@ import time
 #   8 : Dégâts infligés à un ennemi (Client -> Serveur)
 #   9 : Ping / Pong
 #  10 : Connexion (Handshake)
+#  11 : Taunt(Aggro tous les ennemis) (Client -> Serveur)
+#  12 : Stop aggro (Client -> Serveur)
 
 DEBUG = True
 
@@ -193,3 +195,17 @@ class ClientNetwork:
             print("Disconnected from server.")
         except Exception as e:
             print("Disconnect error:", e)
+
+    def send_taunt(self): #to be hunt by every entities
+        try:
+            packet = b'\x0B'
+            self.sock.sendto(packet, self.server)
+        except Exception as e:
+            print("Taunt error:", e)
+
+    def send_clear_taunt(self):
+        try:
+            packet = b'\x0C'
+            self.sock.sendto(packet, self.server)
+        except Exception as e:
+            print("Clear taunt error:", e)

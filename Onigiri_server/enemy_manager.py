@@ -108,6 +108,7 @@ class Enemy:
             'vx': 0.0,
             'vy': 0.0,
             'target_player': None,
+            'taunt_target': None,
             'flip': False,
             'state': "idle",
         }
@@ -291,15 +292,48 @@ class Blob(Enemy):
         else:
             velocity[1] = 0
 
-        # --- Trouver la cible la plus proche ---
-        closest_dist = None
-        closest_pid = None
-        for pid in players.keys():
-            dist = distance_squared_to(pos, players[pid])
-            if closest_dist == None or closest_dist > dist:
-                closest_dist,closest_pid = dist,pid
+        # --- Taunt : cible forcée ---
+        taunt_pid = self.properties['taunt_target']
+        if taunt_pid is not None and taunt_pid in players:
+            closest_pid = taunt_pid
+        else:
+            # --- Trouver la cible la plus proche ---
+            closest_dist = None
+            closest_pid = None
+            for pid in players.keys():
+                dist = distance_squared_to(pos, players[pid])
+                if closest_dist == None or closest_dist > dist:
+                    closest_dist,closest_pid = dist,pid
 
-        if distance_to(pos, players[closest_pid]) < 16*30 and self.can_see_player(players[closest_pid]):
+        if taunt_pid is not None and taunt_pid in players:
+            self.properties['target_player'] = taunt_pid
+            step = [0,0]
+            dist = distance_to(pos, players[taunt_pid])
+            if dist > 1:
+                step = normalized(vector_to(pos, players[taunt_pid]))
+                step = [i * self.speed for i in step]
+
+            # --- Test collisions map ---
+            new_x = pos[0] + step[0]
+            new_y = pos[1] + step[1] + velocity[1]
+
+            if not self.check_collision((new_x, pos[1])):
+                velocity[0] = step[0]
+            else:
+                velocity[0] = 0
+
+            if not self.check_collision((pos[0], new_y)):
+                velocity[1] += step[1]
+            else:
+                velocity[1] = 0
+
+            # Limites de la map
+            pos[0] = max(0, min(pos[0] + velocity[0], 1000))
+            pos[1] = max(0, min(pos[1] + velocity[1], 1000))
+
+            velocity[1] = 0
+
+        elif distance_to(pos, players[closest_pid]) < 16*30 and self.can_see_player(players[closest_pid]):
             self.properties['target_player'] = closest_pid
             step = [0,0]
             dist = distance_to(pos, players[closest_pid])
@@ -332,7 +366,8 @@ class Blob(Enemy):
             velocity = [0,0]
             
             # test
-            if random.randint(0, 500) == 0:
+            if len(players) > 0 and random.randint(0, 500) == 0:
+                pid = list(players.keys())[0]
                 new_blob_pos = raycast_pos(pos, angle(vector_to(pos, players[pid])), tilemap, distance_to(pos, players[pid]) - 10, 4, PHYSICS_TILES, 10, True)
                 if new_blob_pos != None:
                     self.create_enemy(new_blob_pos, "blob")
@@ -435,14 +470,20 @@ class Patrol(Enemy):
         pos = self.pos()
         players = self.enemy_manager.players
         
+        taunt_pid = self.properties['taunt_target']
+
         # --- Trouver la cible la plus proche ---
         closest_dist = None
         closest_pid = None
-        for pid in players.keys():
-            if pid in self.players_last_pos.keys():
-                dist = distance_squared_to(pos, self.players_last_pos[pid])
-                if closest_dist == None or closest_dist > dist:
-                    closest_dist,closest_pid = dist,pid
+        if taunt_pid is not None and taunt_pid in players:
+            closest_pid = taunt_pid
+            closest_dist = distance_squared_to(pos, players[taunt_pid])
+        else:
+            for pid in players.keys():
+                if pid in self.players_last_pos.keys():
+                    dist = distance_squared_to(pos, self.players_last_pos[pid])
+                    if closest_dist == None or closest_dist > dist:
+                        closest_dist,closest_pid = dist,pid
         
         velocity = [0,0]
         if closest_pid: # if has target
@@ -453,7 +494,10 @@ class Patrol(Enemy):
             self.wander_pos = None
             self.wander_speed = self.speed
             self.properties['target_player'] = closest_pid
-            if dist > 4:
+            if taunt_pid is not None and taunt_pid in players:
+                velocity = normalized(vector_to(pos, players[taunt_pid]))
+                velocity = [i * self.speed for i in velocity]
+            elif dist > 4:
                 velocity = normalized(vector_to(pos, self.players_last_pos[closest_pid]))
                 velocity = [i * self.speed for i in velocity]
             elif not self.can_see_player(players[closest_pid], PATROL_MAX_SIGHT_PATROL):
@@ -479,7 +523,9 @@ class Patrol(Enemy):
 
         players_last_pos = {}
         for pid in players.keys():
-            if self.can_see_player(players[pid], PATROL_MAX_SIGHT_PATROL):
+            if taunt_pid is not None and pid == taunt_pid:
+                players_last_pos[pid] = [players[pid][0], players[pid][1]]
+            elif self.can_see_player(players[pid], PATROL_MAX_SIGHT_PATROL):
                 if distance_to(players[pid], pos) < VISION_DISTANCE_PATROL and distance_to(players[pid], pos) > 1:
                     players_last_pos[pid] = [players[pid][0],players[pid][1]]
             else:
@@ -511,15 +557,19 @@ class Dromp(Enemy):
         pos = self.pos()
         players = self.enemy_manager.players
         
+        taunt_pid = self.properties['taunt_target']
         rage = False
-        for pid in players.keys():
-            dist = distance_to(pos, players[pid])
-            if dist <= DROMP_VISION_DISTANCE:
-                agl = diff_angles(angle(sub_vecs(players[pid], pos)), angle([self.orientation, 0]))
-                if agl <= DROMP_VISION_FOV:
-                    if self.can_see_player(players[pid], DROMP_VISION_DISTANCE):
-                        rage = True
-                        break
+        if taunt_pid is not None and taunt_pid in players:
+            rage = True
+        else:
+            for pid in players.keys():
+                dist = distance_to(pos, players[pid])
+                if dist <= DROMP_VISION_DISTANCE:
+                    agl = diff_angles(angle(sub_vecs(players[pid], pos)), angle([self.orientation, 0]))
+                    if agl <= DROMP_VISION_FOV:
+                        if self.can_see_player(players[pid], DROMP_VISION_DISTANCE):
+                            rage = True
+                            break
 
         if rage:
             self.properties['state'] = 'rage'

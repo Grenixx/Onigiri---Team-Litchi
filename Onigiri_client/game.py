@@ -91,6 +91,8 @@ class Game:
             'projectile': load_image(resource_path('data/images/projectile.png'), True),
             'mace': Animation(load_images(resource_path('data/images/entities/weapon/mace'), True), img_dur=5, loop=False),
             'mace1': Animation(load_images(resource_path('data/images/entities/weapon/mace1'), True), img_dur=5, loop=False),
+            'mace_stop': Animation(load_images(resource_path('data/images/entities/weapon/mace_stop'), True), img_dur=8, loop=False),
+            'mace1_stop': Animation(load_images(resource_path('data/images/entities/weapon/mace1_stop'), True), img_dur=8, loop=False),
             'slashTriangle': Animation(load_images(resource_path('data/images/entities/weapon/slashTriangle'), True), img_dur=1.5, loop=False),
             'texte': load_images(resource_path('data/images/tuto/texte'), True),
             'patrol/idle': load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=3, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
@@ -136,7 +138,8 @@ class Game:
         self.shader_bg = ShaderBackground(SCALE[0], SCALE[1], "data/shaders/1.0 tuto.frag", ctx=self.ctx)
         self.scream_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/4.0.frag", ctx=self.ctx)
         self.transition_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/3.9transi.frag", ctx=self.ctx)
-        self.scream_active = False 
+        self.scream_active = False
+        self.hunt=False
         self.controller = Controller()
         self.emissive_surface = pygame.Surface(SCALE, pygame.SRCALPHA)
         self.bloom_shader = ShaderEffect(SCALE[0], SCALE[1], "data/shaders/bloom.frag", ctx=self.ctx)
@@ -157,7 +160,7 @@ class Game:
         self.player.weapon.weapon_equiped.toggle_debug()
 
     def loadcontrols(self):
-        default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v}
+        default_keys = {"LEFT": pygame.K_q, "RIGHT": pygame.K_d, "UP": pygame.K_z, "DOWN": pygame.K_s, "JUMP": pygame.K_SPACE, "DASH": pygame.K_LSHIFT, "ATTACK": pygame.K_c, "CHANGE_WEAPON": pygame.K_v, "TAUNT": pygame.K_j}
         try:
             path = resource_path('user_prefs.json')
             if os.path.exists(path):
@@ -203,6 +206,7 @@ class Game:
         self.invincibility_time = 1.6 
 
         self.hitstop_timer = 0
+        self.recoil=100
 
         keys = self.tilemap.tilemap.keys() #recup les tiles de la map
         max_y = [int(k.split(';')[1]) for k in keys] #calcul la tiles inferieur
@@ -318,27 +322,30 @@ class Game:
                             self.sfx['hit'].set_volume(self.SFX_Volume)
                             self.sfx['dash'].set_volume(self.SFX_Volume)
                             self.sfx['jump'].set_volume(self.SFX_Volume)
-                    if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
+                    if event.key == self.controls["LEFT"]:
                         self.movement[0] = True
-                    if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
+                    if event.key == self.controls["RIGHT"]:
                         self.movement[1] = True
-                    if event.key == self.controls["JUMP"] or event.key == pygame.K_w:
+                    if event.key == self.controls["JUMP"]:
                         if self.player.request_jump():
                             self.sfx['jump'].play()
-                    if event.key == self.controls["DASH"] or event.key == pygame.K_x:
+                    if event.key == self.controls["DASH"]:
                         self.player.dash()
-                    if event.key == self.controls["CHANGE_WEAPON"] or event.key == pygame.K_v:
+                    if event.key == self.controls["CHANGE_WEAPON"]:
                         self.currentWeaponIndex = (self.currentWeaponIndex % len(self.weaponDictionary)) + 1
                         self.weapon_type = self.weaponDictionary[self.currentWeaponIndex]
                         self.player.weapon.set_weapon(self.weapon_type)
                     if event.key == pygame.K_n:
                         self.net.send_map_change_request()
-                    if event.key == pygame.K_j:
+                    if event.key == self.controls["TAUNT"] :
                         p_pos = (self.player.rect().center)
                         uv_x = (p_pos[0] - render_scroll[0]) / self.display.get_width()
                         uv_y = (p_pos[1] - render_scroll[1]) / self.display.get_height()
                         self.scream_shader.trigger((uv_x, 1.0 - uv_y))
                         self.scream_active = True
+                        self.target=True
+                        self.net.send_taunt()
+                        
                     if event.key == pygame.K_KP_PLUS or event.key == pygame.K_PLUS:
                          self.set_zoom(self.zoom + 0.1)
                     if event.key == pygame.K_KP_MINUS or event.key == pygame.K_MINUS:
