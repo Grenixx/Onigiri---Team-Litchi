@@ -6,7 +6,17 @@ from scripts.spark import Spark
 from scripts.weapon import Weapon
 from scripts.grass import GrassManager
 
-
+def draw_cooldown_clock(surf, center, radius, progress, color, bg_color):
+        if progress <= 0:
+            return
+        pygame.draw.circle(surf, bg_color, center, radius, 2)
+        points = [center]
+        start = -math.pi / 2
+        end = start + 2 * math.pi * progress
+        for i in range(33):
+            a = start + (end - start) * i / 32
+            points.append((center[0] + radius * math.cos(a), center[1] + radius * math.sin(a)))
+        pygame.draw.polygon(surf, color, points)
 class PhysicsEntity:
     def __init__(self, game, e_type, pos, size):
         self.game = game
@@ -153,6 +163,10 @@ class Player(PhysicsEntity):
 
     def update(self, tilemap, movement=(0, 0), dt=0):
         # Mise à jour des timers de cooldown/buffer
+        if self.game.KO_time > 0:
+            if self.action != 'idle_KO':
+                self.set_action('idle_KO')
+        
         self.dash_cooldown_timer = max(0, self.dash_cooldown_timer - dt)
         self.jump_buffer_timer = max(0, self.jump_buffer_timer - dt)
         self.weapon.weapon_equiped.update(dt)
@@ -234,7 +248,7 @@ class Player(PhysicsEntity):
         else:
             self.wall_slide = False
         
-        if not self.wall_slide and not self.action.startswith('attack'):
+        if not self.wall_slide and not self.action.startswith('attack') and self.game.KO_time <= 0:
             if self.air_time > 0.1:
                 self.set_action('jump')
             elif actual_movement[0] != 0:
@@ -292,15 +306,19 @@ class Player(PhysicsEntity):
         force_pos = (self.pos[0] + self.game.player.size[0] / 2, self.pos[1] + player_height)
         self.game.tilemap.grass_manager.apply_force(force_pos, 4, 8)
 
-
-    
     def render(self, surf, offset=(0, 0), white=False):
         super().render(surf, offset=offset, white=white)
         # Puis on dessine l'arme par-dessus pour qu'elle soit devant
         self.weapon.weapon_equiped.render(surf, offset)
+
+        if self.game.cooldown > 0:
+            cx = self.pos[0] - offset[0] + self.size[0] // 2
+            cy = self.pos[1] - offset[1] - 15
+            progress = self.game.cooldown / self.game.cooldown_max
+            draw_cooldown_clock(surf, (cx, cy), 6, progress, (255, 200, 0), (40, 40, 40))
             
     def jump(self):
-        if self.wall_slide:
+        if self.wall_slide or self.game.KO_time > 0:
             if self.flip and self.last_movement[0] < 0:
                 self.velocity[0] = self.wall_jump_force_x
                 self.velocity[1] = self.wall_jump_force_y
@@ -315,7 +333,8 @@ class Player(PhysicsEntity):
                 return True
                 
         # Saut normal ou "Coyote Time" : si on a un saut et qu'on est en l'air depuis peu de temps
-        elif self.jumps and self.air_time < self.coyote_time: # 9 frames = ~0.15s
+        elif self.jumps and self.air_time < self.coyote_time:
+            # # 9 frames = ~0.15s
             self.velocity[1] = self.jump_force
             self.jumps = False
             self.air_time = 0.08
@@ -363,8 +382,7 @@ class Player(PhysicsEntity):
 
     def attack(self, direction):
         # On ne peut pas attaquer si on est déjà en train d'attaquer ou de dasher
-        if (not self.action.startswith('attack') or self.animation.done)and not self.wall_slide:
-            
+        if self.game.cooldown<=0 and((not self.action.startswith('attack') or self.animation.done)and not self.wall_slide):
             attack_direction = 'front' # Direction par défaut
 
             # Priorité 1 : Attaque vers le haut si la touche 'haut' est pressée.
@@ -494,16 +512,25 @@ class ClientEnemyManager:
                         if current_weapon.weapon_type == "slashTriangle":
                             self.game.hitstop_timer = 2
                             self.game.screenshake = 15
-                            self.game.recoil=50
+                            self.game.recoil=75
+                            self.game.cooldown=2
+                            self.game.cooldown_max=2
+                            self.game.KO_time=0
                         elif current_weapon.weapon_type == "mace1":
-                            self.game.hitstop_timer = 3
+                            self.game.hitstop_timer = 2
                             self.game.screenshake = 24
-                            self.game.recoil=100
+                            self.game.recoil=175
+                            self.game.cooldown=50
+                            self.game.cooldown_max=50
+                            self.game.KO_time=25
                             current_weapon.play_hit_animation()
                         elif current_weapon.weapon_type == "mace":
-                            self.game.hitstop_timer = 4
+                            self.game.hitstop_timer = 2
                             self.game.screenshake = 33
-                            self.game.recoil=150
+                            self.game.recoil=250
+                            self.game.cooldown=80
+                            self.game.cooldown_max=80
+                            self.game.KO_time=40
                             current_weapon.play_hit_animation()
                         current_weapon.already_hitstop = 1
 

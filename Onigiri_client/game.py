@@ -84,7 +84,8 @@ class Game:
             'player/attack_down': Animation(load_images(resource_path('data/images/entities/player/attack_down'), True), img_dur=20, loop=False),
             'player/jump': Animation(load_images(resource_path('data/images/entities/player/jump'), True)),
             'player/slide': Animation(load_images(resource_path('data/images/entities/player/slide'), True)),
-            'player/wall_slide': Animation(load_images(resource_path('data/images/entities/player/wall_slide'), True)),
+            'player/wall_slide': Animation(load_images(resource_path('data/images/entities/player/wall_slide'), True),img_dur=4, loop=True),
+            'player/idle_KO': Animation(load_images(resource_path('data/images/entities/player/idle_KO'), True)),
             'particle/leaf': Animation(load_images(resource_path('data/images/particles/leaf'), True), img_dur=20, loop=False),
             'particle/particle': Animation(load_images(resource_path('data/images/particles/particle'), True), img_dur=6, loop=False),
             'gun': load_image(resource_path('data/images/gun.png'), True),
@@ -207,6 +208,10 @@ class Game:
 
         self.hitstop_timer = 0
         self.recoil=100
+
+        self.cooldown=0
+        self.cooldown_max = 0
+        self.KO_time=0
 
         keys = self.tilemap.tilemap.keys() #recup les tiles de la map
         max_y = [int(k.split(';')[1]) for k in keys] #calcul la tiles inferieur
@@ -392,8 +397,32 @@ class Game:
                     elif self.controller.dpad_right: direction_vec[0] = 1
                     elif abs(ls_x) > 0.4: direction_vec[0] = 1 if ls_x > 0 else -1
             self.player.input_axis = direction_vec
+            
+            if  self.KO_time>0:
+                self.KO_time -=1
+                move_dir=0
+                if self.player.action != 'idle_KO':
+                    self.player.set_action('idle_KO')
+                    self.player.animation.update(dt)
+
+            if self.hitstop_timer > 0:
+                self.hitstop_timer -= 1
+                dt =0
+                self.screenshake = max(self.screenshake, 15)
+                """  flash blanc lors d'un hit """
+                white_surf = pygame.Surface(self.display_2.get_size())
+                white_surf.fill((255, 255, 255))
+                white_surf.set_alpha(100)
+                self.display_2.blit(white_surf, (0, 0))
+
+            else:
+                dt=real_dt
+            
+            if  self.cooldown>0:
+                self.cooldown -=1
+
             if not self.dead:
-                move_dir = (final_move_right - final_move_left)
+                move_dir = 0 if self.KO_time>0 else (final_move_right - final_move_left)
                 self.player.update(self.tilemap, (move_dir, 0), dt=dt)
                 action_mapping = {"idle": 0, "run": 1, "jump": 2, "wall_slide": 3, "slide": 4, "attack_front": 5, "attack_up": 6, "attack_down": 7}
                 action_id = action_mapping.get(self.player.action, 0)
@@ -415,6 +444,9 @@ class Game:
 
                 else:
                     dt=real_dt
+                
+                if  self.cooldown>0:
+                    self.cooldown -=1
 
 
             if self.controller.joystick:
