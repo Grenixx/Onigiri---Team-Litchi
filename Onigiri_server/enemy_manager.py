@@ -68,13 +68,39 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         if checking == 'eid' and checking_value != 0 and checking_value != enemy_manager.landmark_variable:
             return
         if checking == 'number' and enemy_manager.landmark_variable > checking_value:
-            for enemy_eid in sorted(list(enemy_manager.enemies.keys())):
+            for enemy_eid in enemy_manager.enemies.keys().sort():
                 if enemy_manager.landmark_variable <= checking_value:
                     break
                 enemy = enemy_manager.enemies[enemy_eid]
                 if enemy.properties['type'] == "Landmark":
                     enemy.kill()
 
+        self.eid = eid
+        self.properties = {
+            'x': pos[0],
+            'y': pos[1],
+            'vx': 0.0,
+            'vy': 0.0,
+            'target_player': None,
+            'flip': False,
+            'state': "idle",
+        }
+        self.enemy_manager = enemy_manager
+        self.persistance = persistance
+        self.properties['type'] = "Landmark"
+        print(f"Landmark created at {pos} with eid : {eid} !")
+    
+    def physics_process(self, dt: float):
+        if self.persistance <= 0:
+            self.kill()
+        self.persistance -= 1
+    
+    def kill(self):
+        self.enemy_manager.enemies.pop(self.eid)
+        print(f"Landmark deleted with eid : {self.eid} !")
+
+class Enemy:
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple, knockback_type: str = "any", knockback_strength: float | int = 8, hitbox_offset = (0,0)):
         self.eid = eid
         self.properties = {
             'x': pos[0],
@@ -250,13 +276,10 @@ class Enemy:
                 self.knockback_velocity = knockback_velocity
     
     def kill(self):
-        self.enemy_manager.enemies.pop(self.eid, None)
+        self.enemy_manager.enemies.pop(self.eid)
         if LANDMARK_TYPE_CHECK == "eid":
             if self.enemy_manager.landmark_variable == self.eid:
-                if self.enemy_manager.enemies:
-                    self.enemy_manager.landmark_variable = random.choice(list(self.enemy_manager.enemies.keys()))
-                else:
-                    self.enemy_manager.landmark_variable = 0
+                self.enemy_manager.landmark_variable = random.choice(self.enemy_manager.enemies.keys())
     
     def pos(self):
         return [self.properties['x'], self.properties['y']]
@@ -440,7 +463,7 @@ class Patrol(Enemy):
         #print(f"angle : {self.wander_angle}")
         
         self.wander_pos = wander_pos
-        self.create_enemy(self.wander_pos, "Landmark", self.eid)
+        #self.create_enemy(self.wander_pos, "Landmark", self.eid)
 
     def wander(self) -> list:
         pos = self.pos()

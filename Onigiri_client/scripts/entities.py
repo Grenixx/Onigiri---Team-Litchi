@@ -250,7 +250,7 @@ class Player(PhysicsEntity):
             
             # Vitesse du dash
             if self.dash_dir == 'down':
-                self.velocity[1] = self.dassh_speed
+                self.velocity[1] = self.dash_speed
                 self.velocity[0] = 0
             elif self.dash_dir == 'up':
                 self.velocity[1] = -self.dash_speed
@@ -404,7 +404,7 @@ class ClientEnemyManager:
 
     def set_state_for_enemy(self, eid, etype, state):
         if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state:
-            print(f'{etype}/{state}')
+            #print(f'{etype}/{state}')
             base_anim = self.game.assets.get(f'{etype}/{state}')
             self.enemy_anims[eid] = base_anim.copy()
             self.enemy_anims[eid].state = state
