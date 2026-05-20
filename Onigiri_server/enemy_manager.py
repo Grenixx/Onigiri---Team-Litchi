@@ -108,32 +108,6 @@ class Enemy:
             'vx': 0.0,
             'vy': 0.0,
             'target_player': None,
-            'flip': False,
-            'state': "idle",
-        }
-        self.enemy_manager = enemy_manager
-        self.persistance = persistance
-        self.properties['type'] = "Landmark"
-        print(f"Landmark created at {pos} with eid : {eid} !")
-    
-    def physics_process(self, dt: float):
-        if self.persistance <= 0:
-            self.kill()
-        self.persistance -= 1
-    
-    def kill(self):
-        self.enemy_manager.enemies.pop(self.eid, None)
-        print(f"Landmark deleted with eid : {self.eid} !")
-
-class Enemy:
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple, knockback_type: str = "any", knockback_strength: float | int = 8, hitbox_offset = (0,0)):
-        self.eid = eid
-        self.properties = {
-            'x': pos[0],
-            'y': pos[1],
-            'vx': 0.0,
-            'vy': 0.0,
-            'target_player': None,
             'taunt_target': None,
             'flip': False,
             'state': "idle",
