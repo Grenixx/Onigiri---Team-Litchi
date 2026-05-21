@@ -230,12 +230,12 @@ class Player(PhysicsEntity):
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60
         
-        if self.collisions['right'] or self.collisions['left'] and self.air_time > 0.05:
+        if self.collisions['right'] or self.collisions['left'] and self.air_time > 0.08:
             self.can_dash = True
             if self.dashing != 0:
                 self.dashing = 0
                 self.dash_dir = [0, 0]
-            if self.air_time > 0 and not self.collisions['down']:
+            if self.air_time > 0.05 and not self.collisions['down']:
                 self.wall_slide = True
                 self.air_time = 0.08
                 if self.collisions['right']:
@@ -509,57 +509,54 @@ class ClientEnemyManager:
             # 3. Collision Arme
             if collide_arme:
                 if is_attacking and not (eid in self.game.net.damaging_eid):
-                    # On ne traite la collision que si l'arme n'a pas déjà touché un ennemi pendant ce swing.
-                    if current_weapon.already_hitstop == 0:
-                        hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
-                        
-                        # On active le "hitstop" (freeze de l'écran) et on marque le coup comme ayant touché.
-                        if current_weapon.weapon_type == "slashTriangle":
-                            self.game.hitstop_timer = 2
-                            self.game.screenshake = 15
-                            self.game.recoil=75
-                            self.game.cooldown=2
-                            self.game.cooldown_max=2
-                            self.game.KO_time=0
-                        elif current_weapon.weapon_type == "mace1":
-                            self.game.hitstop_timer = 2
-                            self.game.screenshake = 24
-                            self.game.recoil=175
-                            self.game.cooldown=50
-                            self.game.cooldown_max=50
-                            self.game.KO_time=25
-                            current_weapon.play_hit_animation()
-                        elif current_weapon.weapon_type == "mace":
-                            self.game.hitstop_timer = 2
-                            self.game.screenshake = 33
-                            self.game.recoil=250
-                            self.game.cooldown=80
-                            self.game.cooldown_max=80
-                            self.game.KO_time=40
-                            current_weapon.play_hit_animation()
-                        current_weapon.already_hitstop = 1
+                    hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
+                    
+                    if current_weapon.weapon_type == "slashTriangle":
+                        self.game.hitstop_timer = 2
+                        self.game.screenshake = 15
+                        self.game.recoil=75
+                        self.game.cooldown=2
+                        self.game.cooldown_max=2
+                        self.game.KO_time=0
+                    elif current_weapon.weapon_type == "mace1":
+                        self.game.hitstop_timer = 2
+                        self.game.screenshake = 24
+                        self.game.recoil=175
+                        self.game.cooldown=50
+                        self.game.cooldown_max=50
+                        self.game.KO_time=25
+                        current_weapon.play_hit_animation()
+                    elif current_weapon.weapon_type == "mace":
+                        self.game.hitstop_timer = 2
+                        self.game.screenshake = 33
+                        self.game.recoil=250
+                        self.game.cooldown=80
+                        self.game.cooldown_max=80
+                        self.game.KO_time=40
+                        current_weapon.play_hit_animation()
+                    current_weapon.already_hitstop = 1
 
-                        self.game.freeze_time = 0.06 #pause pour le feeling
-                        self.game.screenshake = max(8, self.game.screenshake)
+                    self.game.freeze_time = 0.06 #pause pour le feeling
+                    self.game.screenshake = max(8, self.game.screenshake)
 
-                        # POGO
-                        if current_weapon.attack_direction == 'down' and player.air_time > 0:
-                            player.velocity[1] = -230
-                            player.air_time = 0.08
-                            player.can_dash = True
-                            player.dashing = 0
+                    # POGO
+                    if current_weapon.attack_direction == 'down' and player.air_time > 0:
+                        player.velocity[1] = -230
+                        player.air_time = 0.08
+                        player.can_dash = True
+                        player.dashing = 0
 
-                        # RECUL
-                        elif current_weapon.attack_direction in ['front', 'left', 'right']:
-                            recoil_dir = 1 if player.flip else -1
-                            player.velocity[0] = recoil_dir * self.game.recoil
+                    # RECUL
+                    elif current_weapon.attack_direction in ['front', 'left', 'right']:
+                        recoil_dir = 1 if player.flip else -1
+                        player.velocity[0] = recoil_dir * self.game.recoil
 
 
-                        for i in range(30):
-                            angle = random.random() * math.pi * 2
-                            self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
+                    for i in range(30):
+                        angle = random.random() * math.pi * 2
+                        self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
 
-                        to_damage.append(eid)
+                    to_damage.append(eid)
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         #for eid in to_remove:
         #    if eid in self.game.net.enemies:
