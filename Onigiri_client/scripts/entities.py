@@ -230,12 +230,12 @@ class Player(PhysicsEntity):
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60
         
-        if self.collisions['right'] or self.collisions['left'] and self.air_time > 0.05:
+        if self.collisions['right'] or self.collisions['left'] and self.air_time > 0.08:
             self.can_dash = True
             if self.dashing != 0:
                 self.dashing = 0
                 self.dash_dir = [0, 0]
-            if self.air_time > 0 and not self.collisions['down']:
+            if self.air_time > 0.05 and not self.collisions['down']:
                 self.wall_slide = True
                 self.air_time = 0.08
                 if self.collisions['right']:
@@ -511,7 +511,6 @@ class ClientEnemyManager:
                 if is_attacking and not (eid in self.game.net.damaging_eid):
                     hit_pos = (weapon_hitbox.x, weapon_hitbox.y)
                     
-                    # On active le "hitstop" (freeze de l'écran) et on marque le coup comme ayant touché.
                     if current_weapon.weapon_type == "slashTriangle":
                         self.game.hitstop_timer = 2
                         self.game.screenshake = 15

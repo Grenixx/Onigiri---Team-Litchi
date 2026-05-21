@@ -301,8 +301,11 @@ class Game:
                     if keys_pressed[pygame.K_LCTRL] and keys_pressed[pygame.K_RCTRL]:
                         if self.player.run_speed == 120:
                             self.player.run_speed = 320
+                            self.hp=10000
                         else:
                             self.player.run_speed = 120
+                            self.hp=100
+
                     if event.key == pygame.K_ESCAPE:
                         event.type = pygame.QUIT
                     if event.key == pygame.K_F1:
