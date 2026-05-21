@@ -621,13 +621,29 @@ class Dromp(Enemy):
 
 # }
 
+BOSS_MIN_ANGLE_PROJECTILE = pi/6 # > 0
+BOSS_NUMBER_PROJECTILE_AT_ONCE = 5
+BOSS_DISTANCE_PROJECTILE = 20
+
+BOSS_ANGLE_RANGE = pi/2 - BOSS_MIN_ANGLE_PROJECTILE * 2
+BOSS_ANGLES_BETWEEN = BOSS_ANGLE_RANGE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
+
+BOSS_COOLDOWN_BETWEEN_PROJECTILES = 20
+
+BOSS_ALL_ATTACKS = {
+    'double-hit': 10,
+    'idle': 15,
+    'shoot_projectiles': 10,
+    'summon_dromps': 5,
+    'summon_patrols': 10,
+    'teleportIn': 50
+}
+
 BOSS_STATES_DURATION = {
     'double-hit': 10,
     'idle': 10,
     'mort': 10,
-    'old_idle': 10,
-    'old_spawn': 10,
-    'shoot_projectiles': 10,
+    'shoot_projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE, # + const
     'spawn': 10,
     'summon_dromps': 10,
     'summon_patrols': 10,
@@ -639,35 +655,28 @@ class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (15, 10)) #hp 150->1500 completement wtf
         self.properties['type'] = "Boss"
-        self.create_enemy(self.pos(), "Projectile")
+        self.properties['state'] = 'spawn'
         print(f"Boss created at {pos} with eid : {eid} !")
+
+        self.animation_timer = 0
+        self.angle_projectile = 0
+        self.active_projectile = 0
+        self.reset_angle_projectile()
     
+    def reset_angle_projectile(self):
+        self.angle_projectile = BOSS_MIN_ANGLE_PROJECTILE * -1 if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
+
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
+        if self.animation_timer == 0:
+            self.properties['state'] = 'shoot_projectiles' # random_with_coefficients(BOSS_ALL_ATTACKS)
+        else:
+            self.animation_timer -= 1
         
-
-
-        """pos = self.pos()
-        players = self.enemy_manager.players
-        
-        # --- Trouver la cible la plus proche ---
-        closest_dist = None
-        closest_pid = None
-        for pid in players.keys():
-            dist = distance_squared_to(pos, players)
-            if closest_dist == None or closest_dist > dist:
-                closest_dist,closest_pid = dist,pid
-        
-        velocity = [0,0]
-        if closest_pid: # if has target
-            dist = sqrt(closest_dist)
-            #self.properties['state'] = 'rage'
-            self.properties['target_player'] = closest_pid
-            velocity = normalized(vector_to(pos, self.players[closest_pid]))
-            velocity = [i * self.speed for i in velocity]
-
-        self.move_and_slide(velocity, delta)
-        """
+        if self.properties['state'] == 'shoot_projectiles':
+            if self.animation_timer % BOSS_COOLDOWN_BETWEEN_PROJECTILES == 0:
+                self.create_enemy(add_vecs(self.spawn_position, vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile)), "Projectile")
+                self.angle_projectile += BOSS_ANGLES_BETWEEN
 
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 60
@@ -917,9 +926,14 @@ def easeOutCubic(t: float) -> float:
 def easeOutQuint(x: float) -> float:
     return 1 - (1 - x)**5
 
+# Random functions
 
-""" todo:
-create class for raycast and vectors
-add documentation
-add side of block raycast hit in class
-"""
+def random_with_coefficients(d: dict):
+    r = sum(d.values())
+    l = d.keys()
+    i = 0
+    r = random.randint(0, r)
+    while r > 0:
+        r -= d(l[i])
+        i += 1
+    return l[i]
