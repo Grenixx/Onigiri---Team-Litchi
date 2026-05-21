@@ -641,11 +641,13 @@ class Boss(Enemy):
         """
 
 PROJECTILE_MAX_DIST = 16*20
+PROJECTILE_SPEED = 60
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 10)) #1 pv pr le one shoot
         self.properties['type'] = "Projectile"
+        self.properties['state'] = 'spawn'
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
         self.time_before_launch = 60
@@ -654,6 +656,7 @@ class Projectile(Enemy):
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.time_before_launch <= 0:
+            self.properties['state'] = 'idle'
             pos = self.pos()
             players = self.enemy_manager.players
 
