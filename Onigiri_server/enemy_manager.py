@@ -612,7 +612,28 @@ class Dromp(Enemy):
 
 #BOSS_MAX_HEIGHT = 
 
-BOSS_STATES_TRANSITIONS = {''}
+# BOSS_STATES_TRANSITIONS = {'teleportIn': (
+#                                ('teleportOut', 100)
+#                            ),
+#                            'teleportOut': (
+#                                ()
+#                            )
+
+# }
+
+BOSS_STATES_DURATION = {
+    'double-hit': 10,
+    'idle': 10,
+    'mort': 10,
+    'old_idle': 10,
+    'old_spawn': 10,
+    'shoot_projectiles': 10,
+    'spawn': 10,
+    'summon_dromps': 10,
+    'summon_patrols': 10,
+    'teleportIn': 10,
+    'teleportOut': 10,
+}
 
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
