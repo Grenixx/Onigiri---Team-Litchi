@@ -445,6 +445,11 @@ class ClientEnemyManager:
         for eid in current_eids - active_eids:
             del self.enemy_anims[eid]
 
+        # On vide damaging_eid dès que le swing est terminé
+        # (indépendamment de la collision résiduelle de l'arme)
+        if not is_attacking:
+            self.game.net.damaging_eid = []
+
         for eid, (ex, ey, flip, etype, state, hp) in list(self.game.net.enemies.items()):
             self.set_state_for_enemy(eid, etype, state)
             anim = self.enemy_anims[eid]
@@ -555,9 +560,6 @@ class ClientEnemyManager:
                             self.game.sparks.append(Spark(hit_pos, angle, 2 + random.random()))
 
                         to_damage.append(eid)
-                
-            if not is_attacking and not collide_arme:
-                self.game.net.damaging_eid = []
         # Retrait des ennemis retirer temporairement le temps que l on teste les retrait des pv 
         #for eid in to_remove:
         #    if eid in self.game.net.enemies:

@@ -21,6 +21,8 @@ class EnemyManager:
         """Resets all the enemies on the map"""
         self.tilemap = tilemap
         self.enemies.clear()
+        self.next_enemy_id = 1
+        self.landmark_variable = 0
         # Find spawners
         spawners = getattr(self.tilemap, 'spawners', [])
         for spawner in spawners:
@@ -253,7 +255,10 @@ class Enemy:
         self.enemy_manager.enemies.pop(self.eid)
         if LANDMARK_TYPE_CHECK == "eid":
             if self.enemy_manager.landmark_variable == self.eid:
-                self.enemy_manager.landmark_variable = random.choice(self.enemy_manager.enemies.keys())
+                if self.enemy_manager.enemies:
+                    self.enemy_manager.landmark_variable = random.choice(list(self.enemy_manager.enemies.keys()))
+                else:
+                    self.enemy_manager.landmark_variable = 0
     
     def pos(self):
         return [self.properties['x'], self.properties['y']]
