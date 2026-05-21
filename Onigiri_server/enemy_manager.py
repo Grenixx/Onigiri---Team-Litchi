@@ -606,8 +606,8 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
-# spell = spawn projectiles
-# spell2 = spawn patrols
+# spell = shoot_projectiles
+# spell2 = summon_patrols
 # unsure : spell3 = spawn 1 or 2 Dromps
 
 #BOSS_MAX_HEIGHT = 
