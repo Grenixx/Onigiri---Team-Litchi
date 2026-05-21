@@ -409,11 +409,6 @@ class Game:
                 self.hitstop_timer -= 1
                 dt =0
                 self.screenshake = max(self.screenshake, 15)
-                """  flash blanc lors d'un hit """
-                white_surf = pygame.Surface(self.display_2.get_size())
-                white_surf.fill((255, 255, 255))
-                white_surf.set_alpha(100)
-                self.display_2.blit(white_surf, (0, 0))
 
             else:
                 dt=real_dt
