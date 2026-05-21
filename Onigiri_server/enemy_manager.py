@@ -606,6 +606,14 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
+# spell = spawn projectiles
+# spell2 = spawn patrols
+# unsure : spell3 = spawn 1 or 2 Dromps
+
+#BOSS_MAX_HEIGHT = 
+
+BOSS_STATES_TRANSITIONS = {''}
+
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (15, 10)) #hp 150->1500 completement wtf
