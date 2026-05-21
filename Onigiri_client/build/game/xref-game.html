@@ -15,7 +15,7 @@
 
 <div class="node">
   <a name="game.py"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/game.py" type="text/plain"><tt>game.py</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/game.py" type="text/plain"><tt>game.py</tt></a>
 <span class="moduletype">Script</span>  <div class="import">
 imports:
     <a href="#_collections_abc">_collections_abc</a>
@@ -152,10 +152,12 @@ imports:
  &#8226;   <a href="#genericpath">genericpath</a>
  &#8226;   <a href="#heapq">heapq</a>
  &#8226;   <a href="#io">io</a>
+ &#8226;   <a href="#json">json</a>
  &#8226;   <a href="#keyword">keyword</a>
  &#8226;   <a href="#linecache">linecache</a>
  &#8226;   <a href="#locale">locale</a>
  &#8226;   <a href="#math">math</a>
+ &#8226;   <a href="#moderngl">moderngl</a>
  &#8226;   <a href="#ntpath">ntpath</a>
  &#8226;   <a href="#operator">operator</a>
  &#8226;   <a href="#os">os</a>
@@ -179,9 +181,9 @@ imports:
  &#8226;   <a href="#scripts.clouds">scripts.clouds</a>
  &#8226;   <a href="#scripts.controller">scripts.controller</a>
  &#8226;   <a href="#scripts.entities">scripts.entities</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.particle">scripts.particle</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
  &#8226;   <a href="#scripts.spark">scripts.spark</a>
  &#8226;   <a href="#scripts.tilemap">scripts.tilemap</a>
  &#8226;   <a href="#scripts.utils">scripts.utils</a>
@@ -191,6 +193,7 @@ imports:
  &#8226;   <a href="#sre_parse">sre_parse</a>
  &#8226;   <a href="#stat">stat</a>
  &#8226;   <a href="#sys">sys</a>
+ &#8226;   <a href="#time">time</a>
  &#8226;   <a href="#traceback">traceback</a>
  &#8226;   <a href="#types">types</a>
  &#8226;   <a href="#warnings">warnings</a>
@@ -14362,7 +14365,6 @@ imports:
  &#8226;   <a href="#importlib">importlib</a>
  &#8226;   <a href="#importlib._bootstrap">importlib._bootstrap</a>
  &#8226;   <a href="#importlib._bootstrap_external">importlib._bootstrap_external</a>
- &#8226;   <a href="#importlib.machinery">importlib.machinery</a>
  &#8226;   <a href="#sys">sys</a>
  &#8226;   <a href="#warnings">warnings</a>
 
@@ -14507,7 +14509,6 @@ imports:
 imported by:
     <a href="#ctypes.util">ctypes.util</a>
  &#8226;   <a href="#imp">imp</a>
- &#8226;   <a href="#importlib">importlib</a>
  &#8226;   <a href="#importlib.abc">importlib.abc</a>
  &#8226;   <a href="#inspect">inspect</a>
  &#8226;   <a href="#numpy.compat.py3k">numpy.compat.py3k</a>
@@ -15811,7 +15812,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#jinja2.utils">jinja2.utils</a>
+    <a href="#game.py">game.py</a>
+ &#8226;   <a href="#jinja2.utils">jinja2.utils</a>
  &#8226;   <a href="#json.decoder">json.decoder</a>
  &#8226;   <a href="#json.encoder">json.encoder</a>
  &#8226;   <a href="#json.scanner">json.scanner</a>
@@ -16125,7 +16127,6 @@ imported by:
  &#8226;   <a href="#random">random</a>
  &#8226;   <a href="#scripts.entities">scripts.entities</a>
  &#8226;   <a href="#scripts.grass">scripts.grass</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.spark">scripts.spark</a>
  &#8226;   <a href="#scripts.weapon">scripts.weapon</a>
  &#8226;   <a href="#selectors">selectors</a>
@@ -16186,9 +16187,11 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#moderngl">moderngl</a>
+    <a href="#game.py">game.py</a>
+ &#8226;   <a href="#moderngl">moderngl</a>
  &#8226;   <a href="#moderngl.mgl">moderngl.mgl</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
 
   </div>
 
@@ -17308,6 +17311,7 @@ imported by:
  &#8226;   <a href="#pygame.sndarray">pygame.sndarray</a>
  &#8226;   <a href="#pygame.surfarray">pygame.surfarray</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
 
   </div>
 
@@ -22305,8 +22309,8 @@ imported by:
  &#8226;   <a href="#runpy">runpy</a>
  &#8226;   <a href="#screeninfo.enumerators.drm">screeninfo.enumerators.drm</a>
  &#8226;   <a href="#scripts.grass">scripts.grass</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
  &#8226;   <a href="#scripts.tilemap">scripts.tilemap</a>
  &#8226;   <a href="#scripts.utils">scripts.utils</a>
  &#8226;   <a href="#shlex">shlex</a>
@@ -24531,8 +24535,8 @@ imported by:
  &#8226;   <a href="#scripts.controller">scripts.controller</a>
  &#8226;   <a href="#scripts.entities">scripts.entities</a>
  &#8226;   <a href="#scripts.grass">scripts.grass</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
  &#8226;   <a href="#scripts.spark">scripts.spark</a>
  &#8226;   <a href="#scripts.tilemap">scripts.tilemap</a>
  &#8226;   <a href="#scripts.utils">scripts.utils</a>
@@ -25872,7 +25876,6 @@ imported by:
  &#8226;   <a href="#scripts.clouds">scripts.clouds</a>
  &#8226;   <a href="#scripts.entities">scripts.entities</a>
  &#8226;   <a href="#scripts.grass">scripts.grass</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.tilemap">scripts.tilemap</a>
  &#8226;   <a href="#scripts.weapon">scripts.weapon</a>
  &#8226;   <a href="#secrets">secrets</a>
@@ -26422,9 +26425,9 @@ imported by:
  &#8226;   <a href="#scripts.controller">scripts.controller</a>
  &#8226;   <a href="#scripts.entities">scripts.entities</a>
  &#8226;   <a href="#scripts.grass">scripts.grass</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.particle">scripts.particle</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
  &#8226;   <a href="#scripts.spark">scripts.spark</a>
  &#8226;   <a href="#scripts.tilemap">scripts.tilemap</a>
  &#8226;   <a href="#scripts.utils">scripts.utils</a>
@@ -26436,7 +26439,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.client_network"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/client_network.py" type="text/plain"><tt>scripts.client_network</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/client_network.py" type="text/plain"><tt>scripts.client_network</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#scripts">scripts</a>
@@ -26456,7 +26459,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.clouds"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/clouds.py" type="text/plain"><tt>scripts.clouds</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/clouds.py" type="text/plain"><tt>scripts.clouds</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#random">random</a>
@@ -26473,7 +26476,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.controller"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/controller.py" type="text/plain"><tt>scripts.controller</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/controller.py" type="text/plain"><tt>scripts.controller</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#pygame">pygame</a>
@@ -26490,7 +26493,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.entities"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/entities.py" type="text/plain"><tt>scripts.entities</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/entities.py" type="text/plain"><tt>scripts.entities</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#math">math</a>
@@ -26513,7 +26516,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.grass"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/grass.py" type="text/plain"><tt>scripts.grass</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/grass.py" type="text/plain"><tt>scripts.grass</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#copy">copy</a>
@@ -26522,6 +26525,7 @@ imports:
  &#8226;   <a href="#pygame">pygame</a>
  &#8226;   <a href="#random">random</a>
  &#8226;   <a href="#scripts">scripts</a>
+ &#8226;   <a href="#scripts.utils">scripts.utils</a>
  &#8226;   <a href="#sys">sys</a>
 
   </div>
@@ -26535,29 +26539,8 @@ imported by:
 </div>
 
 <div class="node">
-  <a name="scripts.lighting"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/lighting.py" type="text/plain"><tt>scripts.lighting</tt></a>
-<span class="moduletype">SourceModule</span>  <div class="import">
-imports:
-    <a href="#math">math</a>
- &#8226;   <a href="#os">os</a>
- &#8226;   <a href="#pygame">pygame</a>
- &#8226;   <a href="#random">random</a>
- &#8226;   <a href="#scripts">scripts</a>
- &#8226;   <a href="#sys">sys</a>
-
-  </div>
-  <div class="import">
-imported by:
-    <a href="#game.py">game.py</a>
-
-  </div>
-
-</div>
-
-<div class="node">
   <a name="scripts.particle"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/particle.py" type="text/plain"><tt>scripts.particle</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/particle.py" type="text/plain"><tt>scripts.particle</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#scripts">scripts</a>
@@ -26574,7 +26557,29 @@ imported by:
 
 <div class="node">
   <a name="scripts.shader_bg"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/shader_bg.py" type="text/plain"><tt>scripts.shader_bg</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/shader_bg.py" type="text/plain"><tt>scripts.shader_bg</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#moderngl">moderngl</a>
+ &#8226;   <a href="#numpy">numpy</a>
+ &#8226;   <a href="#os">os</a>
+ &#8226;   <a href="#pygame">pygame</a>
+ &#8226;   <a href="#scripts">scripts</a>
+ &#8226;   <a href="#sys">sys</a>
+ &#8226;   <a href="#time">time</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#game.py">game.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="scripts.shader_effect"></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/shader_effect.py" type="text/plain"><tt>scripts.shader_effect</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#moderngl">moderngl</a>
@@ -26596,7 +26601,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.spark"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/spark.py" type="text/plain"><tt>scripts.spark</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/spark.py" type="text/plain"><tt>scripts.spark</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#math">math</a>
@@ -26615,7 +26620,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.tilemap"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/tilemap.py" type="text/plain"><tt>scripts.tilemap</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/tilemap.py" type="text/plain"><tt>scripts.tilemap</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#json">json</a>
@@ -26637,7 +26642,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.utils"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/utils.py" type="text/plain"><tt>scripts.utils</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/utils.py" type="text/plain"><tt>scripts.utils</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#os">os</a>
@@ -26649,6 +26654,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#game.py">game.py</a>
+ &#8226;   <a href="#scripts.grass">scripts.grass</a>
 
   </div>
 
@@ -26656,7 +26662,7 @@ imported by:
 
 <div class="node">
   <a name="scripts.weapon"></a>
-  <a target="code" href="///C:/Users/enzom/Downloads/PythonMultiplayerNetworking/ninja_game/scripts/weapon.py" type="text/plain"><tt>scripts.weapon</tt></a>
+  <a target="code" href="///C:/Users/enzom/Downloads/Onigiri/Onigiri_client/scripts/weapon.py" type="text/plain"><tt>scripts.weapon</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#math">math</a>
@@ -27356,8 +27362,8 @@ imported by:
  &#8226;   <a href="#runpy">runpy</a>
  &#8226;   <a href="#screeninfo.enumerators.xrandr">screeninfo.enumerators.xrandr</a>
  &#8226;   <a href="#scripts.grass">scripts.grass</a>
- &#8226;   <a href="#scripts.lighting">scripts.lighting</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
  &#8226;   <a href="#scripts.tilemap">scripts.tilemap</a>
  &#8226;   <a href="#scripts.utils">scripts.utils</a>
  &#8226;   <a href="#selectors">selectors</a>
@@ -27678,6 +27684,7 @@ imported by:
  &#8226;   <a href="#email._parseaddr">email._parseaddr</a>
  &#8226;   <a href="#email.generator">email.generator</a>
  &#8226;   <a href="#email.utils">email.utils</a>
+ &#8226;   <a href="#game.py">game.py</a>
  &#8226;   <a href="#gc">gc</a>
  &#8226;   <a href="#gzip">gzip</a>
  &#8226;   <a href="#http.cookiejar">http.cookiejar</a>
@@ -27702,6 +27709,7 @@ imported by:
  &#8226;   <a href="#random">random</a>
  &#8226;   <a href="#scripts.client_network">scripts.client_network</a>
  &#8226;   <a href="#scripts.shader_bg">scripts.shader_bg</a>
+ &#8226;   <a href="#scripts.shader_effect">scripts.shader_effect</a>
  &#8226;   <a href="#socketserver">socketserver</a>
  &#8226;   <a href="#ssl">ssl</a>
  &#8226;   <a href="#subprocess">subprocess</a>
