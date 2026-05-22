@@ -640,9 +640,9 @@ BOSS_ALL_ATTACKS = {
 }
 
 BOSS_STATES_DURATION = {
-    'double-hit': 10,
-    'idle': 10,
-    'mort': 10,
+    'double-hit': 101,
+    'idle': 71,
+    'death': 10,
     'shoot_projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE, # + const
     'spawn': 10,
     'summon_dromps': 10,
@@ -670,6 +670,7 @@ class Boss(Enemy):
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.animation_timer == 0:
             self.properties['state'] = 'shoot_projectiles' # random_with_coefficients(BOSS_ALL_ATTACKS)
+            self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
         else:
             self.animation_timer -= 1
         
