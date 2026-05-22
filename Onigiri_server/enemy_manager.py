@@ -606,7 +606,7 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
-# spell = shoot_projectiles
+# spell = projectiles
 # spell2 = summon_patrols
 # unsure : spell3 = spawn 1 or 2 Dromps
 
@@ -623,19 +623,19 @@ class Dromp(Enemy):
 
 BOSS_MIN_ANGLE_PROJECTILE = pi/6 # > 0
 BOSS_NUMBER_PROJECTILE_AT_ONCE = 5
-BOSS_DISTANCE_PROJECTILE = 20
+BOSS_DISTANCE_PROJECTILE = 100
 
-BOSS_ANGLE_RANGE = pi/2 - BOSS_MIN_ANGLE_PROJECTILE * 2
+BOSS_ANGLE_RANGE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
 BOSS_ANGLES_BETWEEN = BOSS_ANGLE_RANGE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
 
-BOSS_COOLDOWN_BETWEEN_PROJECTILES = 20
+BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
 
 BOSS_ALL_ATTACKS = {
     'double-hit': 10,
     'idle': 15,
-    'shoot_projectiles': 10,
-    'summon_dromps': 5,
-    'summon_patrols': 10,
+    'projectiles': 10,
+    'dromps': 5,
+    'patrols': 10,
     'teleportIn': 50
 }
 
@@ -643,40 +643,45 @@ BOSS_STATES_DURATION = {
     'double-hit': 101,
     'idle': 71,
     'death': 10,
-    'shoot_projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE, # + const
-    'spawn': 10,
-    'summon_dromps': 10,
-    'summon_patrols': 10,
-    'teleportIn': 10,
-    'teleportOut': 10,
+    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE, # + const
+    'spawn': 209,
+    'dromps': 247,
+    'patrols': 93,
+    'teleportIn': 22,
+    'teleportOut': 37,
 }
+
+for i in BOSS_STATES_DURATION.keys():
+    BOSS_STATES_DURATION[i] *= 1.5
+    BOSS_STATES_DURATION[i] = int(BOSS_STATES_DURATION[i])
 
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (15, 10)) #hp 150->1500 completement wtf
+        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (200, 200)) #hp 150->1500 completement wtf
         self.properties['type'] = "Boss"
         self.properties['state'] = 'spawn'
         print(f"Boss created at {pos} with eid : {eid} !")
 
-        self.animation_timer = 0
+        self.animation_timer = BOSS_STATES_DURATION['spawn']
         self.angle_projectile = 0
         self.active_projectile = 0
         self.reset_angle_projectile()
-    
+
     def reset_angle_projectile(self):
-        self.angle_projectile = BOSS_MIN_ANGLE_PROJECTILE * -1 if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
+        self.angle_projectile = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.animation_timer == 0:
-            self.properties['state'] = 'shoot_projectiles' # random_with_coefficients(BOSS_ALL_ATTACKS)
+            self.reset_angle_projectile()
+            self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS) # "projectiles" 
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
         else:
             self.animation_timer -= 1
         
-        if self.properties['state'] == 'shoot_projectiles':
-            if self.animation_timer % BOSS_COOLDOWN_BETWEEN_PROJECTILES == 0:
-                self.create_enemy(add_vecs(self.spawn_position, vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile)), "Projectile")
+        if self.properties['state'] == 'projectiles':
+            if self.animation_timer % BOSS_COOLDOWN_BETWEEN_PROJECTILES == 0 and self.animation_timer != 0:
+                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile)), "Projectile")
                 self.angle_projectile += BOSS_ANGLES_BETWEEN
 
 PROJECTILE_MAX_DIST = 16*20
@@ -931,10 +936,12 @@ def easeOutQuint(x: float) -> float:
 
 def random_with_coefficients(d: dict):
     r = sum(d.values())
-    l = d.keys()
+    l = list(d.keys())
+    print(r)
     i = 0
     r = random.randint(0, r)
     while r > 0:
-        r -= d(l[i])
+        print(r, l[i], d[l[i]])
+        r -= d[l[i]]
         i += 1
-    return l[i]
+    return l[i-1]
