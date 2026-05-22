@@ -656,8 +656,6 @@ BOSS_STATES_DURATION = {
     'teleportOut': 37,
 }
 
-print(BOSS_STATES_DURATION)
-
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (200, 200)) #hp 150->1500 completement wtf
@@ -672,11 +670,9 @@ class Boss(Enemy):
 
     def reset_angle_projectile(self):
         self.angle_projectile = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
-        print("reset")
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        print(self.animation_timer)
         if self.animation_timer == 0:
             self.reset_angle_projectile()
             self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS) # "projectiles" 

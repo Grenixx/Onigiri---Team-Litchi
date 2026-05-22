@@ -422,12 +422,21 @@ class ClientEnemyManager:
 
     def set_state_for_enemy(self, eid, etype, state):
         if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state or getattr(self.enemy_anims[eid], 'etype', None) != etype:
-            base_anim = self.game.assets.get(f'{etype}/{state}')
-            if base_anim is None:
-                base_anim = self.game.assets.get('patrol/idle')
-            self.enemy_anims[eid] = base_anim.copy()
-            self.enemy_anims[eid].state = state
-            self.enemy_anims[eid].etype = etype
+            try:
+                base_anim = self.game.assets.get(f'{etype}/{state}')
+                if base_anim is None:
+                    base_anim = self.game.assets.get('patrol/idle')
+                self.enemy_anims[eid] = base_anim.copy()
+                self.enemy_anims[eid].state = state
+                self.enemy_anims[eid].etype = etype
+            except:
+                print(f'------------------------------ {etype}/{state} not found ------------------------------')
+                base_anim = self.game.assets.get(f'{etype}/{state}')
+                if base_anim is None:
+                    base_anim = self.game.assets.get('patrol/idle')
+                self.enemy_anims[eid] = base_anim.copy()
+                self.enemy_anims[eid].state = state
+                self.enemy_anims[eid].etype = etype
 
     def update(self, dt=1/60):
         """Vérifie les collisions entre joueurs/armes et les ennemis."""
