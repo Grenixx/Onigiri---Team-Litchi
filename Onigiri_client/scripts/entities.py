@@ -421,11 +421,13 @@ class ClientEnemyManager:
         self.state = 'idle'
 
     def set_state_for_enemy(self, eid, etype, state):
-        if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state:
-            #print(f'{etype}/{state}')
+        if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state or getattr(self.enemy_anims[eid], 'etype', None) != etype:
             base_anim = self.game.assets.get(f'{etype}/{state}')
+            if base_anim is None:
+                base_anim = self.game.assets.get('patrol/idle')
             self.enemy_anims[eid] = base_anim.copy()
             self.enemy_anims[eid].state = state
+            self.enemy_anims[eid].etype = etype
 
     def update(self, dt=1/60):
         """Vérifie les collisions entre joueurs/armes et les ennemis."""
@@ -618,12 +620,24 @@ class ClientEnemyManager:
             self.game.tilemap.grass_manager.apply_force((x, y), 6, 12)
 
             if getattr(self.game, 'debug', False):
+                if etype == 'patrol':
+                    debug_size = (18, 25)
+                    debug_offset = (5, 0)
+                elif etype == 'Dromp':
+                    debug_size = (64, 64)
+                    debug_offset = (0, 0)
+                elif etype == 'Landmark':
+                    debug_size = (0, 0)
+                    debug_offset = (0, 0)
+                else:
+                    debug_size = self.size
+                    debug_offset = self.collision_offset
                 enemy_mask = anim.get_pygame_mask(flip)
                 if enemy_mask:
                     mask_surf = enemy_mask.to_surface(setcolor=(255, 0, 255, 128), unsetcolor=(0, 0, 0, 0)).convert_alpha()
                     surf.blit(mask_surf, (ex_topleft, ey_topleft))
                 else:
-                    debug_rect = pygame.Rect(x + self.collision_offset[0] - offset[0], y + self.collision_offset[1] - offset[1], self.size[0], self.size[1])
+                    debug_rect = pygame.Rect(x + debug_offset[0] - offset[0], y + debug_offset[1] - offset[1], debug_size[0], debug_size[1])
                     pygame.draw.rect(surf, (0, 255, 255), debug_rect, 1)
             
             
