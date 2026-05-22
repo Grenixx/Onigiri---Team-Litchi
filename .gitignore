@@ -7,3 +7,5 @@
 /Onigiri_game/user_prefs.json
 *.pyc
 /Onigiri_game/user_prefs.json
+/ClientBuild
+/ServerBuild
