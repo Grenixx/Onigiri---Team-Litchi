@@ -280,6 +280,14 @@ class Game:
             bloom_surf = self.bloom_shader.render(self.emissive_surface)
             self.display_2.blit(bloom_surf, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             # -------------------
+            
+            # --- PLAYER HP BAR (CLIENT-SIDE) ---
+            bar_width, bar_height = 50, 4
+            hp_ratio = max(0.0, min(1.0, self.hp / 100.0))
+            pygame.draw.rect(self.display_2, (40, 0, 0), (4, 4, bar_width, bar_height))
+            if hp_ratio > 0:
+                pygame.draw.rect(self.display_2, (200, 0, 0), (4, 4, int(bar_width * hp_ratio), bar_height))
+            # ------------------------------------
             for spark in self.sparks.copy():
                 kill = spark.update(dt) 
                 spark.render(self.display_2, offset=render_scroll)
