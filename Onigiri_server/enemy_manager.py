@@ -687,6 +687,7 @@ class Boss(Enemy):
 
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
+PROJECTILE_TIME_BEFORE_LAUNCH = 20
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -695,7 +696,7 @@ class Projectile(Enemy):
         self.properties['state'] = 'spawn'
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
-        self.time_before_launch = 60
+        self.time_before_launch = PROJECTILE_TIME_BEFORE_LAUNCH
         print(f"Projectile created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
