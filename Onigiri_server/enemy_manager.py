@@ -630,30 +630,33 @@ BOSS_ANGLES_BETWEEN = BOSS_ANGLE_RANGE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if
 
 BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
 
+ANIMATION_SCALE = 1.5
+
+BOSS_COOLDOWN_BETWEEN_PROJECTILES *= ANIMATION_SCALE
+BOSS_COOLDOWN_BETWEEN_PROJECTILES = int(BOSS_COOLDOWN_BETWEEN_PROJECTILES)
+
 BOSS_ALL_ATTACKS = {
-    'double-hit': 10,
-    'idle': 15,
-    'projectiles': 10,
-    'dromps': 5,
-    'patrols': 10,
-    'teleportIn': 50
+    'double-hit': 0, # 'double-hit': 10,
+    'idle': 50, # 'idle': 15,
+    'projectiles': 50, # 'projectiles': 10,
+    'dromps': 0, # 'dromps': 5,
+    'patrols': 0, # 'patrols': 10,
+    'teleportIn': 0 # 'teleportIn': 50
 }
 
 BOSS_STATES_DURATION = {
     'double-hit': 101,
-    'idle': 71,
+    'idle': 106,
     'death': 10,
-    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE, # + const
-    'spawn': 209,
+    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 6,
+    'spawn': 297,
     'dromps': 247,
     'patrols': 93,
     'teleportIn': 22,
     'teleportOut': 37,
 }
 
-for i in BOSS_STATES_DURATION.keys():
-    BOSS_STATES_DURATION[i] *= 1.5
-    BOSS_STATES_DURATION[i] = int(BOSS_STATES_DURATION[i])
+print(BOSS_STATES_DURATION)
 
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -669,9 +672,11 @@ class Boss(Enemy):
 
     def reset_angle_projectile(self):
         self.angle_projectile = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
+        print("reset")
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
+        print(self.animation_timer)
         if self.animation_timer == 0:
             self.reset_angle_projectile()
             self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS) # "projectiles" 
@@ -685,7 +690,7 @@ class Boss(Enemy):
                 self.angle_projectile += BOSS_ANGLES_BETWEEN
 
 PROJECTILE_MAX_DIST = 16*20
-PROJECTILE_SPEED = 60
+PROJECTILE_SPEED = 5
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -937,11 +942,9 @@ def easeOutQuint(x: float) -> float:
 def random_with_coefficients(d: dict):
     r = sum(d.values())
     l = list(d.keys())
-    print(r)
     i = 0
     r = random.randint(0, r)
     while r > 0:
-        print(r, l[i], d[l[i]])
         r -= d[l[i]]
         i += 1
     return l[i-1]
