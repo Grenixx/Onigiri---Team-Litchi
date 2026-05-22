@@ -102,16 +102,17 @@ class Game:
             'Dromp/rage': load_animation_with_masks(resource_path('data/images/entities/enemy/Dromp/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Dromp/idle')),
             'Landmark/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/Landmark/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_Landmark/idle')),
             'Projectile/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
+            'Projectile/spawn':load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
             'Projectile/rage':load_animation_with_masks(resource_path('data/images/entities/enemy/patrol/idle'), img_dur=1, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/col_patrol/idle')),
-            'Boss/double-hit':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/double-hit'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/double-hit')),
-            'Boss/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/idle'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/idle')),
-            'Boss/death':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/death'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/death')),
-            'Boss/shoot_projectiles':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/shoot_projectiles'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/shoot_projectiles')),
-            'Boss/spawn':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/spawn'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/spawn')),
-            'Boss/summon_dromps':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/summon_dromps'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/summon_dromps')),
-            'Boss/summon_patrols':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/summon_patrols'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/summon_patrols')),
-            'Boss/teleportIn':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportIn'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportIn')),
-            'Boss/teleportOut':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportOut'), img_dur=1, loop=False, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportOut'))
+            'Boss/double-hit':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/double-hit'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/double-hit')),
+            'Boss/idle':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/idle'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/idle')),
+            'Boss/death':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/death'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/death')),
+            'Boss/projectiles':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/projectiles'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/projectiles')),
+            'Boss/spawn':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/spawn'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/spawn')),
+            'Boss/dromps':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/dromps'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/dromps')),
+            'Boss/patrols':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/patrols'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/patrols')),
+            'Boss/teleportIn':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportIn'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportIn')),
+            'Boss/teleportOut':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportOut'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportOut'))
         }
         self.sfx = {
             'jump': pygame.mixer.Sound(resource_path('data/sfx/jump.wav')),
