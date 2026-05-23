@@ -75,7 +75,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         if checking == 'eid' and checking_value != 0 and checking_value != enemy_manager.landmark_variable:
             return
         if checking == 'number' and enemy_manager.landmark_variable > checking_value:
-            for enemy_eid in enemy_manager.enemies.keys().sort():
+            for enemy_eid in sorted(enemy_manager.enemies.keys()):
                 if enemy_manager.landmark_variable <= checking_value:
                     break
                 enemy = enemy_manager.enemies[enemy_eid]
@@ -522,7 +522,7 @@ class Patrol(Enemy):
                     self.properties['flip'] = True
                 elif self.properties['vx'] > 0:
                     self.properties['flip'] = False
-        else:
+        elif self.wander_angle is not None:
             if self.properties['flip'] and self.wander_angle > -pi/3 and self.wander_angle < pi/3:
                 self.properties['flip'] = False
             elif (not self.properties['flip']) and (self.wander_angle < -2*pi/3 or self.wander_angle > 2*pi/3):
@@ -833,6 +833,8 @@ def middle_pos_player(player):
     return add_vecs(player, mult_vec(PLAYER_SIZE, 0.5))
 
 def sign(x: float | int) -> int:
+    if x == 0:
+        return 0
     return round(x / abs(x))
 
 def list_copy(lst: list) -> list:
@@ -889,6 +891,8 @@ def normalized(vec: list) -> list:
     Returns the normalized input vector
     """
     norm = distance_to([0,0],vec)
+    if norm == 0:
+        return [0, 0]
     vec = [i/norm for i in vec]
     return vec
 
@@ -912,7 +916,7 @@ def angle(vec: list) -> float:
     n = norm(vec)
     if n == 0:
         return 0
-    ax = acos(vec[0] / n)
+    ax = acos(max(-1, min(1, vec[0] / n)))
     ay = asin(vec[1] / n)
     if ax == ay:
         return ax

@@ -224,9 +224,12 @@ class Game:
         self.cooldown_max = 0
         self.KO_time=0
 
-        keys = self.tilemap.tilemap.keys() #recup les tiles de la map
-        max_y = [int(k.split(';')[1]) for k in keys] #calcul la tiles inferieur
-        self.void_y_threshold = (max(max_y) + 2) * self.tilemap.tile_size #calcul la position minimal
+        keys = list(self.tilemap.tilemap.keys())
+        if keys:
+            max_y = [int(k.split(';')[1]) for k in keys]
+            self.void_y_threshold = (max(max_y) + 2) * self.tilemap.tile_size
+        else:
+            self.void_y_threshold = 1000 #calcul la position minimal
 
     def run(self):
         pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))

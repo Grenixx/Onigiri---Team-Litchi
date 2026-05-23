@@ -100,7 +100,7 @@ def normalize(val, amt, target):
 class GrassManager:
     def __init__(self, grass_path, tile_size=15, shade_amount=100, stiffness=360, max_unique=10, place_range=[1, 1], padding=13):
         # asset manager
-        self.grass_path = resource_path(grass_path)
+        self.grass_path = grass_path
         self.ga = GrassAssets(self.grass_path, self)
 
         # caching variables
