@@ -612,21 +612,29 @@ BOSS_MIN_ANGLE_PROJECTILE = pi/6 # > 0
 BOSS_NUMBER_PROJECTILE_AT_ONCE = 8
 BOSS_DISTANCE_PROJECTILE = 100
 
-BOSS_ANGLE_RANGE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
-BOSS_ANGLES_BETWEEN = BOSS_ANGLE_RANGE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
+BOSS_ANGLE_RANGE_PROJECTILE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
+BOSS_ANGLES_BETWEEN_PROJECTILE = BOSS_ANGLE_RANGE_PROJECTILE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
 
 BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
 
 # ---------- Summon Patrols ----------
 
-BOSS_NUMBER_PATROL_AT_ONCE = 5
+BOSS_MIN_ANGLE_PATROL = pi/6 # > 0
+BOSS_NUMBER_PATROL_AT_ONCE = 3
+BOSS_MIN_DISTANCE_PATROL = 100
+BOSS_MAX_DISTANCE_PATROL = 50
+
+BOSS_ANGLE_RANGE_PATROL = pi - BOSS_MIN_ANGLE_PATROL * 2
+BOSS_ANGLES_BETWEEN_PATROL = BOSS_ANGLE_RANGE_PATROL / (BOSS_NUMBER_PATROL_AT_ONCE - 1) if BOSS_NUMBER_PATROL_AT_ONCE != 1 else 0
+
+BOSS_COOLDOWN_BETWEEN_PATROLS = 10
 
 BOSS_ALL_ATTACKS = {
     'double-hit': 0, # 'double-hit': 10,
     'idle': 50, # 'idle': 15,
-    'projectiles': 50, # 'projectiles': 10,
+    'projectiles': 25, # 'projectiles': 10,
     'dromps': 0, # 'dromps': 5,
-    'patrols': 0, # 'patrols': 10,
+    'patrols': 25, # 'patrols': 10,
     'teleportIn': 0 # 'teleportIn': 50
 }
 
@@ -652,17 +660,19 @@ class Boss(Enemy):
         print(f"Boss created at {pos} with eid : {eid} !")
 
         self.animation_timer = BOSS_STATES_DURATION['spawn']
-        self.angle_projectile = 0
-        self.active_projectile = 0
-        self.reset_angle_projectile()
+        self.angle_shoot = 0
+        self.reset_angle_shoot()
+        self.patrols = 0
 
-    def reset_angle_projectile(self):
-        self.angle_projectile = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
+    def reset_angle_shoot(self):
+        self.angle_shoot = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.animation_timer == 0:
-            self.reset_angle_projectile()
+            self.patrols = 0
+            self.reset_angle_shoot()
+            
             tmp = 0
             last_state = self.properties['state']
             if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
@@ -679,8 +689,14 @@ class Boss(Enemy):
         
         if self.properties['state'] == 'projectiles':
             if self.animation_timer % BOSS_COOLDOWN_BETWEEN_PROJECTILES == 0 and self.animation_timer != 0:
-                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile)), "Projectile")
-                self.angle_projectile += BOSS_ANGLES_BETWEEN
+                self.create_enemy(add_vecs(add_vecs(self.pos(), mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_shoot)), "Projectile")
+                self.angle_shoot += BOSS_ANGLES_BETWEEN_PROJECTILE
+        
+        elif self.properties['state'] == 'patrols':
+            if self.patrols < BOSS_NUMBER_PATROL_AT_ONCE and self.animation_timer % BOSS_COOLDOWN_BETWEEN_PATROLS == 0 and self.animation_timer != 0:
+                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(random.randint(BOSS_MAX_DISTANCE_PATROL, BOSS_MIN_DISTANCE_PATROL), self.angle_shoot)), "patrol")
+                self.angle_shoot += BOSS_ANGLES_BETWEEN_PATROL
+                self.patrols += 1
 
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
