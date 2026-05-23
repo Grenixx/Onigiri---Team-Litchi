@@ -60,7 +60,7 @@ void main() {
 
   // Thème B (Intérieur : Noir/Rouge)
   vec3 bgB = vec3(0.0, 0.0, 0.0);
-  vec3 ringB = vec3(0.6863, 0.0, 0.0);
+  vec3 ringB = vec3(0.1922, 0.0, 0.0);
 
   // On mélange les thèmes en fonction de la transition
   vec3 currentBg = mix(bgB, bgA, transition);
