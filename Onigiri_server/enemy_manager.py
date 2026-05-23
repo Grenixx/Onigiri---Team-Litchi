@@ -718,21 +718,13 @@ class Projectile(Enemy):
             pos = self.pos()
             players = self.enemy_manager.players
 
-            if self.is_target_pos_aquire == None:
-                # --- Trouver la cible la plus proche ---
-                closest_dist = None
-                closest_pid = None
-                for pid in players.keys():
-                    dist = distance_squared_to(pos, players[pid])
-                    if closest_dist == None or closest_dist > dist:
-                        closest_dist,closest_pid = dist,pid
-                if closest_pid:
-                    self.is_target_pos_aquire = list_copy(players[closest_pid])
+            if self.is_target_pos_aquire == None and players != {}:
+                target_player_pid = random.choice(list(players.keys()))
+                self.is_target_pos_aquire = list_copy(players[target_player_pid])
 
-                    dist = sqrt(closest_dist)
-                    self.properties['state'] = 'rage'
-                    self.properties['target_player'] = closest_pid
-                    self.velocity = mult_vec(normalized(vector_to(pos, self.is_target_pos_aquire)), self.speed)
+                self.properties['state'] = 'rage'
+                self.properties['target_player'] = target_player_pid
+                self.velocity = mult_vec(normalized(vector_to(pos, self.is_target_pos_aquire)), self.speed)
         else:
             self.time_before_launch -=1
             
