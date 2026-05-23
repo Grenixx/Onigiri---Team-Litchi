@@ -425,6 +425,13 @@ class ClientEnemyManager:
             try:
                 base_anim = self.game.assets.get(f'{etype}/{state}')
                 if base_anim is None:
+                    if etype == "Hand":
+                        base_anim = self.game.assets.get(f'Projectile/{state}')
+                    elif etype == "HandLeft":
+                        base_anim = self.game.assets.get('Boss/left')
+                    elif etype == "HandRight":
+                        base_anim = self.game.assets.get('Boss/right')
+                if base_anim is None:
                     base_anim = self.game.assets.get('patrol/idle')
                 self.enemy_anims[eid] = base_anim.copy()
                 self.enemy_anims[eid].state = state
@@ -432,6 +439,13 @@ class ClientEnemyManager:
             except:
                 print(f'------------------------------ {etype}/{state} not found ------------------------------')
                 base_anim = self.game.assets.get(f'{etype}/{state}')
+                if base_anim is None:
+                    if etype == "Hand":
+                        base_anim = self.game.assets.get(f'Projectile/{state}')
+                    elif etype == "HandLeft":
+                        base_anim = self.game.assets.get('Boss/left')
+                    elif etype == "HandRight":
+                        base_anim = self.game.assets.get('Boss/right')
                 if base_anim is None:
                     base_anim = self.game.assets.get('patrol/idle')
                 self.enemy_anims[eid] = base_anim.copy()
@@ -474,6 +488,9 @@ class ClientEnemyManager:
                 self.collision_offset = (0, 0)
             elif etype == "Landmark":
                 self.size = (0, 0)
+                self.collision_offset = (0, 0)
+            elif etype in ["Hand", "HandLeft", "HandRight"]:
+                self.size = (15, 10)
                 self.collision_offset = (0, 0)
             enemy_rect = pygame.Rect(ex + self.collision_offset[0], ey + self.collision_offset[1], self.size[0], self.size[1])
 
@@ -611,7 +628,7 @@ class ClientEnemyManager:
 
             bar_width = 25
             bar_height = 2
-            max_hp_par_type = {"patrol": 50, "Blob": 25, "Dromp": 160, "Boss": 1500}
+            max_hp_par_type = {"patrol": 50, "Blob": 25, "Dromp": 160, "Boss": 1500, "Hand": 1, "HandLeft": 1, "HandRight": 1}
             position_x_centre = ex_topleft + (imgAnim.get_width() - bar_width) // 2
             position_y = ey_topleft - 3
             
@@ -637,6 +654,9 @@ class ClientEnemyManager:
                     debug_offset = (0, 0)
                 elif etype == 'Landmark':
                     debug_size = (0, 0)
+                    debug_offset = (0, 0)
+                elif etype in ['Hand', 'HandLeft', 'HandRight']:
+                    debug_size = (15, 10)
                     debug_offset = (0, 0)
                 else:
                     debug_size = self.size

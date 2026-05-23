@@ -37,7 +37,12 @@ class EnemyManager:
 
     def create_enemy(self, pos: list, enemy_type: str, Landmark_eid: int = 0) -> None:
         """Creates an enemy at 'pos' with the type 'enemy_type'"""
-        enemy_types = {"blob": Blob, "patrol": Patrol, "Dromp": Dromp, "Boss": Boss, "Projectile": Projectile}
+        enemy_types = {
+            "blob": Blob, "patrol": Patrol, "Dromp": Dromp, "Boss": Boss, "Projectile": Projectile,
+            "Hand": Hand, "hand": Hand,
+            "HandLeft": HandLeft, "HandRight": HandRight,
+            "hand_left": HandLeft, "hand_right": HandRight
+        }
         if enemy_type == "Landmark":
             LM = Landmark(self.next_enemy_id, pos, self, 200, LANDMARK_TYPE_CHECK, Landmark_eid)
             try:
@@ -682,56 +687,99 @@ class Boss(Enemy):
         
         if self.properties['state'] == 'projectiles':
             if self.animation_timer % BOSS_COOLDOWN_BETWEEN_PROJECTILES == 0 and self.animation_timer != 0:
-                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile)), "Projectile")
+                spawn_pos = add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile))
+                
+                # Côté gauche si cos(angle) < 0, sinon côté droit
+                is_left = cos(self.angle_projectile) < 0
+                hand_type = "HandLeft" if is_left else "HandRight"
+                
+                self.create_enemy(spawn_pos, hand_type)
                 self.angle_projectile += BOSS_ANGLES_BETWEEN
 
 HAND_SPEED = 5
-HAND_TIME_BEFORE_LAUNCH = 5
+HAND_TIME_BEFORE_LAUNCH = 40  # 40 ticks (environ 0.66s) pour donner le temps de voler et s'immobiliser au-dessus
 
 class Hand(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 10)) #1 pv pr le one shoot
+        # On passe une vitesse de 4.0 pour que la main puisse voler rapidement vers le joueur
+        super().__init__(eid, pos, enemy_manager, 4.0, 1, (15, 10)) # 1 PV pour pouvoir être one-shot
         self.properties['type'] = "Hand"
         self.properties['state'] = 'idle'
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
         self.time_before_launch = HAND_TIME_BEFORE_LAUNCH
+        self.impact_timer = 0  # Permet à la main de rester au sol un court instant avant de disparaître
         print(f"Hand created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
-        if self.time_before_launch <= 0:
-            pass #slam le sol
-        else:
+        players = self.enemy_manager.players
+
+        # Si l'impact au sol a déjà eu lieu, on reste immobile puis on meurt après expiration du timer
+        if self.impact_timer > 0:
+            self.velocity = [0, 0]
+            self.impact_timer -= 1
+            if self.impact_timer == 0:
+                self.kill()
+            return
+
+        if self.time_before_launch > 0:
             self.properties['state'] = 'idle'
-            pos = self.pos()
-            players = self.enemy_manager.players
-
-            if self.is_target_pos_aquire == None:
-                # --- Trouver la cible la plus proche ---
-                closest_dist = None
-                closest_pid = None
-                for pid in players.keys():
-                    dist = distance_squared_to(pos, players[pid])
-                    if closest_dist == None or closest_dist > dist:
-                        closest_dist,closest_pid = dist,pid
-                if closest_pid:
-                    self.is_target_pos_aquire = list_copy(players[closest_pid])
-                    pos_au_dessus_de_target = add_vecs(self.is_target_pos_aquire, [0,20])
-
-                    dist = sqrt(closest_dist)
-                    self.properties['state'] = 'idle' #  a voir
-                    self.properties['target_player'] = closest_pid
-                    self.velocity = mult_vec(normalized(vector_to(pos, pos_au_dessus_de_target)), self.speed)
-            self.time_before_launch -=1
             
+            # --- Trouver la cible la plus proche ---
+            closest_dist = None
+            closest_pid = None
+            for pid in players.keys():
+                dist = distance_squared_to(self.pos(), players[pid])
+                if closest_dist is None or closest_dist > dist:
+                    closest_dist, closest_pid = dist, pid
+                    
+            if closest_pid:
+                player_pos = players[closest_pid]
+                self.properties['target_player'] = closest_pid
+                
+                # Position cible : directement au-dessus du joueur (-60 pixels)
+                target_x = player_pos[0]
+                target_y = player_pos[1]
+                target_pos = [target_x, target_y]
+                
+                dist_to_target = distance_to(self.pos(), target_pos)
+                if dist_to_target > 4:
+                    # On vole de manière fluide vers la position cible au-dessus du joueur
+                    self.velocity = mult_vec(normalized(vector_to(self.pos(), target_pos)), self.speed)
+                else:
+                    # On y est presque ou déjà arrivé, on s'arrête et on s'aligne proprement
+                    self.velocity = [0, 0]
+                    self.properties['x'] = target_x
+                    self.properties['y'] = target_y
+            else:
+                self.velocity = [0, 0]
+            
+            self.time_before_launch -= 1
+            # On se déplace mais on IGNORE les collisions mortelles pendant le vol/hover pour éviter de disparaître
+            self.move_and_slide(self.velocity, delta)
+        else:
+            # Phase de chute : tombe rapidement tout droit vers le sol
+            self.properties['state'] = 'idle'
+            self.velocity = [0, HAND_SPEED]
 
-        self.move_and_slide(self.velocity, delta)
-        
-        # Col = explosion et ou juste kill
-        if self.last_collisions[0] or self.last_collisions[1]:
-            print(f"you collided {self.eid}")
-            self.kill()
+            self.move_and_slide(self.velocity, delta)
+            
+            # Collision au sol / mur déclenchée uniquement en phase de chute
+            if self.last_collisions[0] or self.last_collisions[1]:
+                print(f"you collided {self.eid}")
+                self.velocity = [0, 0]
+                self.impact_timer = 15  # Reste figé au sol pendant 15 ticks (environ 0.25s) avant de disparaître
+
+class HandLeft(Hand):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager)
+        self.properties['type'] = "HandLeft"
+
+class HandRight(Hand):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager)
+        self.properties['type'] = "HandRight"
 
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5

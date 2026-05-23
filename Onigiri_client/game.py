@@ -113,7 +113,9 @@ class Game:
             'Boss/dromps':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/dromps'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/dromps')),
             'Boss/patrols':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/patrols'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/patrols')),
             'Boss/teleportIn':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportIn'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportIn')),
-            'Boss/teleportOut':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportOut'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportOut'))
+            'Boss/teleportOut':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/teleportOut'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/teleportOut')),
+            'Boss/left':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/left'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/left')),
+            'Boss/right':load_animation_with_masks(resource_path('data/images/entities/enemy/Boss/right'), img_dur=2, loop=True, convert_alpha=False, col_path=resource_path('data/images/entities/enemy/Boss/right'))
         }
         self.sfx = {
             'jump': pygame.mixer.Sound(resource_path('data/sfx/jump.wav')),
