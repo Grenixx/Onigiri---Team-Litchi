@@ -309,6 +309,7 @@ def refresh_servers():
     items = []
     print("Recherche de serveurs...")
     servers = LobbyManager.get_server_list()
+    print(f"[DEBUG] Serveurs trouvés : {servers}")
     
     if not servers:
         items.append(("No servers found", None))

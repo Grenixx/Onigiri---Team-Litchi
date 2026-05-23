@@ -98,7 +98,7 @@ class GameServer:
         try:
             upnp.addportmapping(self.port, 'UDP', upnp.lanaddr, self.port, 'Python Game Server', '')
         except Exception as e:
-            pass
+            print(f"[UPnP] Échec ouverture port : {e}")
 
     def run(self):
         try:
