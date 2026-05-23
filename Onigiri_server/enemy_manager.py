@@ -697,13 +697,13 @@ class Boss(Enemy):
                 self.angle_projectile += BOSS_ANGLES_BETWEEN
 
 HAND_SPEED = 10
-HAND_FLY_SPEED = 7           # Vitesse de vol vers le joueur (pixels/tick)
+HAND_FLY_SPEED = 3           # Vitesse de vol vers le joueur (pixels/tick)
 HAND_TIME_BEFORE_LAUNCH = 100 
 PIXEL_AU_DESSUS_DU_PLAYER = 200
 
 class Hand(Enemy):
-    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, HAND_FLY_SPEED, 1, (200, 125))
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, size=(200, 125)):
+        super().__init__(eid, pos, enemy_manager, HAND_FLY_SPEED, 1, size)
         self.properties['type'] = "Hand"
         self.properties['state'] = 'idle'
         self.velocity = [0, 0]
@@ -772,12 +772,12 @@ class Hand(Enemy):
 
 class HandLeft(Hand):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager)
+        super().__init__(eid, pos, enemy_manager, size=(200,115))
         self.properties['type'] = "HandLeft"
 
 class HandRight(Hand):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager)
+        super().__init__(eid, pos, enemy_manager, size=(200,125))
         self.properties['type'] = "HandRight"
 
 PROJECTILE_MAX_DIST = 16*20
@@ -786,7 +786,7 @@ PROJECTILE_TIME_BEFORE_LAUNCH = 20
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 10)) #1 pv pr le one shoot
+        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 15)) #1 pv pr le one shoot
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
         self.is_target_pos_aquire = None
