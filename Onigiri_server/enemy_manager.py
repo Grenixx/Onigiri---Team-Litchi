@@ -606,23 +606,10 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
-# spell = projectiles
-# spell2 = summon_patrols
-# unsure : spell3 = spawn 1 or 2 Dromps
-
-#BOSS_MAX_HEIGHT = 
-
-# BOSS_STATES_TRANSITIONS = {'teleportIn': (
-#                                ('teleportOut', 100)
-#                            ),
-#                            'teleportOut': (
-#                                ()
-#                            )
-
-# }
+# ---------- Spawn Projectiles ----------
 
 BOSS_MIN_ANGLE_PROJECTILE = pi/6 # > 0
-BOSS_NUMBER_PROJECTILE_AT_ONCE = 5
+BOSS_NUMBER_PROJECTILE_AT_ONCE = 8
 BOSS_DISTANCE_PROJECTILE = 100
 
 BOSS_ANGLE_RANGE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
@@ -630,10 +617,9 @@ BOSS_ANGLES_BETWEEN = BOSS_ANGLE_RANGE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if
 
 BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
 
-ANIMATION_SCALE = 1.5
+# ---------- Summon Patrols ----------
 
-BOSS_COOLDOWN_BETWEEN_PROJECTILES *= ANIMATION_SCALE
-BOSS_COOLDOWN_BETWEEN_PROJECTILES = int(BOSS_COOLDOWN_BETWEEN_PROJECTILES)
+BOSS_NUMBER_PATROL_AT_ONCE = 5
 
 BOSS_ALL_ATTACKS = {
     'double-hit': 0, # 'double-hit': 10,
@@ -648,13 +634,15 @@ BOSS_STATES_DURATION = {
     'double-hit': 101,
     'idle': 106,
     'death': 10,
-    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 6,
+    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 1,
     'spawn': 297,
     'dromps': 247,
     'patrols': 93,
     'teleportIn': 22,
     'teleportOut': 37,
 }
+
+BOSS_EXCLUDED_TRANSITIONS = ('death', 'spawn', 'teleportOut')
 
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
@@ -675,7 +663,16 @@ class Boss(Enemy):
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.animation_timer == 0:
             self.reset_angle_projectile()
+            tmp = 0
+            last_state = self.properties['state']
+            if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
+                tmp = BOSS_ALL_ATTACKS[self.properties['state']]
+
+                BOSS_ALL_ATTACKS[self.properties['state']] = 0
             self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS) # "projectiles" 
+            if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
+                BOSS_ALL_ATTACKS[last_state] = tmp
+
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
         else:
             self.animation_timer -= 1
