@@ -645,7 +645,7 @@ BOSS_STATES_DURATION = {
     'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 1,
     'spawn': 297,
     'dromps': 247,
-    'patrols': 93,
+    'patrols': 133,
     'teleportIn': 22,
     'teleportOut': 37,
 }
