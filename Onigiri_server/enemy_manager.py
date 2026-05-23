@@ -696,80 +696,80 @@ class Boss(Enemy):
                 self.create_enemy(spawn_pos, hand_type)
                 self.angle_projectile += BOSS_ANGLES_BETWEEN
 
-HAND_SPEED = 5
-HAND_TIME_BEFORE_LAUNCH = 40  # 40 ticks (environ 0.66s) pour donner le temps de voler et s'immobiliser au-dessus
+HAND_SPEED = 10
+HAND_FLY_SPEED = 7           # Vitesse de vol vers le joueur (pixels/tick)
+HAND_TIME_BEFORE_LAUNCH = 100 
+PIXEL_AU_DESSUS_DU_PLAYER = 200
 
 class Hand(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        # On passe une vitesse de 4.0 pour que la main puisse voler rapidement vers le joueur
-        super().__init__(eid, pos, enemy_manager, 4.0, 1, (15, 10)) # 1 PV pour pouvoir être one-shot
+        super().__init__(eid, pos, enemy_manager, HAND_FLY_SPEED, 1, (200, 125))
         self.properties['type'] = "Hand"
         self.properties['state'] = 'idle'
-        self.is_target_pos_aquire = None
-        self.velocity = [0,0]
+        self.velocity = [0, 0]
         self.time_before_launch = HAND_TIME_BEFORE_LAUNCH
-        self.impact_timer = 0  # Permet à la main de rester au sol un court instant avant de disparaître
+        self.impact_timer = 0  # Ticks de pause au sol avant de disparaître
         print(f"Hand created at {pos} with eid : {eid} !")
-    
+
+    def unstuck(self):
+        # Les mains ne doivent PAS être unstuck au spawn, elles flottent
+        pass
+
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         players = self.enemy_manager.players
 
-        # Si l'impact au sol a déjà eu lieu, on reste immobile puis on meurt après expiration du timer
+        # --- Phase de pause au sol post-impact ---
         if self.impact_timer > 0:
-            self.velocity = [0, 0]
             self.impact_timer -= 1
             if self.impact_timer == 0:
                 self.kill()
             return
 
+        # --- Phase de vol / hover au-dessus du joueur ---
         if self.time_before_launch > 0:
             self.properties['state'] = 'idle'
-            
-            # --- Trouver la cible la plus proche ---
+
+            # Trouver le joueur le plus proche
             closest_dist = None
             closest_pid = None
             for pid in players.keys():
                 dist = distance_squared_to(self.pos(), players[pid])
                 if closest_dist is None or closest_dist > dist:
                     closest_dist, closest_pid = dist, pid
-                    
+
             if closest_pid:
                 player_pos = players[closest_pid]
                 self.properties['target_player'] = closest_pid
-                
-                # Position cible : directement au-dessus du joueur (-60 pixels)
-                target_x = player_pos[0]
-                target_y = player_pos[1]
+
+                target_x = player_pos[0] + PLAYER_SIZE[0] / 2 - self.size[0] / 2
+                target_y = player_pos[1] - PIXEL_AU_DESSUS_DU_PLAYER
                 target_pos = [target_x, target_y]
-                
+
                 dist_to_target = distance_to(self.pos(), target_pos)
-                if dist_to_target > 4:
-                    # On vole de manière fluide vers la position cible au-dessus du joueur
-                    self.velocity = mult_vec(normalized(vector_to(self.pos(), target_pos)), self.speed)
+                if dist_to_target > 3:
+                    step = mult_vec(normalized(vector_to(self.pos(), target_pos)), min(self.speed, dist_to_target))
+                    self.properties['x'] += step[0]
+                    self.properties['y'] += step[1]
                 else:
-                    # On y est presque ou déjà arrivé, on s'arrête et on s'aligne proprement
-                    self.velocity = [0, 0]
                     self.properties['x'] = target_x
                     self.properties['y'] = target_y
-            else:
-                self.velocity = [0, 0]
-            
-            self.time_before_launch -= 1
-            # On se déplace mais on IGNORE les collisions mortelles pendant le vol/hover pour éviter de disparaître
-            self.move_and_slide(self.velocity, delta)
-        else:
-            # Phase de chute : tombe rapidement tout droit vers le sol
-            self.properties['state'] = 'idle'
-            self.velocity = [0, HAND_SPEED]
 
-            self.move_and_slide(self.velocity, delta)
+            self.time_before_launch -= 1
+
+        # --- Phase de chute ---
+        else:
+            self.properties['state'] = 'idle'
             
-            # Collision au sol / mur déclenchée uniquement en phase de chute
+            self.last_collisions = [False, False]
+            self.velocity = [0, HAND_SPEED]
+            self.move_and_slide(self.velocity, delta)
+
+            # Impact au sol ou sur un mur latéral
             if self.last_collisions[0] or self.last_collisions[1]:
-                print(f"you collided {self.eid}")
+                print(f"Hand {self.eid} impacted!")
                 self.velocity = [0, 0]
-                self.impact_timer = 15  # Reste figé au sol pendant 15 ticks (environ 0.25s) avant de disparaître
+                self.impact_timer = 15  # ~0.25s au sol avant de disparaître
 
 class HandLeft(Hand):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
