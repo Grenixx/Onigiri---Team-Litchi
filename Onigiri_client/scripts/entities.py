@@ -629,8 +629,9 @@ class ClientEnemyManager:
             bar_width = 25
             bar_height = 2
             max_hp_par_type = {"patrol": 50, "Blob": 25, "Dromp": 160, "Boss": 1500, "Hand": 1, "HandLeft": 1, "HandRight": 1}
+            bar_offset_y = {"Boss": 44, "HandLeft": 68, "HandRight": 76}
             position_x_centre = ex_topleft + (imgAnim.get_width() - bar_width) // 2
-            position_y = ey_topleft - 3
+            position_y = ey_topleft + bar_offset_y.get(etype, -3)
             
             # barre de couleur pour hp
             ratio = max(0.0, min(1.0, hp / max_hp_par_type.get(etype, 50)))
