@@ -712,7 +712,6 @@ class Hand(Enemy):
         print(f"Hand created at {pos} with eid : {eid} !")
 
     def unstuck(self):
-        # Les mains ne doivent PAS être unstuck au spawn, elles flottent
         pass
 
     def physics_process(self, delta: float) -> None:
