@@ -685,6 +685,54 @@ class Boss(Enemy):
                 self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile)), "Projectile")
                 self.angle_projectile += BOSS_ANGLES_BETWEEN
 
+HAND_SPEED = 5
+HAND_TIME_BEFORE_LAUNCH = 5
+
+class Hand(Enemy):
+    def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
+        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 10)) #1 pv pr le one shoot
+        self.properties['type'] = "Hand"
+        self.properties['state'] = 'idle'
+        self.is_target_pos_aquire = None
+        self.velocity = [0,0]
+        self.time_before_launch = HAND_TIME_BEFORE_LAUNCH
+        print(f"Hand created at {pos} with eid : {eid} !")
+    
+    def physics_process(self, delta: float) -> None:
+        """The physics engine of the enemy called every tick by EnemyManager.update()"""
+        if self.time_before_launch <= 0:
+            pass #slam le sol
+        else:
+            self.properties['state'] = 'idle'
+            pos = self.pos()
+            players = self.enemy_manager.players
+
+            if self.is_target_pos_aquire == None:
+                # --- Trouver la cible la plus proche ---
+                closest_dist = None
+                closest_pid = None
+                for pid in players.keys():
+                    dist = distance_squared_to(pos, players[pid])
+                    if closest_dist == None or closest_dist > dist:
+                        closest_dist,closest_pid = dist,pid
+                if closest_pid:
+                    self.is_target_pos_aquire = list_copy(players[closest_pid])
+                    pos_au_dessus_de_target = add_vecs(self.is_target_pos_aquire, [0,20])
+
+                    dist = sqrt(closest_dist)
+                    self.properties['state'] = 'idle' #  a voir
+                    self.properties['target_player'] = closest_pid
+                    self.velocity = mult_vec(normalized(vector_to(pos, pos_au_dessus_de_target)), self.speed)
+            self.time_before_launch -=1
+            
+
+        self.move_and_slide(self.velocity, delta)
+        
+        # Col = explosion et ou juste kill
+        if self.last_collisions[0] or self.last_collisions[1]:
+            print(f"you collided {self.eid}")
+            self.kill()
+
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
 PROJECTILE_TIME_BEFORE_LAUNCH = 20
