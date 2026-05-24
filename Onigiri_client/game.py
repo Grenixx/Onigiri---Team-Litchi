@@ -500,6 +500,8 @@ class Game:
                 self.display_2.blit(trans_surf, (0, 0))
             self.tilemap.grass_manager.update_render(self.display, 1/10, offset=render_scroll, rot_function=lambda x, y: int(math.sin(x / 100 + pygame.time.get_ticks() / 300) * 30) / 10)
             if self.scream_active:
+                render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
+                self.scream_shader.prog["u_camera"] = (float(render_scroll[0]), float(render_scroll[1]))
                 scream_surf = self.scream_shader.render(self.display_2)
                 self.display_2.blit(scream_surf, (0, 0))
                 if time.time() - self.scream_shader.start_time - self.scream_shader.trigger_time > 1.2:

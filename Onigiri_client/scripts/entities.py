@@ -625,15 +625,11 @@ class ClientEnemyManager:
             # --- SHADER BOSS SPAWN (frame d'aim) ---
             if etype == 'Boss' and state == 'spawn' and not self._boss_shader_triggered:
                 if anim.frame >= 160:
-                    display_w = self.game.display.get_width()
-                    display_h = self.game.display.get_height()
-                    render_scroll = self.game.scroll
-                    boss_shader_offset = (0, -15) 
+                    boss_shader_offset = (0, -15)
                     center_x = x + imgAnim.get_width() / 2 + boss_shader_offset[0]
                     center_y = y + imgAnim.get_height() / 2 + boss_shader_offset[1]
-                    uv_x = max(0.0, min(1.0, (center_x - render_scroll[0]) / display_w))
-                    uv_y = max(0.0, min(1.0, (center_y - render_scroll[1]) / display_h))
-                    self.game.scream_shader.trigger((uv_x, 1.0 - uv_y))
+                    # Position monde, pas UV !
+                    self.game.scream_shader.trigger((center_x, center_y))
                     self.game.scream_active = True
                     self._boss_shader_triggered = True
             # ----------------------------------------
