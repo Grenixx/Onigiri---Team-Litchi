@@ -420,6 +420,8 @@ class ClientEnemyManager:
         self.enemy_anims = {}  # eid -> animation
         self.state = 'idle'
 
+        self._boss_shader_triggered = False
+
     def set_state_for_enemy(self, eid, etype, state):
         if eid not in self.enemy_anims or getattr(self.enemy_anims[eid], 'state', None) != state or getattr(self.enemy_anims[eid], 'etype', None) != etype:
             try:
@@ -434,6 +436,7 @@ class ClientEnemyManager:
                 if base_anim is None:
                     base_anim = self.game.assets.get('patrol/idle')
                 self.enemy_anims[eid] = base_anim.copy()
+                self.enemy_anims[eid].frame = 0
                 self.enemy_anims[eid].state = state
                 self.enemy_anims[eid].etype = etype
             except:
@@ -598,10 +601,6 @@ class ClientEnemyManager:
 
     def render(self, surf, offset=(0, 0), dt=1):
         """Affiche les ennemis ronds violets à l'écran."""
-
-        #surf.blit(pygame.transform.flip(self.animation.img(), self.flip, False),
-        #          (self.pos[0] - offset[0] + self.anim_offset[0],
-        #           self.pos[1] - offset[1] + self.anim_offset[1]))
         
         active_eids = set(self.game.net.enemies.keys())
         current_eids = set(self.enemy_anims.keys())
@@ -615,8 +614,6 @@ class ClientEnemyManager:
             anim.update(dt)
             imgAnim = anim.img()
             
-            imgAnim = anim.img()
-            
             # Alignement consistant avec le joueur (Top-left + Offset)
             anim_offset = (-3, -3)
             ex_topleft = x - offset[0] + anim_offset[0]
@@ -625,6 +622,21 @@ class ClientEnemyManager:
             # Rendu Principal avec Flip
             surf.blit(pygame.transform.flip(imgAnim, flip, False), (ex_topleft, ey_topleft))
 
+            # --- SHADER BOSS SPAWN (frame d'aim) ---
+            if etype == 'Boss' and state == 'spawn' and not self._boss_shader_triggered:
+                if anim.frame >= 160:
+                    display_w = self.game.display.get_width()
+                    display_h = self.game.display.get_height()
+                    render_scroll = self.game.scroll
+                    boss_shader_offset = (0, -15) 
+                    center_x = x + imgAnim.get_width() / 2 + boss_shader_offset[0]
+                    center_y = y + imgAnim.get_height() / 2 + boss_shader_offset[1]
+                    uv_x = max(0.0, min(1.0, (center_x - render_scroll[0]) / display_w))
+                    uv_y = max(0.0, min(1.0, (center_y - render_scroll[1]) / display_h))
+                    self.game.scream_shader.trigger((uv_x, 1.0 - uv_y))
+                    self.game.scream_active = True
+                    self._boss_shader_triggered = True
+            # ----------------------------------------
 
             bar_width = 25
             bar_height = 2
@@ -633,7 +645,6 @@ class ClientEnemyManager:
             position_x_centre = ex_topleft + (imgAnim.get_width() - bar_width) // 2
             position_y = ey_topleft + bar_offset_y.get(etype, -3)
             
-            # barre de couleur pour hp
             ratio = max(0.0, min(1.0, hp / max_hp_par_type.get(etype, 50)))
             largeur_remplie = int(bar_width * ratio)
             red = (max(0, min(255, int(255 * ratio))), 0, 0)
@@ -641,8 +652,6 @@ class ClientEnemyManager:
             pygame.draw.rect(surf, (0, 0, 0), (position_x_centre, position_y, bar_width, bar_height))
             if largeur_remplie > 0:
                 pygame.draw.rect(surf, red, (position_x_centre, position_y, largeur_remplie, bar_height))
-
-
 
             self.game.tilemap.grass_manager.apply_force((x, y), 6, 12)
 

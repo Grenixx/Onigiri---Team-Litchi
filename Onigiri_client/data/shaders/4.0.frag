@@ -21,7 +21,7 @@ void main() {
     float totalFlash = 0.0;
 
     // Durée totale de l'effet
-    float duration = 1.0;
+    float duration = 100.0;
     if (time_since_trigger > duration || time_since_trigger < 0.0) {
         gl_FragColor = texture2D(u_texture, uv);
         return;
@@ -34,7 +34,7 @@ void main() {
         if (waveTime < 0.0 || waveTime > 1.0) continue;
         
         float radius = waveTime * 1.2; // L'onde s'étend
-        float thickness = 0.025;
+        float thickness = 0.05;
         float force = 0.03 * (1.0 - waveTime); // L'onde faiblit en s'éloignant
 
         // Masque de l'anneau pour l'onde i
