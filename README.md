@@ -11,13 +11,4 @@ Pour ce faire c'est très simple, voici plusieurs méthodes :
 
 Pour compiler les exécutables vous-mêmes :
 
-```
-pip install pygame moderngl numpy miniupnpc screeninfo
-
-cd Onigiri_server
-pyinstaller --onefile server.py
-Copy-Item -Recurse -Force "data" "dist\data"
-
-cd ../Onigiri_client
-pyinstaller --onefile --add-data "data;data" --add-data "scripts;scripts" game.py
-```
+lancer pyinstaller.bat
