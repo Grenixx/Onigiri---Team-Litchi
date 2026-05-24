@@ -8,6 +8,8 @@ PLAYER_SIZE = (14, 18)
 
 LANDMARK_TYPE_CHECK = "eid"
 
+PRINT_DEBUG_SPAWNING_INFO = True
+
 class EnemyManager:
     def __init__(self, tilemap):
         self.tilemap = tilemap
@@ -95,7 +97,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         self.enemy_manager = enemy_manager
         self.persistance = persistance
         self.properties['type'] = "Landmark"
-        print(f"Landmark created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Landmark created at {pos} with eid : {eid} !")
     
     def physics_process(self, dt: float):
         if self.persistance <= 0:
@@ -104,7 +106,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
     
     def kill(self):
         self.enemy_manager.enemies.pop(self.eid)
-        print(f"Landmark deleted with eid : {self.eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Landmark deleted with eid : {self.eid} !")
 
 class Enemy:
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple, knockback_type: str = "any", knockback_strength: float | int = 8, hitbox_offset = (0,0)):
@@ -242,6 +244,24 @@ class Enemy:
         norm_k = norm(self.knockback_velocity)
         if norm_k != 0:
             self.knockback_velocity = mult_vec(self.knockback_velocity, max((norm_k - KNOCKBACK_DEPLETION) / norm_k, 0))
+    
+    def move(self, velocity: list, delta: float) -> None:
+        """
+        Applies the velocity and updates the position
+        (without verifying collisions)
+        """
+        self.properties['vx'] = velocity[0]
+        self.properties['vy'] = velocity[1]
+        pos = self.pos()
+        new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
+        self.last_pos = pos
+        self.last_velocity = velocity
+        self.properties['x'] = new_pos[0]
+        self.properties['y'] = new_pos[1]
+        
+        norm_k = norm(self.knockback_velocity)
+        if norm_k != 0:
+            self.knockback_velocity = mult_vec(self.knockback_velocity, max((norm_k - KNOCKBACK_DEPLETION) / norm_k, 0))
 
     def damage(self, damage_amount: int, pid: int) -> None:
         self.hp -= damage_amount
@@ -284,7 +304,7 @@ class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 25) #hp 50->25 pour etre one shoter par tous
         self.properties['type'] = "Blob"
-        print(f"Blob created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Blob created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -403,7 +423,7 @@ class Patrol(Enemy):
         self.wander_angle = None
         self.wander_dist = None
         self.wander_speed = self.speed
-        print(f"Patrol created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Patrol created at {pos} with eid : {eid} !")
     
     def create_wander_pos(self, hit_result: list = [False, False]) -> None:
         """Creates a wandering position when the patrol doesn't see the player"""
@@ -557,7 +577,7 @@ class Dromp(Enemy):
         self.properties['flip'] = self.orientation == 1
         self.rage_cooldown_timer = -1
         self.properties['state'] = 'idle'
-        print(f"Dromp created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Dromp created at {pos} with eid : {eid} !")
         for _ in range(500):
             if self.does_collide(add_vecs(self.pos(), [0, 1]))[1]:
                 break
@@ -615,90 +635,163 @@ class Dromp(Enemy):
 
         self.move_and_slide(velocity, delta)
 
-# spell = projectiles
-# spell2 = summon_patrols
-# unsure : spell3 = spawn 1 or 2 Dromps
-
-#BOSS_MAX_HEIGHT = 
-
-# BOSS_STATES_TRANSITIONS = {'teleportIn': (
-#                                ('teleportOut', 100)
-#                            ),
-#                            'teleportOut': (
-#                                ()
-#                            )
-
-# }
+# ---------- Spawn Projectiles ----------
 
 BOSS_MIN_ANGLE_PROJECTILE = pi/6 # > 0
-BOSS_NUMBER_PROJECTILE_AT_ONCE = 5
+BOSS_NUMBER_PROJECTILE_AT_ONCE = 6
 BOSS_DISTANCE_PROJECTILE = 100
 
-BOSS_ANGLE_RANGE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
-BOSS_ANGLES_BETWEEN = BOSS_ANGLE_RANGE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
+BOSS_ANGLE_RANGE_PROJECTILE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
+BOSS_ANGLES_BETWEEN_PROJECTILE = BOSS_ANGLE_RANGE_PROJECTILE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
 
-BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
+BOSS_COOLDOWN_BETWEEN_PROJECTILES = 13
 
-ANIMATION_SCALE = 1.5
+# ---------- Summon Patrols ----------
 
-BOSS_COOLDOWN_BETWEEN_PROJECTILES *= ANIMATION_SCALE
-BOSS_COOLDOWN_BETWEEN_PROJECTILES = int(BOSS_COOLDOWN_BETWEEN_PROJECTILES)
+BOSS_MIN_ANGLE_PATROL = pi/6 # > 0
+BOSS_NUMBER_PATROL_AT_ONCE = 3
+BOSS_MIN_DISTANCE_PATROL = 50
+BOSS_MAX_DISTANCE_PATROL = 100
+
+BOSS_ANGLE_RANGE_PATROL = pi - BOSS_MIN_ANGLE_PATROL * 2
+BOSS_ANGLES_BETWEEN_PATROL = BOSS_ANGLE_RANGE_PATROL / (BOSS_NUMBER_PATROL_AT_ONCE - 1) if BOSS_NUMBER_PATROL_AT_ONCE != 1 else 0
+
+BOSS_COOLDOWN_BETWEEN_PATROLS = 10
+
+# ---------- Teleportation ----------
+
+BOSS_MAX_DIST_FROM_SPAWN = (150, 150, 20, 20) # left, right, down, up
+
+# ---------- Double Hit ----------
+
+BOSS_PIVOTS_DISTANCE = 0
+BOSS_RADIUS_X = 200
+BOSS_RADIUS_Y = 75
+BOSS_SPEED = 3
+
+# ---------- Hands ----------
+
+BOSS_HANDS_DISTANCE_SPAWN_X = 75
+BOSS_HANDS_DISTANCE_SPAWN_Y = -150
+
+# ---------- All animations ----------
 
 BOSS_ALL_ATTACKS = {
-    'double-hit': 0, # 'double-hit': 10,
+    'double-hit': 100, # 'double-hit': 10,
     'idle': 50, # 'idle': 15,
-    'projectiles': 50, # 'projectiles': 10,
-    'dromps': 0, # 'dromps': 5,
-    'patrols': 0, # 'patrols': 10,
-    'teleportIn': 0 # 'teleportIn': 50
+    'projectiles': 25, # 'projectiles': 10,
+    'dromps': 1000, # 'dromps': 5,
+    'patrols': 25, # 'patrols': 10,
+    'teleportIn': 50 # 'teleportIn': 50
 }
 
 BOSS_STATES_DURATION = {
-    'double-hit': 101,
+    'double-hit': 202,
     'idle': 106,
     'death': 10,
-    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 6,
+    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 3,
     'spawn': 297,
     'dromps': 247,
-    'patrols': 93,
-    'teleportIn': 22,
-    'teleportOut': 37,
+    'patrols': 133,
+    'teleportIn': 52,
+    'teleportOut': 52,
 }
+
+BOSS_EXCLUDED_TRANSITIONS = ('death', 'spawn', 'teleportOut')
+
+BOSS_MIDDLE_DOUBLE_ATTACK = 100
+# BOSS_END_DOUBLE_ATTACK = 25
 
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (200, 200)) #hp 150->1500 completement wtf
+        super().__init__(eid, pos, enemy_manager, BOSS_SPEED, 1500, (200, 200), "any", 0)
         self.properties['type'] = "Boss"
         self.properties['state'] = 'spawn'
-        print(f"Boss created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Boss created at {pos} with eid : {eid} !")
 
         self.animation_timer = BOSS_STATES_DURATION['spawn']
-        self.angle_projectile = 0
-        self.active_projectile = 0
-        self.reset_angle_projectile()
+        self.angle_shoot = 0
+        self.reset_angle_shoot()
+        self.patrols = 0
+        self.teleported = False
+        self.double_hit = False
+        self.angle_double_hit = pi/2
+        self.animations = {k: v for k, v in BOSS_ALL_ATTACKS.items()}
 
-    def reset_angle_projectile(self):
-        self.angle_projectile = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
+    def reset_angle_shoot(self):
+        self.angle_shoot = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.animation_timer == 0:
-            self.reset_angle_projectile()
-            self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS) # "projectiles" 
+            self.reset_angle_shoot()
+            if self.properties['state'] == 'double-hit':
+                self.double_hit = False
+                self.properties['state'] = 'teleportIn'
+            elif self.properties['state'] == 'teleportOut' and self.double_hit:
+                self.properties['state'] = 'double-hit'
+                self.angle_double_hit = pi/2
+            elif self.properties['state'] == 'teleportIn':
+                if self.double_hit:
+                    self.properties['x'] = self.spawn_position[0] - BOSS_MAX_DIST_FROM_SPAWN[0]
+                    self.properties['y'] = self.spawn_position[1] - 70
+                else:
+                    self.properties['x'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[0] + BOSS_MAX_DIST_FROM_SPAWN[1]) + self.spawn_position[0] - BOSS_MAX_DIST_FROM_SPAWN[0]
+                    self.properties['y'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[2] + BOSS_MAX_DIST_FROM_SPAWN[3]) + self.spawn_position[1] - BOSS_MAX_DIST_FROM_SPAWN[3] - 42
+                self.properties['state'] = 'teleportOut'
+                self.teleported = True
+            else:
+                tmp = {k: v for k, v in self.animations.items()}
+                if self.teleported:
+                    self.animations['teleportIn'] = 0
+                    self.animations['double-hit'] = 0
+                if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
+                    self.animations[self.properties['state']] = 0
+                self.properties['state'] = random_with_coefficients(self.animations)
+                self.teleported = False
+                self.animations = tmp
+
+                if self.properties['state'] == 'double-hit':
+                    self.properties['state'] = 'teleportIn'
+                    self.double_hit = True
+
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
+            #print(self.properties['state'])
         else:
             self.animation_timer -= 1
         
         if self.properties['state'] == 'projectiles':
             if self.animation_timer % BOSS_COOLDOWN_BETWEEN_PROJECTILES == 0 and self.animation_timer != 0:
-                spawn_pos = add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_projectile))
-                
-                # Côté gauche si cos(angle) < 0, sinon côté droit
-                is_left = cos(self.angle_projectile) < 0
-                hand_type = "HandLeft" if is_left else "HandRight"
-                
-                self.create_enemy(spawn_pos, hand_type)
-                self.angle_projectile += BOSS_ANGLES_BETWEEN
+                self.create_enemy(add_vecs(add_vecs(self.pos(), mult_vec(self.size, 0.425)), vec_from_angle(BOSS_DISTANCE_PROJECTILE, self.angle_shoot)), "Projectile")
+                self.angle_shoot += BOSS_ANGLES_BETWEEN_PROJECTILE
+        
+        elif self.properties['state'] == 'patrols':
+            if self.patrols < BOSS_NUMBER_PATROL_AT_ONCE and self.animation_timer % BOSS_COOLDOWN_BETWEEN_PATROLS == 0 and self.animation_timer != 0:
+                self.create_enemy(add_vecs(add_vecs(add_vecs(self.pos(), [-25, 0]), mult_vec(self.size, 0.425)), vec_from_angle(random.randint(BOSS_MIN_DISTANCE_PATROL, BOSS_MAX_DISTANCE_PATROL), self.angle_shoot)), "patrol")
+                self.angle_shoot += BOSS_ANGLES_BETWEEN_PATROL
+                self.patrols += 1
+        
+        elif self.properties['state'] == 'double-hit':
+            if self.animation_timer > BOSS_MIDDLE_DOUBLE_ATTACK:
+                self.angle_double_hit -= 1/40
+            elif self.animation_timer < BOSS_MIDDLE_DOUBLE_ATTACK:
+                self.angle_double_hit += 1/40
+            else:
+                self.angle_double_hit += pi
+
+            velocity = cos(self.angle_double_hit) * BOSS_RADIUS_X, sin(self.angle_double_hit) * BOSS_RADIUS_Y
+
+            velocity = mult_vec(normalized(velocity), self.speed)
+
+            self.move(velocity, 0)
+
+        elif self.properties['state'] == 'dromps':
+            if self.animation_timer == BOSS_STATES_DURATION['dromps']:
+                self.create_enemy(add_vecs(self.middle_pos(), [BOSS_HANDS_DISTANCE_SPAWN_X, BOSS_HANDS_DISTANCE_SPAWN_Y]), "HandRight")
+                self.create_enemy(add_vecs(self.middle_pos(), [-BOSS_HANDS_DISTANCE_SPAWN_X, BOSS_HANDS_DISTANCE_SPAWN_Y]), "HandLeft")
+        
+    def kill(self):
+        self.enemy_manager.enemies.clear()
 
 HAND_SPEED = 10
 HAND_FLY_SPEED = 3           # Vitesse de vol vers le joueur (pixels/tick)
@@ -788,15 +881,18 @@ PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
 PROJECTILE_TIME_BEFORE_LAUNCH = 20
 
+PROJECTILE_LATENCY = 10
+
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 15)) #1 pv pr le one shoot
+        super().__init__(eid, pos, enemy_manager, 1.5, 300, (20, 20), 'any', 0, (5,5))
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
-        self.is_target_pos_aquire = None
+        self.properties['target_player'] = None
         self.velocity = [0,0]
         self.time_before_launch = PROJECTILE_TIME_BEFORE_LAUNCH
-        print(f"Projectile created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Projectile created at {pos} with eid : {eid} !")
+        self.player_pos = []
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -805,30 +901,28 @@ class Projectile(Enemy):
             pos = self.pos()
             players = self.enemy_manager.players
 
-            if self.is_target_pos_aquire == None:
-                # --- Trouver la cible la plus proche ---
-                closest_dist = None
-                closest_pid = None
-                for pid in players.keys():
-                    dist = distance_squared_to(pos, players[pid])
-                    if closest_dist == None or closest_dist > dist:
-                        closest_dist,closest_pid = dist,pid
-                if closest_pid:
-                    self.is_target_pos_aquire = list_copy(players[closest_pid])
-
-                    dist = sqrt(closest_dist)
-                    self.properties['state'] = 'rage'
-                    self.properties['target_player'] = closest_pid
-                    self.velocity = mult_vec(normalized(vector_to(pos, self.is_target_pos_aquire)), self.speed)
+            if players == {}:
+                if self.properties['target_player'] != None:
+                    self.kill()
+                    return
+                self.velocity = [0,0]
+            elif self.properties['target_player'] == None:
+                self.properties['target_player'] = random.choice(list(players.keys()))
+                self.player_pos.append(players[self.properties['target_player']])
+                self.velocity = mult_vec(normalized(vector_to(pos, self.player_pos[0])), self.speed)
+            else:
+                self.player_pos.append(players[self.properties['target_player']])
+                if len(self.player_pos) > PROJECTILE_LATENCY:
+                    self.player_pos.pop(0)
+                self.velocity = mult_vec(normalized(vector_to(pos, self.player_pos[0])), self.speed)
         else:
             self.time_before_launch -=1
-            
 
         self.move_and_slide(self.velocity, delta)
         
         # Col = explosion et ou juste kill
-        if self.last_collisions[0] or self.last_collisions[1]:
-            print(f"you collided {self.eid}")
+        if self.last_collisions[0] or self.last_collisions[1] or distance_to(self.pos(), self.spawn_position) > PROJECTILE_MAX_DIST:
+            if PRINT_DEBUG_SPAWNING_INFO: print(f"you collided {self.eid}")
             self.kill()
 
 
@@ -1047,4 +1141,7 @@ def random_with_coefficients(d: dict):
     while r > 0:
         r -= d[l[i]]
         i += 1
+    if l[i-1] == 'spawn':
+        d.pop('spawn')
+        return random_with_coefficients(d)
     return l[i-1]

@@ -41,7 +41,7 @@ class Editor:
         
         self.tilemap = Tilemap(self, tile_size=16)
         
-        self.level = 0
+        self.level = 2
         self.load_level(self.level)
         
         self.scroll = [0, 0]
