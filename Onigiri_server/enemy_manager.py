@@ -633,7 +633,7 @@ BOSS_COOLDOWN_BETWEEN_PATROLS = 10
 
 # ---------- Teleportation ----------
 
-BOSS_MAX_DIST_FROM_SPAWN = (50, 50, 25, 25) # left, right, down, up
+BOSS_MAX_DIST_FROM_SPAWN = (100, 100, 20, 20) # left, right, down, up
 
 BOSS_ALL_ATTACKS = {
     'double-hit': 0, # 'double-hit': 10,
@@ -652,8 +652,8 @@ BOSS_STATES_DURATION = {
     'spawn': 297,
     'dromps': 247,
     'patrols': 133,
-    'teleportIn': 22,
-    'teleportOut': 37,
+    'teleportIn': 22 + 30,
+    'teleportOut': 37 + 10,
 }
 
 BOSS_EXCLUDED_TRANSITIONS = ('death', 'spawn', 'teleportOut')
@@ -669,6 +669,7 @@ class Boss(Enemy):
         self.angle_shoot = 0
         self.reset_angle_shoot()
         self.patrols = 0
+        self.teleported = False
 
     def reset_angle_shoot(self):
         self.angle_shoot = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
@@ -679,15 +680,26 @@ class Boss(Enemy):
             self.patrols = 0
             self.reset_angle_shoot()
             
-            tmp = 0
-            last_state = self.properties['state']
-            if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
-                tmp = BOSS_ALL_ATTACKS[self.properties['state']]
+            if self.properties['state'] == 'teleportIn':
+                self.properties['x'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[0] + BOSS_MAX_DIST_FROM_SPAWN[1]) + self.spawn_position[0] - BOSS_MAX_DIST_FROM_SPAWN[0]
+                self.properties['y'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[2] + BOSS_MAX_DIST_FROM_SPAWN[3]) + self.spawn_position[1] - BOSS_MAX_DIST_FROM_SPAWN[3] - 42
+                self.properties['state'] = 'teleportOut'
+                self.teleported = True
+            else:
+                tmp2 = BOSS_ALL_ATTACKS['teleportIn']
+                if self.teleported:
+                    BOSS_ALL_ATTACKS['teleportIn'] = 0
+                tmp = 0
+                last_state = self.properties['state']
+                if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
+                    tmp = BOSS_ALL_ATTACKS[self.properties['state']]
 
-                BOSS_ALL_ATTACKS[self.properties['state']] = 0
-            self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS)
-            if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
-                BOSS_ALL_ATTACKS[last_state] = tmp
+                    BOSS_ALL_ATTACKS[self.properties['state']] = 0
+                self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS)
+                if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
+                    BOSS_ALL_ATTACKS[last_state] = tmp
+                self.teleported = False
+                BOSS_ALL_ATTACKS['teleportIn'] = tmp2
 
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
             print(self.properties['state'])
