@@ -55,7 +55,8 @@ class Game:
             resolution = [monitor.width, monitor.height]
         self.screen = pygame.display.set_mode(resolution)
         
-        self.base_resolution = (320, 180)
+        #self.base_resolution = (320, 180)
+        self.base_resolution = (320 * 2 , 180 * 2)
         self.zoom = 1.0
         SCALE = self.base_resolution
         
