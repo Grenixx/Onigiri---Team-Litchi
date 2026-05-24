@@ -631,13 +631,17 @@ BOSS_ANGLES_BETWEEN_PATROL = BOSS_ANGLE_RANGE_PATROL / (BOSS_NUMBER_PATROL_AT_ON
 
 BOSS_COOLDOWN_BETWEEN_PATROLS = 10
 
+# ---------- Teleportation ----------
+
+BOSS_MAX_DIST_FROM_SPAWN = (50, 50, 25, 25) # left, right, down, up
+
 BOSS_ALL_ATTACKS = {
     'double-hit': 0, # 'double-hit': 10,
     'idle': 50, # 'idle': 15,
     'projectiles': 25, # 'projectiles': 10,
     'dromps': 0, # 'dromps': 5,
     'patrols': 25, # 'patrols': 10,
-    'teleportIn': 0 # 'teleportIn': 50
+    'teleportIn': 50 # 'teleportIn': 50
 }
 
 BOSS_STATES_DURATION = {
