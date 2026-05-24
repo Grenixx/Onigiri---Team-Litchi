@@ -611,13 +611,13 @@ class Dromp(Enemy):
 # ---------- Spawn Projectiles ----------
 
 BOSS_MIN_ANGLE_PROJECTILE = pi/6 # > 0
-BOSS_NUMBER_PROJECTILE_AT_ONCE = 8
+BOSS_NUMBER_PROJECTILE_AT_ONCE = 6
 BOSS_DISTANCE_PROJECTILE = 100
 
 BOSS_ANGLE_RANGE_PROJECTILE = pi - BOSS_MIN_ANGLE_PROJECTILE * 2
 BOSS_ANGLES_BETWEEN_PROJECTILE = BOSS_ANGLE_RANGE_PROJECTILE / (BOSS_NUMBER_PROJECTILE_AT_ONCE - 1) if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else 0
 
-BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
+BOSS_COOLDOWN_BETWEEN_PROJECTILES = 13
 
 # ---------- Summon Patrols ----------
 
@@ -648,7 +648,7 @@ BOSS_STATES_DURATION = {
     'double-hit': 101,
     'idle': 106,
     'death': 10,
-    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 1,
+    'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 3,
     'spawn': 297,
     'dromps': 247,
     'patrols': 133,
@@ -709,13 +709,13 @@ class Boss(Enemy):
         self.enemy_manager.enemies.clear()
 
 PROJECTILE_MAX_DIST = 16*20
-PROJECTILE_SPEED = 5
+PROJECTILE_SPEED = 3
 
-PROJECTILE_LATENCY = 20
+PROJECTILE_LATENCY = 10
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 1, (15, 10)) #1 pv pr le one shoot
+        super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 1, (30, 30)) #1 pv pr le one shoot
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
         self.properties['target_player'] = None
@@ -969,5 +969,6 @@ def random_with_coefficients(d: dict):
         r -= d[l[i]]
         i += 1
     if l[i-1] == 'spawn':
-        print(d)
+        d.pop('spawn')
+        return random_with_coefficients(d)
     return l[i-1]
