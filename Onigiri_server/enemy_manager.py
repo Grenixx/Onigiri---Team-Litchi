@@ -711,15 +711,18 @@ class Boss(Enemy):
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
 
+PROJECTILE_LATENCY = 20
+
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 1, (15, 10)) #1 pv pr le one shoot
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
-        self.is_target_pos_aquire = None
+        self.properties['target_player'] = None
         self.velocity = [0,0]
         self.time_before_launch = 60
         if PRINT_DEBUG_SPAWNING_INFO: print(f"Projectile created at {pos} with eid : {eid} !")
+        self.player_pos = []
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -728,13 +731,21 @@ class Projectile(Enemy):
             pos = self.pos()
             players = self.enemy_manager.players
 
-            if self.is_target_pos_aquire == None and players != {}:
-                target_player_pid = random.choice(list(players.keys()))
-                self.is_target_pos_aquire = list_copy(players[target_player_pid])
-
+            if players == {}:
+                if self.properties['target_player'] != None:
+                    self.kill()
+                    return
+                self.velocity = [0,0]
+            elif self.properties['target_player'] == None:
                 self.properties['state'] = 'rage'
-                self.properties['target_player'] = target_player_pid
-                self.velocity = mult_vec(normalized(vector_to(pos, self.is_target_pos_aquire)), self.speed)
+                self.properties['target_player'] = random.choice(list(players.keys()))
+                self.player_pos.append(players[self.properties['target_player']])
+                self.velocity = mult_vec(normalized(vector_to(pos, self.player_pos[0])), self.speed)
+            else:
+                self.player_pos.append(players[self.properties['target_player']])
+                if len(self.player_pos) > PROJECTILE_LATENCY:
+                    self.player_pos.pop(0)
+                self.velocity = mult_vec(normalized(vector_to(pos, self.player_pos[0])), self.speed)
         else:
             self.time_before_launch -=1
 
