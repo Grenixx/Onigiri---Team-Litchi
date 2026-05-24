@@ -1,7 +1,6 @@
 import socket
 import struct
 import time
-import miniupnpc
 import os 
 import sys
 
@@ -15,7 +14,7 @@ BANDWIDTH = {False: 1024, True: 1024**2}
 #   0 : Mise à jour du joueur (Client -> Serveur)
 #   1 : Déconnexion (Client -> Serveur)
 #   2 : Mise à jour du monde (Serveur -> Client)
-#   3 : Suppression d’un ennemi (Client -> Serveur)
+#   3 : Suppression d'un ennemi (Client -> Serveur)
 #   4 : Changement de carte (Serveur -> Client)
 #   5 : Requête changement de carte (Client -> Serveur)
 #   8 : Dégâts infligés à un ennemi (Client -> Serveur)
@@ -24,8 +23,11 @@ BANDWIDTH = {False: 1024, True: 1024**2}
 #  11 : Taunt
 #  12 : Clear taunt
 
-DEBUG = True
-BANDWIDTH = {False: 1024, True: 1024**2}
+try:
+    import miniupnpc
+    HAS_UPNP = True
+except ImportError:
+    HAS_UPNP = False
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../Onigiri_client/scripts')))
@@ -91,14 +93,24 @@ class GameServer:
                 self.lobby.start_heartbeat()
 
     def init_upnp(self):
-        upnp = miniupnpc.UPnP()
-        upnp.discoverdelay = 200
-        upnp.discover()
-        upnp.selectigd()
+        if not HAS_UPNP:
+            print("[UPnP] miniupnpc non installé — ignore la redirection de port")
+            return
         try:
-            upnp.addportmapping(self.port, 'UDP', upnp.lanaddr, self.port, 'Python Game Server', '')
+            upnp = miniupnpc.UPnP()
+            upnp.discoverdelay = 200
+            devices = upnp.discover()
+            if devices == 0:
+                print("[UPnP] Aucun routeur UPnP trouvé sur le réseau")
+                return
+            print(f"[UPnP] {devices} appareil(s) trouvé(s)")
+            upnp.selectigd()
+            print(f"[UPnP] Routeur : {upnp.presentationurl}")
+            print(f"[UPnP] IP locale : {upnp.lanaddr}")
+            upnp.addportmapping(self.port, 'UDP', upnp.lanaddr, self.port, 'Onigiri Server', '')
+            print(f"[UPnP] Port {self.port}/UDP redirigé vers {upnp.lanaddr}")
         except Exception as e:
-            print(f"[UPnP] Échec ouverture port : {e}")
+            print(f"[UPnP] Échec UPnP : {e}")
 
     def run(self):
         try:

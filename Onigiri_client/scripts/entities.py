@@ -98,13 +98,6 @@ class PhysicsEntity:
         
         self.animation.update(dt)
 
-        current_img = self.animation.img()
-
-        if self.flip:
-            current_img = pygame.transform.flip(current_img, True, False)
-
-        self.image = current_img
-
     def render(self, surf, offset=(0, 0), white=False):
         render_pos = (self.pos[0] - offset[0] + self.anim_offset[0],
                      self.pos[1] - offset[1] + self.anim_offset[1])
@@ -230,7 +223,7 @@ class Player(PhysicsEntity):
                 self.game.screenshake = max(16, self.game.screenshake)
             self.game.dead += dt * 60
         
-        if self.collisions['right'] or self.collisions['left'] and self.air_time > 0.08:
+        if (self.collisions['right'] or self.collisions['left']) and self.air_time > 0.08:
             self.can_dash = True
             if self.dashing != 0:
                 self.dashing = 0
