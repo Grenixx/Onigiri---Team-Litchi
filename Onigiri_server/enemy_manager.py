@@ -239,6 +239,24 @@ class Enemy:
         norm_k = norm(self.knockback_velocity)
         if norm_k != 0:
             self.knockback_velocity = mult_vec(self.knockback_velocity, max((norm_k - KNOCKBACK_DEPLETION) / norm_k, 0))
+    
+    def move(self, velocity: list, delta: float) -> None:
+        """
+        Applies the velocity and updates the position
+        (without verifying collisions)
+        """
+        self.properties['vx'] = velocity[0]
+        self.properties['vy'] = velocity[1]
+        pos = self.pos()
+        new_pos = [self.properties['x'] + self.properties['vx'] + self.knockback_velocity[0], self.properties['y'] + self.properties['vy'] + self.knockback_velocity[1]]
+        self.last_pos = pos
+        self.last_velocity = velocity
+        self.properties['x'] = new_pos[0]
+        self.properties['y'] = new_pos[1]
+        
+        norm_k = norm(self.knockback_velocity)
+        if norm_k != 0:
+            self.knockback_velocity = mult_vec(self.knockback_velocity, max((norm_k - KNOCKBACK_DEPLETION) / norm_k, 0))
 
     def damage(self, damage_amount: int, pid: int) -> None:
         self.hp -= damage_amount
@@ -633,10 +651,17 @@ BOSS_COOLDOWN_BETWEEN_PATROLS = 10
 
 # ---------- Teleportation ----------
 
-BOSS_MAX_DIST_FROM_SPAWN = (100, 100, 20, 20) # left, right, down, up
+BOSS_MAX_DIST_FROM_SPAWN = (150, 150, 20, 20) # left, right, down, up
+
+# ---------- Double Hit ----------
+
+BOSS_PIVOTS_DISTANCE = 0
+BOSS_RADIUS_X = 200
+BOSS_RADIUS_Y = 75
+BOSS_SPEED = 3
 
 BOSS_ALL_ATTACKS = {
-    'double-hit': 0, # 'double-hit': 10,
+    'double-hit': 100, # 'double-hit': 10,
     'idle': 50, # 'idle': 15,
     'projectiles': 25, # 'projectiles': 10,
     'dromps': 0, # 'dromps': 5,
@@ -645,22 +670,25 @@ BOSS_ALL_ATTACKS = {
 }
 
 BOSS_STATES_DURATION = {
-    'double-hit': 101,
+    'double-hit': 202,
     'idle': 106,
     'death': 10,
     'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 3,
     'spawn': 297,
     'dromps': 247,
     'patrols': 133,
-    'teleportIn': 22 + 30,
-    'teleportOut': 37 + 10,
+    'teleportIn': 52,
+    'teleportOut': 52,
 }
 
 BOSS_EXCLUDED_TRANSITIONS = ('death', 'spawn', 'teleportOut')
 
+BOSS_MIDDLE_DOUBLE_ATTACK = 100
+# BOSS_END_DOUBLE_ATTACK = 25
+
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (200, 200)) #hp 150->1500 completement wtf
+        super().__init__(eid, pos, enemy_manager, BOSS_SPEED, 1500, (200, 200), "any", 0)
         self.properties['type'] = "Boss"
         self.properties['state'] = 'spawn'
         if PRINT_DEBUG_SPAWNING_INFO: print(f"Boss created at {pos} with eid : {eid} !")
@@ -670,6 +698,9 @@ class Boss(Enemy):
         self.reset_angle_shoot()
         self.patrols = 0
         self.teleported = False
+        self.double_hit = False
+        self.angle_double_hit = pi/2
+        self.animations = {k: v for k, v in BOSS_ALL_ATTACKS.items()}
 
     def reset_angle_shoot(self):
         self.angle_shoot = -pi + BOSS_MIN_ANGLE_PROJECTILE if BOSS_NUMBER_PROJECTILE_AT_ONCE != 1 else pi/2
@@ -680,29 +711,38 @@ class Boss(Enemy):
             self.patrols = 0
             self.reset_angle_shoot()
             
-            if self.properties['state'] == 'teleportIn':
-                self.properties['x'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[0] + BOSS_MAX_DIST_FROM_SPAWN[1]) + self.spawn_position[0] - BOSS_MAX_DIST_FROM_SPAWN[0]
-                self.properties['y'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[2] + BOSS_MAX_DIST_FROM_SPAWN[3]) + self.spawn_position[1] - BOSS_MAX_DIST_FROM_SPAWN[3] - 42
+            if self.properties['state'] == 'double-hit':
+                self.double_hit = False
+                self.properties['state'] = 'teleportIn'
+            elif self.properties['state'] == 'teleportOut' and self.double_hit:
+                self.properties['state'] = 'double-hit'
+                self.angle_double_hit = pi/2
+            elif self.properties['state'] == 'teleportIn':
+                if self.double_hit:
+                    self.properties['x'] = self.spawn_position[0] - BOSS_MAX_DIST_FROM_SPAWN[0]
+                    self.properties['y'] = self.spawn_position[1] - 70
+                else:
+                    self.properties['x'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[0] + BOSS_MAX_DIST_FROM_SPAWN[1]) + self.spawn_position[0] - BOSS_MAX_DIST_FROM_SPAWN[0]
+                    self.properties['y'] = random.random() * (BOSS_MAX_DIST_FROM_SPAWN[2] + BOSS_MAX_DIST_FROM_SPAWN[3]) + self.spawn_position[1] - BOSS_MAX_DIST_FROM_SPAWN[3] - 42
                 self.properties['state'] = 'teleportOut'
                 self.teleported = True
             else:
-                tmp2 = BOSS_ALL_ATTACKS['teleportIn']
+                tmp = {k: v for k, v in self.animations.items()}
                 if self.teleported:
-                    BOSS_ALL_ATTACKS['teleportIn'] = 0
-                tmp = 0
-                last_state = self.properties['state']
+                    self.animations['teleportIn'] = 0
+                    self.animations['double-hit'] = 0
                 if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
-                    tmp = BOSS_ALL_ATTACKS[self.properties['state']]
-
-                    BOSS_ALL_ATTACKS[self.properties['state']] = 0
-                self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS)
-                if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
-                    BOSS_ALL_ATTACKS[last_state] = tmp
+                    self.animations[self.properties['state']] = 0
+                self.properties['state'] = random_with_coefficients(self.animations)
                 self.teleported = False
-                BOSS_ALL_ATTACKS['teleportIn'] = tmp2
+                self.animations = tmp
+
+                if self.properties['state'] == 'double-hit':
+                    self.properties['state'] = 'teleportIn'
+                    self.double_hit = True
 
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
-            print(self.properties['state'])
+            #print(self.properties['state'])
         else:
             self.animation_timer -= 1
         
@@ -713,9 +753,23 @@ class Boss(Enemy):
         
         elif self.properties['state'] == 'patrols':
             if self.patrols < BOSS_NUMBER_PATROL_AT_ONCE and self.animation_timer % BOSS_COOLDOWN_BETWEEN_PATROLS == 0 and self.animation_timer != 0:
-                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(random.randint(BOSS_MIN_DISTANCE_PATROL, BOSS_MAX_DISTANCE_PATROL), self.angle_shoot)), "patrol")
+                self.create_enemy(add_vecs(add_vecs(add_vecs(self.spawn_position, [-25, 0]), mult_vec(self.size, 0.425)), vec_from_angle(random.randint(BOSS_MIN_DISTANCE_PATROL, BOSS_MAX_DISTANCE_PATROL), self.angle_shoot)), "patrol")
                 self.angle_shoot += BOSS_ANGLES_BETWEEN_PATROL
                 self.patrols += 1
+        
+        elif self.properties['state'] == 'double-hit':
+            if self.animation_timer > BOSS_MIDDLE_DOUBLE_ATTACK:
+                self.angle_double_hit -= 1/40
+            elif self.animation_timer < BOSS_MIDDLE_DOUBLE_ATTACK:
+                self.angle_double_hit += 1/40
+            else:
+                self.angle_double_hit += pi
+
+            velocity = cos(self.angle_double_hit) * BOSS_RADIUS_X, sin(self.angle_double_hit) * BOSS_RADIUS_Y
+
+            velocity = mult_vec(normalized(velocity), self.speed)
+
+            self.move(velocity, 0)
     
     def kill(self):
         self.enemy_manager.enemies.clear()
