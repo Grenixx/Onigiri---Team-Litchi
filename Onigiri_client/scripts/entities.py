@@ -525,7 +525,7 @@ class ClientEnemyManager:
             if collide_joueur:
                 offset_x = enemy_rect.x - player_rect.x
                 offset_y = enemy_rect.y - player_rect.y
-                if not self.game.dead and self.game.invincibility_time <= 0 and player.dashing == 0:
+                if not self.game.dead and self.game.invincibility_time <= 0 and player.dashing == 0 and not (etype == 'Boss' and state != 'double-hit'):
                     self.game.screenshake = max(16, self.game.screenshake)      
                     self.game.sfx['hit'].play()
                     self.game.hp-=25
