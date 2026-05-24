@@ -259,40 +259,7 @@ class Player(PhysicsEntity):
         if self.action.startswith('attack') and self.animation.done:
             self.set_action('idle')
             
-        if self.dashing != 0:
-            dash_progress = abs(self.dashing) / self.dash_duration
-            
-            # Vitesse du dash
-            if self.dash_dir == 'down':
-                self.velocity[1] = self.dash_speed
-                self.velocity[0] = 0
-            elif self.dash_dir == 'up':
-                self.velocity[1] = -self.dash_speed
-                self.velocity[0] = 0
-            else:
-                self.velocity[0] = self.dash_speed if self.dashing > 0 else -self.dash_speed
-            
-            # Fin du dash : On décélère
-            if dash_progress < 0.2:
-                if self.dash_dir == 'down':
-                    self.velocity[1] *= dash_progress * 5
-                elif self.dash_dir == 'up':
-                    self.velocity[1] *= dash_progress * 5
-                else:
-                    self.velocity[0] *= dash_progress * 5
-        
-        # TRANSITION FIN DE DASH (Momentum kill)
-        if was_dashing and self.dashing == 0:
-            if self.dash_dir == 'down':
-                self.velocity[1] *= 1
-            elif self.dash_dir == 'up':
-                self.velocity[1] *= 1
-            else:
-                self.velocity[0] *= 1 # On casse l'inertie violemment
-            self.dash_dir = None
-            self.dash_cooldown_timer = self.dash_cooldown
-                
-                # Résistance de l'air (décélération horizontale)
+        # Résistance de l'air (décélération horizontale)
         if self.velocity[0] > 0:
             self.velocity[0] = max(self.velocity[0] - self.air_resistance * dt, 0)
         elif self.velocity[0] < 0:
