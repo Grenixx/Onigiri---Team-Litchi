@@ -558,6 +558,10 @@ class Dromp(Enemy):
         self.rage_cooldown_timer = -1
         self.properties['state'] = 'idle'
         print(f"Dromp created at {pos} with eid : {eid} !")
+        for _ in range(500):
+            if self.does_collide(add_vecs(self.pos(), [0, 1]))[1]:
+                break
+            self.properties['y'] += 1
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
