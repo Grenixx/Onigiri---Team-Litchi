@@ -336,21 +336,22 @@ server_name_input = InputButton((0,0,0,0), "Onigiri Server", font)
 def host_game():
     update_user_prefs() 
     save_user_prefs() 
-    """Lance le serveur via le fichier .bat et rejoint la partie."""
+    """Lance le serveur en ligne via le fichier .bat et rejoint la partie."""
     import time
     
-    print("Démarrage du serveur via start_server.bat...")
+    print("Démarrage du serveur en ligne via start_server.bat...")
     
     # Chemin vers le .bat dans Onigiri_server\
     bat_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../Onigiri_server/start_server.bat'))
+    server_name = server_name_input.input_text if server_name_input.input_text.strip() else "Onigiri Server"
     
     try:
-        # Lance le .bat (qui ouvre une nouvelle console automatiquement)
-        subprocess.Popen([bat_path], shell=True)
+        # Lance le .bat avec les arguments : mode online + nom du serveur (entre guillemets à cause des espaces)
+        subprocess.Popen([bat_path, '--start_local=0', f'--name="{server_name}"'], shell=True)
         
-        # Attente simple de 2 secondes (le .bat est rapide et fiable)
-        print("Attente du démarrage du serveur (2 secondes)...")
-        time.sleep(2)
+        # Attente du démarrage du serveur
+        print("Attente du démarrage du serveur (3 secondes)...")
+        time.sleep(3)
         
         # On rejoint automatiquement en local
         start_game("127.0.0.1")

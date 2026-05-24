@@ -118,6 +118,9 @@ class Tilemap:
                 self.grass_manager.place_tile(pos, density, [0, 1, 2])
 
     def render(self, surf, offset=(0, 0), dt=0, show_spawners=False, emissive_surf=None, glow_assets=None):
+        # Culling margin to prevent large sprites (large_decor up to 92x81) from disappearing at screen edges
+        MARGIN = 5
+
         for tile in self.offgrid_tiles:
             pos = (tile['pos'][0] - offset[0], tile['pos'][1] - offset[1])
             surf.blit(self.game.assets[tile['type']][tile['variant']], pos)
@@ -126,8 +129,8 @@ class Tilemap:
             if emissive_surf and glow_assets and tile['type'] in glow_assets:
                 emissive_surf.blit(glow_assets[tile['type']][tile['variant']], pos)
 
-        for x in range(offset[0] // self.tile_size, (offset[0] + surf.get_width()) // self.tile_size + 1):
-            for y in range(offset[1] // self.tile_size, (offset[1] + surf.get_height()) // self.tile_size + 1):
+        for x in range(offset[0] // self.tile_size - MARGIN, (offset[0] + surf.get_width()) // self.tile_size + 1 + MARGIN):
+            for y in range(offset[1] // self.tile_size - MARGIN, (offset[1] + surf.get_height()) // self.tile_size + 1 + MARGIN):
                 loc = str(x) + ';' + str(y)
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]

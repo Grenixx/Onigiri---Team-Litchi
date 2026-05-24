@@ -86,9 +86,9 @@ class GameServer:
         self.last_update = time.time()
         if not local:
             self.init_upnp()
-        if LobbyManager:
-            self.lobby = LobbyManager(mode='server', server_port=self.port, server_name=server_name)
-            self.lobby.start_heartbeat()
+            if LobbyManager:
+                self.lobby = LobbyManager(mode='server', server_port=self.port, server_name=server_name)
+                self.lobby.start_heartbeat()
 
     def init_upnp(self):
         upnp = miniupnpc.UPnP()

@@ -42,8 +42,9 @@ class ClientNetwork:
         threading.Thread(target=self._ping_loop, daemon=True).start()  # <--- Nouveau
 
 
-    def connect(self):
+    def connect(self, max_retries=15):
         print("Connexion au serveur...")
+        retries = 0
         while self.id is None and self.running:
             try:
                 # envoyer le paquet de connexion
@@ -63,6 +64,10 @@ class ClientNetwork:
                         pass
 
                 if self.id is None:
+                    retries += 1
+                    if retries >= max_retries:
+                        print(f"Échec de connexion après {max_retries} tentatives. Vérifie que le serveur est bien lancé et que le port 5005 est ouvert sur le routeur.")
+                        break
                     print("Timeout, nouvelle tentative de connexion...")
                     time.sleep(0.5)
 
