@@ -8,7 +8,7 @@ PLAYER_SIZE = (14, 18)
 
 LANDMARK_TYPE_CHECK = "eid"
 
-PRINT_DEBUG_SPAWNING_INFO = False
+PRINT_DEBUG_SPAWNING_INFO = True
 
 class EnemyManager:
     def __init__(self, tilemap):
@@ -677,12 +677,12 @@ BOSS_HANDS_DISTANCE_SPAWN_Y = -150
 # ---------- All animations ----------
 
 BOSS_ALL_ATTACKS = {
-    'double-hit': 100, # 'double-hit': 10,
-    'idle': 50, # 'idle': 15,
-    'projectiles': 25, # 'projectiles': 10,
-    'dromps': 1000, # 'dromps': 5,
-    'patrols': 25, # 'patrols': 10,
-    'teleportIn': 50 # 'teleportIn': 50
+    'double-hit': 10, # 'double-hit': 10,
+    'idle': 15, # 'idle': 15,
+    'projectiles': 20, # 'projectiles': 10,
+    'dromps': 10, # 'dromps': 5,
+    'patrols': 15, # 'patrols': 10,
+    'teleportIn': 30. # 'teleportIn': 50
 }
 
 BOSS_STATES_DURATION = {
@@ -756,7 +756,7 @@ class Boss(Enemy):
                     self.double_hit = True
 
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
-            #print(self.properties['state'])
+            if PRINT_DEBUG_SPAWNING_INFO: print(self.properties['state'])
         else:
             self.animation_timer -= 1
         
@@ -881,18 +881,17 @@ PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
 PROJECTILE_TIME_BEFORE_LAUNCH = 20
 
-PROJECTILE_LATENCY = 10
+PROJECTILE_LAST_VELO_COEF = 0.95
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 300, (20, 20), 'any', 0, (5,5))
+        super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 300, (20, 20), 'any', 0, (5,5))
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
         self.properties['target_player'] = None
         self.velocity = [0,0]
         self.time_before_launch = PROJECTILE_TIME_BEFORE_LAUNCH
         if PRINT_DEBUG_SPAWNING_INFO: print(f"Projectile created at {pos} with eid : {eid} !")
-        self.player_pos = []
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -904,17 +903,13 @@ class Projectile(Enemy):
             if players == {}:
                 if self.properties['target_player'] != None:
                     self.kill()
-                    return
-                self.velocity = [0,0]
+                return
             elif self.properties['target_player'] == None:
                 self.properties['target_player'] = random.choice(list(players.keys()))
-                self.player_pos.append(players[self.properties['target_player']])
-                self.velocity = mult_vec(normalized(vector_to(pos, self.player_pos[0])), self.speed)
-            else:
-                self.player_pos.append(players[self.properties['target_player']])
-                if len(self.player_pos) > PROJECTILE_LATENCY:
-                    self.player_pos.pop(0)
-                self.velocity = mult_vec(normalized(vector_to(pos, self.player_pos[0])), self.speed)
+            
+            self.velocity = mult_vec(normalized(vector_to(pos, players[self.properties['target_player']])), self.speed)
+
+            self.velocity = add_vecs( mult_vec(self.velocity, 1 - PROJECTILE_LAST_VELO_COEF) , mult_vec(self.last_velocity, PROJECTILE_LAST_VELO_COEF))
         else:
             self.time_before_launch -=1
 
