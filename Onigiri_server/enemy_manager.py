@@ -713,7 +713,7 @@ PROJECTILE_SPEED = 5
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, 1.5, 1, (15, 10)) #1 pv pr le one shoot
+        super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 1, (15, 10)) #1 pv pr le one shoot
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
         self.is_target_pos_aquire = None
