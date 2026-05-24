@@ -8,6 +8,8 @@ PLAYER_SIZE = (14, 18)
 
 LANDMARK_TYPE_CHECK = "eid"
 
+PRINT_DEBUG_SPAWNING_INFO = False
+
 class EnemyManager:
     def __init__(self, tilemap):
         self.tilemap = tilemap
@@ -90,7 +92,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
         self.enemy_manager = enemy_manager
         self.persistance = persistance
         self.properties['type'] = "Landmark"
-        print(f"Landmark created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Landmark created at {pos} with eid : {eid} !")
     
     def physics_process(self, dt: float):
         if self.persistance <= 0:
@@ -99,7 +101,7 @@ class Landmark: # The hole purpose is to make testing easier by showing some pos
     
     def kill(self):
         self.enemy_manager.enemies.pop(self.eid)
-        print(f"Landmark deleted with eid : {self.eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Landmark deleted with eid : {self.eid} !")
 
 class Enemy:
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager, speed: float, hp: int, size: tuple, knockback_type: str = "any", knockback_strength: float | int = 8, hitbox_offset = (0,0)):
@@ -279,7 +281,7 @@ class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 25) #hp 50->25 pour etre one shoter par tous
         self.properties['type'] = "Blob"
-        print(f"Blob created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Blob created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -398,7 +400,7 @@ class Patrol(Enemy):
         self.wander_angle = None
         self.wander_dist = None
         self.wander_speed = self.speed
-        print(f"Patrol created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Patrol created at {pos} with eid : {eid} !")
     
     def create_wander_pos(self, hit_result: list = [False, False]) -> None:
         """Creates a wandering position when the patrol doesn't see the player"""
@@ -552,7 +554,7 @@ class Dromp(Enemy):
         self.properties['flip'] = self.orientation == 1
         self.rage_cooldown_timer = -1
         self.properties['state'] = 'idle'
-        print(f"Dromp created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Dromp created at {pos} with eid : {eid} !")
 
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -621,8 +623,8 @@ BOSS_COOLDOWN_BETWEEN_PROJECTILES = 10
 
 BOSS_MIN_ANGLE_PATROL = pi/6 # > 0
 BOSS_NUMBER_PATROL_AT_ONCE = 3
-BOSS_MIN_DISTANCE_PATROL = 100
-BOSS_MAX_DISTANCE_PATROL = 50
+BOSS_MIN_DISTANCE_PATROL = 50
+BOSS_MAX_DISTANCE_PATROL = 100
 
 BOSS_ANGLE_RANGE_PATROL = pi - BOSS_MIN_ANGLE_PATROL * 2
 BOSS_ANGLES_BETWEEN_PATROL = BOSS_ANGLE_RANGE_PATROL / (BOSS_NUMBER_PATROL_AT_ONCE - 1) if BOSS_NUMBER_PATROL_AT_ONCE != 1 else 0
@@ -657,7 +659,7 @@ class Boss(Enemy):
         super().__init__(eid, pos, enemy_manager, 1.5 * 1.5, 1500, (200, 200)) #hp 150->1500 completement wtf
         self.properties['type'] = "Boss"
         self.properties['state'] = 'spawn'
-        print(f"Boss created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Boss created at {pos} with eid : {eid} !")
 
         self.animation_timer = BOSS_STATES_DURATION['spawn']
         self.angle_shoot = 0
@@ -679,11 +681,12 @@ class Boss(Enemy):
                 tmp = BOSS_ALL_ATTACKS[self.properties['state']]
 
                 BOSS_ALL_ATTACKS[self.properties['state']] = 0
-            self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS) # "projectiles" 
+            self.properties['state'] = random_with_coefficients(BOSS_ALL_ATTACKS)
             if not self.properties['state'] in BOSS_EXCLUDED_TRANSITIONS:
                 BOSS_ALL_ATTACKS[last_state] = tmp
 
             self.animation_timer = BOSS_STATES_DURATION[self.properties['state']]
+            print(self.properties['state'])
         else:
             self.animation_timer -= 1
         
@@ -694,9 +697,12 @@ class Boss(Enemy):
         
         elif self.properties['state'] == 'patrols':
             if self.patrols < BOSS_NUMBER_PATROL_AT_ONCE and self.animation_timer % BOSS_COOLDOWN_BETWEEN_PATROLS == 0 and self.animation_timer != 0:
-                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(random.randint(BOSS_MAX_DISTANCE_PATROL, BOSS_MIN_DISTANCE_PATROL), self.angle_shoot)), "patrol")
+                self.create_enemy(add_vecs(add_vecs(self.spawn_position, mult_vec(self.size, 0.425)), vec_from_angle(random.randint(BOSS_MIN_DISTANCE_PATROL, BOSS_MAX_DISTANCE_PATROL), self.angle_shoot)), "patrol")
                 self.angle_shoot += BOSS_ANGLES_BETWEEN_PATROL
                 self.patrols += 1
+    
+    def kill(self):
+        self.enemy_manager.enemies.clear()
 
 PROJECTILE_MAX_DIST = 16*20
 PROJECTILE_SPEED = 5
@@ -709,7 +715,7 @@ class Projectile(Enemy):
         self.is_target_pos_aquire = None
         self.velocity = [0,0]
         self.time_before_launch = 60
-        print(f"Projectile created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Projectile created at {pos} with eid : {eid} !")
     
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
@@ -727,13 +733,12 @@ class Projectile(Enemy):
                 self.velocity = mult_vec(normalized(vector_to(pos, self.is_target_pos_aquire)), self.speed)
         else:
             self.time_before_launch -=1
-            
 
         self.move_and_slide(self.velocity, delta)
         
         # Col = explosion et ou juste kill
-        if self.last_collisions[0] or self.last_collisions[1]:
-            print(f"you collided {self.eid}")
+        if self.last_collisions[0] or self.last_collisions[1] or distance_to(self.pos(), self.spawn_position) > PROJECTILE_MAX_DIST:
+            if PRINT_DEBUG_SPAWNING_INFO: print(f"you collided {self.eid}")
             self.kill()
 
 
@@ -948,4 +953,6 @@ def random_with_coefficients(d: dict):
     while r > 0:
         r -= d[l[i]]
         i += 1
+    if l[i-1] == 'spawn':
+        print(d)
     return l[i-1]
