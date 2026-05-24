@@ -1,5 +1,4 @@
 import random
-import pygame
 from math import *
 
 from TilemapServer import PHYSICS_TILES
@@ -302,7 +301,7 @@ SPEED_BLOB = 1.5
 
 class Blob(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 25) #hp 50->25 pour etre one shoter par tous
+        super().__init__(eid, pos, enemy_manager, SPEED_BLOB, 25, (15, 10)) #hp 50->25 pour etre one shoter par tous
         self.properties['type'] = "Blob"
         if PRINT_DEBUG_SPAWNING_INFO: print(f"Blob created at {pos} with eid : {eid} !")
     
