@@ -1,12 +1,11 @@
 import socket
 import struct
 import time
-import miniupnpc
 import os 
 import sys
 
 from TilemapServer import TilemapServer
-from enemy_manager import Blob, EnemyManager
+from enemy_manager import EnemyManager
 
 DEBUG = True
 BANDWIDTH = {False: 1024, True: 1024**2}
@@ -24,15 +23,24 @@ BANDWIDTH = {False: 1024, True: 1024**2}
 #  11 : Taunt
 #  12 : Clear taunt
 
-DEBUG = True
-BANDWIDTH = {False: 1024, True: 1024**2}
-
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../Onigiri_client/scripts')))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CLIENT_SCRIPTS_DIR = os.path.abspath(os.path.join(BASE_DIR, '../Onigiri_client/scripts'))
+if CLIENT_SCRIPTS_DIR not in sys.path:
+    sys.path.append(CLIENT_SCRIPTS_DIR)
 try:
     from lobby_discovery import LobbyManager
-except ImportError as e:
+except ImportError:
     LobbyManager = None
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        bundled_path = os.path.join(sys._MEIPASS, relative_path)
+        if os.path.exists(bundled_path):
+            return bundled_path
+        external_path = os.path.join(os.path.dirname(sys.executable), relative_path)
+        if os.path.exists(external_path):
+            return external_path
+    return os.path.join(BASE_DIR, relative_path)
 
 class PlayerManager:
     def __init__(self):
@@ -80,22 +88,50 @@ class GameServer:
         self.next_map = 0
         self.map = TilemapServer()
         self.map_id = 0
-        self.map.load(f"data/maps/{self.map_id}.json")
+        self.map.load(self.map_file(self.map_id))
         self.players = PlayerManager()
         self.EnemyManager = EnemyManager(self.map)
         self.last_update = time.time()
+        self.lobby = None
         if not local:
             self.init_upnp()
-        if LobbyManager:
+        if not local and LobbyManager:
             self.lobby = LobbyManager(mode='server', server_port=self.port, server_name=server_name)
             self.lobby.start_heartbeat()
 
+    def maps_dir(self):
+        return resource_path(os.path.join("data", "maps"))
+
+    def map_file(self, map_id):
+        return os.path.join(self.maps_dir(), f"{int(map_id)}.json")
+
+    def available_map_ids(self):
+        maps_dir = self.maps_dir()
+        if not os.path.isdir(maps_dir):
+            raise FileNotFoundError(f"Map directory not found: {maps_dir}")
+        ids = []
+        for filename in os.listdir(maps_dir):
+            name, ext = os.path.splitext(filename)
+            if ext == ".json" and name.isdigit():
+                ids.append(int(name))
+        if not ids:
+            raise FileNotFoundError(f"No map JSON files found in: {maps_dir}")
+        return sorted(ids)
+
+    def next_map_id(self):
+        ids = self.available_map_ids()
+        if self.map_id not in ids:
+            return ids[0]
+        return ids[(ids.index(self.map_id) + 1) % len(ids)]
+
     def init_upnp(self):
-        upnp = miniupnpc.UPnP()
-        upnp.discoverdelay = 200
-        upnp.discover()
-        upnp.selectigd()
         try:
+            import miniupnpc
+
+            upnp = miniupnpc.UPnP()
+            upnp.discoverdelay = 200
+            upnp.discover()
+            upnp.selectigd()
             upnp.addportmapping(self.port, 'UDP', upnp.lanaddr, self.port, 'Python Game Server', '')
         except Exception as e:
             print(f"[UPnP] Échec ouverture port : {e}")
@@ -112,6 +148,9 @@ class GameServer:
                     pass
                 except OSError as e:
                     continue
+                except Exception as e:
+                    print(f"[Server] Erreur traitement message : {e}")
+                    continue
                 now = time.time()
                 if now - self.last_update >= self.rate:
                     self.last_update = now
@@ -122,6 +161,8 @@ class GameServer:
             self.sock.close()
 
     def handle_message(self, data, addr):
+        if not data:
+            return
         msg_type = data[0]
         if msg_type == 11:  # Taunt
             if addr in self.players.clients:
@@ -165,26 +206,26 @@ class GameServer:
             if eid in self.EnemyManager.enemies:
                 del self.EnemyManager.enemies[eid]
             return
-        if msg_type == 8 and len(data) >= 12:
+        if msg_type == 8 and len(data) >= 13:
             eid, damage_number, pid = struct.unpack("III", data[1:13])
             if eid in self.EnemyManager.enemies:
                 self.EnemyManager.enemies[eid].damage(damage_number, pid)
             return
         if msg_type == 5:
-            self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) 
+            self.next_map = self.next_map_id()
             self.change_level(self.next_map)
             return
 
     def update_world(self):
         self.EnemyManager.update(self.players.players)
         if len(self.EnemyManager.enemies) == 0:
-            self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) 
+            self.next_map = self.next_map_id()
             self.change_level(self.next_map)
         self.broadcast_state()
 
     def change_level(self, map_id):
         try:
-            filename = f"data/maps/{map_id}.json"
+            filename = self.map_file(map_id)
             self.map.load(filename)
             self.map_id = map_id
         except FileNotFoundError:

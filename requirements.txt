@@ -1,0 +1,6 @@
+pygame==2.6.1
+miniupnpc==2.3.3
+moderngl
+numpy
+screeninfo
+pyinstaller
