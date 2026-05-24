@@ -724,6 +724,7 @@ class Boss(Enemy):
     def physics_process(self, delta: float) -> None:
         """The physics engine of the enemy called every tick by EnemyManager.update()"""
         if self.animation_timer == 0:
+            self.patrols = 0
             self.reset_angle_shoot()
             if self.properties['state'] == 'double-hit':
                 self.double_hit = False
@@ -878,14 +879,14 @@ class HandRight(Hand):
         self.properties['type'] = "HandRight"
 
 PROJECTILE_MAX_DIST = 16*20
-PROJECTILE_SPEED = 5
+PROJECTILE_SPEED = 8
 PROJECTILE_TIME_BEFORE_LAUNCH = 20
 
-PROJECTILE_LAST_VELO_COEF = 0.95
+PROJECTILE_LAST_VELO_COEF = 0.975
 
 class Projectile(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
-        super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 300, (20, 20), 'any', 0, (5,5))
+        super().__init__(eid, pos, enemy_manager, PROJECTILE_SPEED, 300, (16, 16), 'any', 0, (7,7))
         self.properties['type'] = "Projectile"
         self.properties['state'] = 'spawn'
         self.properties['target_player'] = None
