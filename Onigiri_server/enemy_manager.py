@@ -8,7 +8,7 @@ PLAYER_SIZE = (14, 18)
 
 LANDMARK_TYPE_CHECK = "eid"
 
-PRINT_DEBUG_SPAWNING_INFO = True
+PRINT_DEBUG_SPAWNING_INFO = False
 
 class EnemyManager:
     def __init__(self, tilemap):
