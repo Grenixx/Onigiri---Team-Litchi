@@ -91,14 +91,18 @@ class GameServer:
             self.lobby.start_heartbeat()
 
     def init_upnp(self):
-        upnp = miniupnpc.UPnP()
-        upnp.discoverdelay = 200
-        upnp.discover()
-        upnp.selectigd()
         try:
+            upnp = miniupnpc.UPnP()
+            upnp.discoverdelay = 200
+            upnp.discover()
+            upnp.selectigd()
+            try:
+                upnp.deleteportmapping(self.port, 'UDP')
+            except:
+                pass
             upnp.addportmapping(self.port, 'UDP', upnp.lanaddr, self.port, 'Python Game Server', '')
         except Exception as e:
-            print(f"[UPnP] Échec ouverture port : {e}")
+            print(f"[UPnP] Echec : {e}")
 
     def run(self):
         try:

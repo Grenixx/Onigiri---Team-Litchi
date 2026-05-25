@@ -29,28 +29,19 @@ class ClientNetwork:
         self.players = {}
         self.enemies = {}
         self.running = True
-
         self.remote_players = {}
         self.ping = 0.0
-        self.map_change_id = None # <--- Nouveau
+        self.map_change_id = None
         self.damaging_eid = []
-
-        # thread de réception
-        threading.Thread(target=self.listen, daemon=True).start()
-
-        # thread ping régulier
-        threading.Thread(target=self._ping_loop, daemon=True).start()  # <--- Nouveau
 
 
     def connect(self):
         print("Connexion au serveur...")
         while self.id is None and self.running:
             try:
-                # envoyer le paquet de connexion
                 self.sock.sendto(b'\x0A', self.server)
                 start_time = time.time()
-
-                while time.time() - start_time < 2:  # attente max 2 secondes
+                while time.time() - start_time < 2:
                     try:
                         data, _ = self.sock.recvfrom(BANDWIDTH[DEBUG])
                         if len(data) == 8:
@@ -58,17 +49,17 @@ class ClientNetwork:
                             print(f"Connected with ID {self.id}")
                             break
                         else:
-                            print("Paquet inattendu reçu, en attente du PID...")
+                            print("Paquet inattendu recu, en attente du PID...")
                     except socket.timeout:
                         pass
-
                 if self.id is None:
                     print("Timeout, nouvelle tentative de connexion...")
                     time.sleep(0.5)
-
             except ConnectionResetError:
                 print("Serveur injoignable, nouvelle tentative...")
                 time.sleep(0.5)
+        threading.Thread(target=self.listen, daemon=True).start()
+        threading.Thread(target=self._ping_loop, daemon=True).start()
 
     def listen(self):
         while self.running:
