@@ -233,8 +233,17 @@ class Game:
         else:
             self.void_y_threshold = 1000 #calcul la position minimal
 
+        if self.level == 4:
+            pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+        if self.level == 5:
+            pygame.mixer.music.load(resource_path('data/music/firststep.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+
     def run(self):
-        pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
+        pygame.mixer.music.load(resource_path('data/music/firststep.mp3'))
         pygame.mixer.music.set_volume(self.MUSIC_Volume)
         pygame.mixer.music.play(-1)
         while True:
@@ -395,6 +404,9 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == self.controls["ATTACK"]: 
                         execute_attack(self)
+
+
+
             self.controller.update()
             keys = pygame.key.get_pressed()
             kb_left = self.movement[0]
