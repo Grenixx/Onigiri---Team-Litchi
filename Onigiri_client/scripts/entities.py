@@ -680,7 +680,7 @@ class RemotePlayerRenderer:
     """Affiche et anime les autres joueurs avec leur sprite."""
 
     class RemotePlayer:
-        def __init__(self, game, pid, pos=(0,0), action='idle', flip=False, size=(10, 18), weapon_id=1):
+        def __init__(self, game, pid, pos=(0,0), action='idle', flip=False, size=(8, 18), weapon_id=1):
             self.game = game
             self.pid = pid
             self.pos = list(pos)
