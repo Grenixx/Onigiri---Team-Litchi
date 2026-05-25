@@ -3,6 +3,8 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 import sys
 import subprocess
 import atexit
+import socket
+import ipaddress
 import pygame
 import moderngl
 import json
@@ -51,6 +53,59 @@ USER_PREFS_FILE = "user_prefs.json"
 
 wait_key = False
 action_changing = None
+server_process = None
+
+
+def app_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def find_server_exe():
+    base_dir = app_dir()
+    candidates = [
+        os.path.join(base_dir, "Onigiri_server.exe"),
+        os.path.abspath(os.path.join(base_dir, "..", "ServerBuild", "Onigiri_server.exe")),
+        os.path.abspath(os.path.join(base_dir, "..", "..", "ServerBuild", "Onigiri_server.exe")),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
+def get_private_ip():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+
+
+def parse_network_target(host_text, fallback_port):
+    host_text = host_text.strip()
+
+    if host_text.count(":") == 1:
+        host, port_text = host_text.rsplit(":", 1)
+        if host and port_text.isdigit():
+            return host, int(port_text)
+
+    return host_text, fallback_port
+
+
+def should_enable_upnp(host):
+    try:
+        address = ipaddress.ip_address(host)
+        return not (
+            address.is_private
+            or address.is_loopback
+            or address.is_link_local
+            or address.is_unspecified
+        )
+    except ValueError:
+        return False
 
 
 def reset_user_prefs():
@@ -428,6 +483,11 @@ def quit_game():
 
 
 def cleanup_server():
+    global server_process
+
+    if server_process and server_process.poll() is None:
+        server_process.terminate()
+        server_process = None
 
     if sys.platform == "win32":
 
@@ -501,7 +561,7 @@ def refresh_servers():
 
         for s in servers:
 
-            label = f"{s.get('name', 'Unknown')} ({s.get('ip')})"
+            label = f"{s.get('name', 'Unknown')} ({s.get('ip')}:{s.get('port', 5005)})"
 
             action = lambda s=s: start_game(
                 s.get("ip"),
@@ -539,7 +599,7 @@ server_name_input = InputButton(
 
 host_ip_input = InputButton(
     (0, 0, 0, 0),
-    "0.0.0.0",
+    get_private_ip(),
     font
 )
 
@@ -564,55 +624,76 @@ direct_port_input = InputButton(
 
 def direct_connect():
 
-    ip = direct_ip_input.input_text
-
     try:
         port = int(direct_port_input.input_text)
 
     except:
         port = 5005
 
+    ip, port = parse_network_target(direct_ip_input.input_text, port)
+
     start_game(ip, port)
 
 
 def host_game():
+    global server_process
+
     update_user_prefs()
     save_user_prefs()
 
     import time
 
-    ip = host_ip_input.input_text.strip()
-    port = int(host_port_input.input_text.strip())
-    name = server_name_input.input_text.strip()
+    try:
+        local_port = int(host_port_input.input_text.strip())
+    except:
+        local_port = 5005
 
-    print(f"Starting server on {ip}:{port}")
+    advertised_ip, advertised_port = parse_network_target(
+        host_ip_input.input_text,
+        local_port
+    )
+    name = server_name_input.input_text.strip()
+    bind_ip = "0.0.0.0"
+    local_ip = "127.0.0.1"
+    start_local = "0" if should_enable_upnp(advertised_ip) else "1"
+
+    print(f"Starting server on {bind_ip}:{local_port}")
 
     # 👉 ICI on crée le lobby AVANT de lancer le serveur
     lobby = LobbyManager(
         mode="server",
-        server_ip=ip,
-        server_port=port,
+        server_ip=advertised_ip,
+        server_port=advertised_port,
         server_name=name
     )
 
     lobby.start_heartbeat()
 
-    # lancement serveur .bat
-    bat_path = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            '../Onigiri_server/start_server.bat'
-        )
-    )
+    server_path = find_server_exe()
+    if not server_path:
+        print("Server error: Onigiri_server.exe not found")
+        return
 
     try:
-        subprocess.Popen([bat_path, ip, str(port)], shell=True)
-        print(f"Launching server on {ip}:{port}")
+        server_process = subprocess.Popen(
+            [server_path, bind_ip, str(local_port), "--start_local", start_local, "--no_lobby"],
+            cwd=os.path.dirname(server_path)
+        )
+        print(f"Launching server on {bind_ip}:{local_port}")
+        print(f"Lobby advertised as {advertised_ip}:{advertised_port}")
+        if advertised_port != local_port:
+            print(f"Tunnel mapping expected: {advertised_port} -> {local_port}")
+        if start_local == "0":
+            print("Public host mode: UPnP enabled")
 
         print("Waiting server...")
         time.sleep(2)
 
-        start_game("127.0.0.1", 5005)
+        if server_process.poll() is not None:
+            print(f"Server error: process exited with code {server_process.returncode}")
+            return
+
+        start_game(local_ip, local_port)
 
     except Exception as e:
         print(f"Server error: {e}")

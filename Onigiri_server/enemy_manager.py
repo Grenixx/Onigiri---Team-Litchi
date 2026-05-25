@@ -691,7 +691,7 @@ BOSS_STATES_DURATION = {
     'death': 10,
     'projectiles': BOSS_COOLDOWN_BETWEEN_PROJECTILES * BOSS_NUMBER_PROJECTILE_AT_ONCE + 3,
     'spawn': 297,
-    'dromps': 247,
+    'dromps': 327,
     'patrols': 133,
     'teleportIn': 52,
     'teleportOut': 52,
@@ -809,7 +809,7 @@ class Hand(Enemy):
         self.velocity = [0, 0]
         self.time_before_launch = HAND_TIME_BEFORE_LAUNCH
         self.impact_timer = 0  # Ticks de pause au sol avant de disparaître
-        print(f"Hand created at {pos} with eid : {eid} !")
+        if PRINT_DEBUG_SPAWNING_INFO: print(f"Hand created at {pos} with eid : {eid} !")
 
     def unstuck(self):
         pass
@@ -866,7 +866,7 @@ class Hand(Enemy):
 
             # Impact au sol ou sur un mur latéral
             if self.last_collisions[0] or self.last_collisions[1]:
-                print(f"Hand {self.eid} impacted!")
+                if PRINT_DEBUG_SPAWNING_INFO: print(f"Hand {self.eid} impacted!")
                 self.velocity = [0, 0]
                 self.impact_timer = 15  # ~0.25s au sol avant de disparaître
 

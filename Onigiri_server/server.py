@@ -5,6 +5,20 @@ import miniupnpc
 import os 
 import sys
 
+def resource_path(relative_path):
+    base_candidates = []
+    if getattr(sys, '_MEIPASS', None):
+        base_candidates.append(sys._MEIPASS)
+    if getattr(sys, 'frozen', False):
+        base_candidates.append(os.path.dirname(sys.executable))
+    base_candidates.append(os.path.dirname(os.path.abspath(__file__)))
+
+    for base_path in base_candidates:
+        full_path = os.path.join(base_path, relative_path)
+        if os.path.exists(full_path):
+            return full_path
+    return os.path.join(base_candidates[0], relative_path)
+
 from TilemapServer import TilemapServer
 from enemy_manager import Blob, EnemyManager
 
@@ -70,7 +84,7 @@ class PlayerManager:
         self.players[pid] = (x, y, action, flip, weapon_id, vx, vy)
 
 class GameServer:
-    def __init__(self,  local : bool = False, ip="0.0.0.0", port=5005, server_name="Onigiri Server", rate=1/60):
+    def __init__(self,  local : bool = False, ip="0.0.0.0", port=5005, server_name="Onigiri Server", rate=1/60, publish_lobby=True):
         self.ip = ip
         self.port = port
         self.rate = rate
@@ -86,13 +100,13 @@ class GameServer:
         self.next_map = 0
         self.map = TilemapServer()
         self.map_id = 0
-        self.map.load(f"data/maps/{self.map_id}.json")
+        self.map.load(resource_path(f"data/maps/{self.map_id}.json"))
         self.players = PlayerManager()
         self.EnemyManager = EnemyManager(self.map)
         self.last_update = time.time()
         if not local:
             self.init_upnp()
-        if LobbyManager:
+        if publish_lobby and LobbyManager:
             self.lobby = LobbyManager(mode='server', server_port=self.port, server_name=server_name)
             self.lobby.start_heartbeat()
 
@@ -187,20 +201,20 @@ class GameServer:
                 self.EnemyManager.enemies[eid].damage(damage_number, pid)
             return
         if msg_type == 5:
-            self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) 
+            self.next_map = int((self.map_id) + 1) % len(os.listdir(resource_path("data/maps"))) 
             self.change_level(self.next_map)
             return
 
     def update_world(self):
         self.EnemyManager.update(self.players.players)
         if len(self.EnemyManager.enemies) == 0:
-            self.next_map = int((self.map_id) + 1) % len(os.listdir("data/maps")) 
+            self.next_map = int((self.map_id) + 1) % len(os.listdir(resource_path("data/maps"))) 
             self.change_level(self.next_map)
         self.broadcast_state()
 
     def change_level(self, map_id):
         try:
-            filename = f"data/maps/{map_id}.json"
+            filename = resource_path(f"data/maps/{map_id}.json")
             self.map.load(filename)
             self.map_id = map_id
         except FileNotFoundError:
@@ -260,6 +274,7 @@ if __name__ == "__main__":
     parser.add_argument("port", type=int, default=5005, nargs="?")
     parser.add_argument("--name", type=str, default="Onigiri Server")
     parser.add_argument("--start_local", type=int, default=1)
+    parser.add_argument("--no_lobby", action="store_true")
 
     args = parser.parse_args()
 
@@ -267,10 +282,8 @@ if __name__ == "__main__":
         local=args.start_local == 1,
         ip=args.ip,
         port=args.port,
-        server_name=args.name
+        server_name=args.name,
+        publish_lobby=not args.no_lobby
     )
-
-    parser.add_argument('--ip', type=str, default="0.0.0.0")
-    parser.add_argument('--port', type=int, default=5005)
 
     server.run()

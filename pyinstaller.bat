@@ -9,10 +9,12 @@ xcopy /E /I /Y data ..\ClientBuild\data
 xcopy /E /I /Y scripts ..\ClientBuild\scripts
 
 cd ..\Onigiri_server
-pyinstaller --onefile --icon="..\icone.ico" server.py
+pyinstaller --onefile --add-data "data;data" --icon="..\icone.ico" server.py
 mkdir ..\ServerBuild
 copy dist\server.exe ..\ServerBuild\Onigiri_server.exe
+copy dist\server.exe ..\ClientBuild\Onigiri_server.exe
 xcopy /E /I /Y data ..\ServerBuild\data
+xcopy /E /I /Y data ..\ClientBuild\data
 
 rmdir /S /Q dist
 rmdir /S /Q build
