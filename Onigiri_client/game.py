@@ -77,13 +77,13 @@ class Game:
             'background': load_image(resource_path('data/images/background.png'), True),
             'clouds': load_images(resource_path('data/images/clouds'), True),
             'enemy/idle': Animation(load_images(resource_path('data/images/entities/enemy/idle'), True), img_dur=6),
-            'enemy/run': Animation(load_images(resource_path('data/images/entities/enemy/run'), True), img_dur=4),
-            'player/idle': Animation(load_images(resource_path('data/images/entities/player/idle'), True), img_dur=6),
-            'player/run': Animation(load_images(resource_path('data/images/entities/player/run'), True), img_dur=4),
-            'player/attack_front': Animation(load_images(resource_path('data/images/entities/player/attack_front'), True), img_dur=20, loop=False),
-            'player/attack_up': Animation(load_images(resource_path('data/images/entities/player/attack_up'), True), img_dur=20, loop=False),
+            'enemy/run': Animation(load_images(resource_path('data/images/entities/enemy/run'), True), img_dur=6),
+            'player/idle': Animation(load_images(resource_path('data/images/entities/new_player/idle'), True), img_dur=6),
+            'player/run': Animation(load_images(resource_path('data/images/entities/new_player/run'), True), img_dur=4),
+            'player/attack_front': Animation(load_images(resource_path('data/images/entities/new_player/attack_front'), True), img_dur=8, loop=False),
+            'player/attack_up': Animation(load_images(resource_path('data/images/entities/new_player/attack_up'), True), img_dur=20, loop=False),
             'player/attack_down': Animation(load_images(resource_path('data/images/entities/player/attack_down'), True), img_dur=20, loop=False),
-            'player/jump': Animation(load_images(resource_path('data/images/entities/player/jump'), True)),
+            'player/jump': Animation(load_images(resource_path('data/images/entities/new_player/jump'), True)),
             'player/slide': Animation(load_images(resource_path('data/images/entities/player/slide'), True)),
             'player/wall_slide': Animation(load_images(resource_path('data/images/entities/player/wall_slide'), True)),
             'player/idle_KO': Animation(load_images(resource_path('data/images/entities/player/idle_KO'), True),img_dur=4, loop=True),
@@ -137,7 +137,7 @@ class Game:
         self.sfx['jump'].set_volume(self.SFX_Volume)
 
         self.clouds = Clouds(self.assets['clouds'], count=5)
-        self.player = Player(self, (50, 50), (8, 15))
+        self.player = Player(self, (50, 50), (10, 17))
         self.enemies_renderer = ClientEnemyManager(self)
         self.remote_players_renderer = RemotePlayerRenderer(self)
         self.tilemap = Tilemap(self, tile_size=16)
