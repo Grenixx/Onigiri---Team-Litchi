@@ -89,7 +89,7 @@ ctx = moderngl.create_standalone_context()
 # Ou restons cohérents avec le jeu : 320x180.
 limit_res = (320, 180) 
 limit_surface = pygame.Surface(limit_res)
-shader_bg = ShaderBackground(limit_res[0], limit_res[1], "data/shaders/2.7.frag", ctx=ctx)
+shader_bg = ShaderBackground(limit_res[0], limit_res[1], "data/shaders/2.8sky.frag", ctx=ctx)
 
 # On garde BACKGROUND_DIM pour la fonction resize au cas où, mais on ne l'utilise plus pour l'affichage direct
 BACKGROUND = pygame.image.load("data/images/menuImage/Background/backgroundtemp.png").convert()
