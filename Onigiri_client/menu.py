@@ -607,11 +607,12 @@ def host_game():
 
     try:
         subprocess.Popen([bat_path, ip, str(port)], shell=True)
+        print(f"Launching server on {ip}:{port}")
 
         print("Waiting server...")
         time.sleep(2)
 
-        start_game("127.0.0.1", port)
+        start_game("127.0.0.1", 5005)
 
     except Exception as e:
         print(f"Server error: {e}")
