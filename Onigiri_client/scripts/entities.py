@@ -172,6 +172,8 @@ class Player(PhysicsEntity):
         self.dash_cooldown_timer = 0 # Cooldown entre deux dashs
         self.input_axis = [0, 0] # Stockage de l'input [x, y] de game.py
         self.can_dash = True # Celeste-style: un seul dash en l'air, refresh au sol
+        self.jump_held = False
+        self.jump_cut_gravity_mult = 2.5
 
 
     def update(self, tilemap, movement=(0, 0), dt=0):
@@ -223,7 +225,14 @@ class Player(PhysicsEntity):
         if self.dashing != 0:
             self.velocity[1] = self.dash_dir[1] * self.dash_speed
         
-        super().update(tilemap, movement=actual_movement, dt=dt) 
+        # Saut court : si on relâche la touche en montant, gravité amplifiée pour couper le saut
+        if not self.jump_held and self.velocity[1] < 0 and not self.wall_slide:
+            original_gravity = self.gravity
+            self.gravity = self.gravity * self.jump_cut_gravity_mult
+            super().update(tilemap, movement=actual_movement, dt=dt)
+            self.gravity = original_gravity
+        else:
+            super().update(tilemap, movement=actual_movement, dt=dt) 
         
         # Post-update fix pour garder la vélocité constante pendant tout le dash (contrecarrer la gravité de PhysicsEntity)
         if self.dashing != 0:
