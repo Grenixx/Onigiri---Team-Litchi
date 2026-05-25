@@ -233,12 +233,20 @@ class Game:
         else:
             self.void_y_threshold = 1000 #calcul la position minimal
 
+        if self.level == 2:
+            pygame.mixer.music.load(resource_path('data/music/firststep.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+        if self.level == 3:
+            pygame.mixer.music.load(resource_path('data/music/zic2.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
         if self.level == 4:
             pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
             pygame.mixer.music.set_volume(self.MUSIC_Volume)
             pygame.mixer.music.play(-1)
         if self.level == 5:
-            pygame.mixer.music.load(resource_path('data/music/firststep.mp3'))
+            pygame.mixer.music.load(resource_path('data/music/zic.mp3'))
             pygame.mixer.music.set_volume(self.MUSIC_Volume)
             pygame.mixer.music.play(-1)
 
