@@ -137,7 +137,7 @@ class Game:
         self.sfx['jump'].set_volume(self.SFX_Volume)
 
         self.clouds = Clouds(self.assets['clouds'], count=5)
-        self.player = Player(self, (50, 50), (10, 17))
+        self.player = Player(self, (50, 50), (10, 18))
         self.enemies_renderer = ClientEnemyManager(self)
         self.remote_players_renderer = RemotePlayerRenderer(self)
         self.tilemap = Tilemap(self, tile_size=16)
