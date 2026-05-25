@@ -40,7 +40,7 @@ def execute_attack(self):
     self.player.attack(direction)
 
 class Game:
-    def __init__(self, max_fps=60, resolution : list = [0, 0], ip="91.165.254.108", port=5005):
+    def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1", port=5005):
         self.max_fps = max_fps
         pygame.init()
 

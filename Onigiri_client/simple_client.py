@@ -1,11 +1,14 @@
 import socket
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(("0.0.0.0", 24024))
-print("Serveur en attente sur port 24024...")
+sock.settimeout(3)
 
-while True:
+ip = input("IP du serveur : ")
+sock.sendto(b'\x0A', (ip, 24024))
+print(f"Paquet envoye vers {ip}:24024")
+
+try:
     data, addr = sock.recvfrom(1024)
-    print(f"Recu de {addr} : {data.hex()}")
-    sock.sendto(b'\xFF', addr)
-    print(f"Reponse envoyee a {addr}")
+    print(f"Reponse reçue de {addr} : {data.hex()}")
+except socket.timeout:
+    print("Timeout — aucune reponse")
