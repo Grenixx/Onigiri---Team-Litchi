@@ -67,6 +67,7 @@ class Game:
         self.movement = [False, False]
         
         self.assets = {
+            'arena': load_images(resource_path('data/images/tiles/arena'), True),
             'decor': load_images(resource_path('data/images/tiles/decor'), True),
             'grass': load_images(resource_path('data/images/tiles/grass'), ['0', '2', '4', '6']),
             'grassSpawner': load_images(resource_path('data/images/grass'), True),
@@ -126,9 +127,9 @@ class Game:
             'ambience': pygame.mixer.Sound(resource_path('data/sfx/ambience.wav')),
         }
 
-        self.MUSIC_Volume = 0  
-        self.SFX_Volume = 0  
-        self.music_on = False  
+        self.MUSIC_Volume = 0.025
+        self.SFX_Volume = 0.025
+        # self.music_on = False  
 
         self.sfx['ambience'].set_volume(self.SFX_Volume)
         self.sfx['shoot'].set_volume(self.SFX_Volume)
@@ -232,8 +233,25 @@ class Game:
         else:
             self.void_y_threshold = 1000 #calcul la position minimal
 
+        if self.level == 2:
+            pygame.mixer.music.load(resource_path('data/music/firststep.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+        if self.level == 3:
+            pygame.mixer.music.load(resource_path('data/music/zic2.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+        if self.level == 4:
+            pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+        if self.level == 5:
+            pygame.mixer.music.load(resource_path('data/music/zic.mp3'))
+            pygame.mixer.music.set_volume(self.MUSIC_Volume)
+            pygame.mixer.music.play(-1)
+
     def run(self):
-        pygame.mixer.music.load(resource_path('data/music/musicDynamiqueLoop.mp3'))
+        pygame.mixer.music.load(resource_path('data/music/firststep.mp3'))
         pygame.mixer.music.set_volume(self.MUSIC_Volume)
         pygame.mixer.music.play(-1)
         while True:
@@ -397,6 +415,9 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == self.controls["ATTACK"]: 
                         execute_attack(self)
+
+
+
             self.controller.update()
             keys = pygame.key.get_pressed()
             kb_left = self.movement[0]
