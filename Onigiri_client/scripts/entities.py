@@ -40,6 +40,19 @@ class PhysicsEntity:
         # Remove mask usage
     def rect(self):
         return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
+
+    def physics_rects_around(self, tilemap):
+        rects_by_pos = {}
+        sample_points = (
+            self.pos,
+            (self.pos[0] + self.size[0], self.pos[1]),
+            (self.pos[0], self.pos[1] + self.size[1]),
+            (self.pos[0] + self.size[0], self.pos[1] + self.size[1]),
+        )
+        for point in sample_points:
+            for rect in tilemap.physics_rects_around(point):
+                rects_by_pos[(rect.x, rect.y)] = rect
+        return rects_by_pos.values()
     
     def set_action(self, action):
         if action != self.action:
@@ -61,7 +74,7 @@ class PhysicsEntity:
         
         self.pos[0] += frame_movement[0] 
         entity_rect = self.rect()
-        for rect in tilemap.physics_rects_around(self.pos):
+        for rect in self.physics_rects_around(tilemap):
             if entity_rect.colliderect(rect):
                 if frame_movement[0] > 0:
                     entity_rect.right = rect.left
@@ -76,7 +89,7 @@ class PhysicsEntity:
 
         self.pos[1] += frame_movement[1] 
         entity_rect = self.rect()
-        for rect in tilemap.physics_rects_around(self.pos):
+        for rect in self.physics_rects_around(tilemap):
             if entity_rect.colliderect(rect):
                 if frame_movement[1] > 0:
                     entity_rect.bottom = rect.top
@@ -787,7 +800,7 @@ class RemotePlayerRenderer:
             self.game.tilemap.grass_manager.apply_force(force_pos, 4, 8)
 
             if pid not in self.players:
-                self.players[pid] = self.RemotePlayer(self.game, pid, (x,y), action, flip, weapon_id=weapon_id)
+                self.players[pid] = self.RemotePlayer(self.game, pid, (x,y), action, flip, size=self.game.player.size, weapon_id=weapon_id)
 
             self.players[pid].update((x,y), action, flip, dt, weapon_id=weapon_id, vx=vx, vy=vy)
             self.players[pid].render(surf, offset)
