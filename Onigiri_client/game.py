@@ -331,28 +331,28 @@ class Game:
 
                     if event.key == pygame.K_ESCAPE:
                         event.type = pygame.QUIT
-                    if event.key == pygame.K_F1:
-                        self.debug = not self.debug
-                    if event.key == pygame.K_F2:
-                        self.music_on = not self.music_on 
-                        if self.music_on:
-                            self.MUSIC_Volume = 0.5  
-                            self.SFX_Volume = 0.5
-                            pygame.mixer.music.set_volume(self.MUSIC_Volume)
-                            self.sfx['ambience'].set_volume(self.SFX_Volume)
-                            self.sfx['shoot'].set_volume(self.SFX_Volume)
-                            self.sfx['hit'].set_volume(self.SFX_Volume)
-                            self.sfx['dash'].set_volume(self.SFX_Volume)
-                            self.sfx['jump'].set_volume(self.SFX_Volume)
-                        else:
-                            self.MUSIC_Volume = 0  
-                            self.SFX_Volume = 0
-                            pygame.mixer.music.set_volume(self.MUSIC_Volume)
-                            self.sfx['ambience'].set_volume(self.SFX_Volume)
-                            self.sfx['shoot'].set_volume(self.SFX_Volume)
-                            self.sfx['hit'].set_volume(self.SFX_Volume)
-                            self.sfx['dash'].set_volume(self.SFX_Volume)
-                            self.sfx['jump'].set_volume(self.SFX_Volume)
+                    #if event.key == pygame.K_F1:
+                    #    self.debug = not self.debug
+                    #if event.key == pygame.K_F2:
+                    #    self.music_on = not self.music_on 
+                    #    if self.music_on:
+                    #        self.MUSIC_Volume = 0.5  
+                        #     self.SFX_Volume = 0.5
+                        #     pygame.mixer.music.set_volume(self.MUSIC_Volume)
+                        #     self.sfx['ambience'].set_volume(self.SFX_Volume)
+                        #     self.sfx['shoot'].set_volume(self.SFX_Volume)
+                        #     self.sfx['hit'].set_volume(self.SFX_Volume)
+                        #     self.sfx['dash'].set_volume(self.SFX_Volume)
+                        #     self.sfx['jump'].set_volume(self.SFX_Volume)
+                        # else:
+                        #     self.MUSIC_Volume = 0  
+                        #     self.SFX_Volume = 0
+                        #     pygame.mixer.music.set_volume(self.MUSIC_Volume)
+                        #     self.sfx['ambience'].set_volume(self.SFX_Volume)
+                        #     self.sfx['shoot'].set_volume(self.SFX_Volume)
+                        #     self.sfx['hit'].set_volume(self.SFX_Volume)
+                        #     self.sfx['dash'].set_volume(self.SFX_Volume)
+                        #     self.sfx['jump'].set_volume(self.SFX_Volume)
                     if event.key == self.controls["LEFT"]:
                         self.movement[0] = True
                     if event.key == self.controls["RIGHT"]:
@@ -368,21 +368,21 @@ class Game:
                         self.player.weapon.set_weapon(self.weapon_type)
                     if event.key == pygame.K_n:
                         self.net.send_map_change_request()
-                    if event.key == self.controls["TAUNT"] :
-                        p_pos = (self.player.rect().center)
-                        uv_x = (p_pos[0] - render_scroll[0]) / self.display.get_width()
-                        uv_y = (p_pos[1] - render_scroll[1]) / self.display.get_height()
-                        self.scream_shader.trigger((uv_x, 1.0 - uv_y))
-                        self.scream_active = True
-                        self.target=True
-                        self.net.send_taunt()
+                    # if event.key == self.controls["TAUNT"] :
+                    #     p_pos = (self.player.rect().center)
+                    #     uv_x = (p_pos[0] - render_scroll[0]) / self.display.get_width()
+                    #     uv_y = (p_pos[1] - render_scroll[1]) / self.display.get_height()
+                    #     self.scream_shader.trigger((uv_x, 1.0 - uv_y))
+                    #     self.scream_active = True
+                    #     self.target=True
+                    #     self.net.send_taunt()
                         
-                    if event.key == pygame.K_KP_PLUS or event.key == pygame.K_PLUS:
-                         self.set_zoom(self.zoom + 0.1)
-                    if event.key == pygame.K_KP_MINUS or event.key == pygame.K_MINUS:
-                         self.set_zoom(self.zoom - 0.1)
-                if event.type == pygame.MOUSEWHEEL:
-                    self.set_zoom(self.zoom + event.y * 0.1)
+                    # if event.key == pygame.K_KP_PLUS or event.key == pygame.K_PLUS:
+                    #      self.set_zoom(self.zoom + 0.1)
+                    # if event.key == pygame.K_KP_MINUS or event.key == pygame.K_MINUS:
+                    #      self.set_zoom(self.zoom - 0.1)
+                # if event.type == pygame.MOUSEWHEEL:
+                #     self.set_zoom(self.zoom + event.y * 0.1)
                 if event.type == pygame.KEYUP or event.type == pygame.K_SPACE:
                     if event.key == self.controls["LEFT"] or event.key == pygame.K_LEFT:
                         self.movement[0] = False
