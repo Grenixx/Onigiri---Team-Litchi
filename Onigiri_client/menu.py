@@ -573,22 +573,28 @@ def direct_connect():
 
 
 def host_game():
-
     update_user_prefs()
     save_user_prefs()
 
     import time
 
-    ip = host_ip_input.input_text
-
-    try:
-        port = int(host_port_input.input_text)
-
-    except:
-        port = 5005
+    ip = host_ip_input.input_text.strip()
+    port = int(host_port_input.input_text.strip())
+    name = server_name_input.input_text.strip()
 
     print(f"Starting server on {ip}:{port}")
 
+    # 👉 ICI on crée le lobby AVANT de lancer le serveur
+    lobby = LobbyManager(
+        mode="server",
+        server_ip=ip,
+        server_port=port,
+        server_name=name
+    )
+
+    lobby.start_heartbeat()
+
+    # lancement serveur .bat
     bat_path = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
@@ -597,20 +603,15 @@ def host_game():
     )
 
     try:
+        subprocess.Popen([bat_path, ip, str(port)], shell=True)
 
-        subprocess.Popen(
-            [bat_path, ip, str(port)],
-            shell=True
-        )
-
-        print("Waiting for server startup...")
+        print("Waiting server...")
         time.sleep(2)
 
         start_game("127.0.0.1", port)
 
     except Exception as e:
-        print(f"Server error : {e}")
-
+        print(f"Server error: {e}")
 
 def open_host_menu():
     set_active_menu(host_menu)
