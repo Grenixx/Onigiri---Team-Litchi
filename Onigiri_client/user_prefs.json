@@ -1,1 +1,1 @@
-{"controls": {"LEFT": 113, "RIGHT": 100, "JUMP": 32, "DASH": 1073742049, "CHANGE ARM": 9, "UP": 122, "DOWN": 115, "ATTACK": 99, "CHANGE_WEAPON": 118}, "graphics": [2560, 1440], "fps": 60}
+{"controls": {"LEFT": 113, "RIGHT": 100, "JUMP": 32, "DASH": 1073742049, "CHANGE ARM": 9, "UP": 122, "DOWN": 115, "ATTACK": 99, "CHANGE_WEAPON": 118}, "graphics": [1280, 720], "fps": 60}

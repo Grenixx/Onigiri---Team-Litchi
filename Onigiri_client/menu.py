@@ -663,10 +663,54 @@ direct_connect_menu = Menu(
     font
 )
 
+keyboard_menu = Menu("Keyboard", 
+    [(f"Jump : {CONTROLS['JUMP']}",lambda: rebinding("JUMP"))
+    ,(f"Change Arm : {CONTROLS['CHANGE ARM']}",lambda: rebinding("ATTACK"))
+    ,(f"Dash : {CONTROLS['DASH']}",lambda: rebinding("DODGE"))
+    ,(f"left : {CONTROLS['LEFT']}",lambda: rebinding("LEFT"))
+    ,(f"Right : {CONTROLS['RIGHT']}",lambda: rebinding("RIGHT"))
+    ,("Back", lambda: set_active_menu(options_menu))
+    ],
+    font
+)
+
+graphics_menu = Menu("Graphics",
+    [("3840-2160",lambda: resize(3840, 2160)),
+     ("2560-1440",lambda: resize(2560, 1440)),
+     ("1920-1080",lambda: resize(1920, 1080)),
+     ("1680-1050",lambda: resize(1680, 1050)),
+     ("1280-720",lambda: resize(1280,720)),
+     ("1024-768",lambda: resize(1024,768)),
+     ("800-600",lambda: resize(800,600)),
+     ("Back", lambda: set_active_menu(options_menu))
+     ],
+     font
+)
+
+
+fps_menu = Menu("FPS",
+                [("30 FPS",lambda: refps(30)),
+        ("45 FPS",lambda: refps(45)),
+        ("60 FPS",lambda: refps(60)),
+        ("120 FPS",lambda: refps(120)),
+        ("144 FPS",lambda: refps(144)),
+        ("165 FPS",lambda: refps(165)),
+        ("180 FPS",lambda: refps(180)),
+        ("240 FPS",lambda: refps(240)),
+        ("UNCAPPED FPS",lambda: refps(100000000)),
+        ("Back", lambda: set_active_menu(options_menu))
+    ],
+    font
+)
+
+
 options_menu = Menu(
     "Options",
     [
-        ("Back", lambda: set_active_menu(main_menu))
+        ("Keyboards",lambda: set_active_menu(keyboard_menu)),
+        ("Graphics",lambda: set_active_menu(graphics_menu)),
+        ("FPS",lambda: set_active_menu(fps_menu))
+        ,("Back", lambda: set_active_menu(main_menu))
     ],
     font
 )
@@ -676,7 +720,10 @@ lst_menu = [
     host_menu,
     server_menu,
     direct_connect_menu,
-    options_menu
+    options_menu,
+    keyboard_menu,
+    graphics_menu,
+    fps_menu
 ]
 
 
@@ -757,5 +804,45 @@ def main():
 
         clock.tick(FPS)
 
+def splash_screen():
+    logo = pygame.image.load("logo.png").convert_alpha()
+    lw, lh = logo.get_size()
 
+    scale = min(WIDTH / lw, HEIGHT / lh)
+    new_size = (int(lw * scale), int(lh * scale))
+    logo = pygame.transform.smoothscale(logo, new_size)
+
+    logo_x = (WIDTH - new_size[0]) // 2
+    logo_y = (HEIGHT - new_size[1]) // 2
+
+    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay.fill((0, 0, 0))
+    for alpha in range(255, -1, -5):
+        overlay.set_alpha(alpha)
+        screen.fill((0, 0, 0))
+        screen.blit(logo, (logo_x, logo_y))
+        screen.blit(overlay, (0, 0))
+        pygame.display.flip()
+        clock.tick(60)
+
+    start = pygame.time.get_ticks()
+    while pygame.time.get_ticks() - start < 2000:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        screen.fill((0, 0, 0))
+        screen.blit(logo, (logo_x, logo_y))
+        pygame.display.flip()
+
+    for alpha in range(0, 255, 5):
+        overlay.set_alpha(alpha)
+        screen.fill((0, 0, 0))
+        screen.blit(logo, (logo_x, logo_y))
+        screen.blit(overlay, (0, 0))
+        pygame.display.flip()
+        clock.tick(60)
+
+
+splash_screen()
 main()
