@@ -126,8 +126,9 @@ class Tilemap:
             if emissive_surf and glow_assets and tile['type'] in glow_assets:
                 emissive_surf.blit(glow_assets[tile['type']][tile['variant']], pos)
 
-        for x in range(offset[0] // self.tile_size, (offset[0] + surf.get_width()) // self.tile_size + 1):
-            for y in range(offset[1] // self.tile_size, (offset[1] + surf.get_height()) // self.tile_size + 1):
+        render_padding = 5
+        for x in range(offset[0] // self.tile_size - render_padding, (offset[0] + surf.get_width()) // self.tile_size + 1 + render_padding):
+            for y in range(offset[1] // self.tile_size - render_padding, (offset[1] + surf.get_height()) // self.tile_size + 1 + render_padding):
                 loc = str(x) + ';' + str(y)
                 if loc in self.tilemap:
                     tile = self.tilemap[loc]
