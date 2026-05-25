@@ -242,7 +242,7 @@ class Menu:
                         selected_btn.callback()
 
 
-def start_game(ip="127.0.0.1", port=5555):
+def start_game(ip="127.0.0.1", port=5005):
     game = Game(FPS, [WIDTH, HEIGHT], ip=ip, port=port)
     update_user_prefs()
     save_user_prefs()

@@ -39,24 +39,27 @@ class ClientNetwork:
         print("Connexion au serveur...")
         while self.id is None and self.running:
             try:
-                self.sock.sendto(b'\x0A', self.server)
+                packet = b'\x0A'
+                self.sock.sendto(packet, self.server)
+                print(f"[DEBUG] Handshake envoye vers {self.server} : {packet.hex()}")
                 start_time = time.time()
                 while time.time() - start_time < 2:
                     try:
-                        data, _ = self.sock.recvfrom(BANDWIDTH[DEBUG])
+                        data, addr = self.sock.recvfrom(BANDWIDTH[DEBUG])
+                        print(f"[DEBUG] Paquet recu de {addr} : {len(data)} bytes : {data.hex()}")
                         if len(data) == 8:
                             self.id, self.map_change_id = struct.unpack("II", data[0:8])
-                            print(f"Connected with ID {self.id}")
+                            print(f"[DEBUG] Connected avec ID={self.id} map={self.map_change_id}")
                             break
                         else:
-                            print("Paquet inattendu recu, en attente du PID...")
+                            print(f"[DEBUG] Paquet inattendu type={data[0]} len={len(data)}")
                     except socket.timeout:
-                        pass
+                        print(f"[DEBUG] Timeout socket apres {time.time() - start_time:.2f}s")
                 if self.id is None:
-                    print("Timeout, nouvelle tentative de connexion...")
+                    print("[DEBUG] Pas de reponse, nouvelle tentative...")
                     time.sleep(0.5)
-            except ConnectionResetError:
-                print("Serveur injoignable, nouvelle tentative...")
+            except ConnectionResetError as e:
+                print(f"[DEBUG] ConnectionResetError : {e}")
                 time.sleep(0.5)
         threading.Thread(target=self.listen, daemon=True).start()
         threading.Thread(target=self._ping_loop, daemon=True).start()

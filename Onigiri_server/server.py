@@ -145,13 +145,19 @@ class GameServer:
                             enemy.properties['target_player'] = None
             return
 
-        if msg_type == 10: 
+        if msg_type == 10:
+            print(f"[DEBUG] Handshake recu de {addr} : {data.hex()}")
             if addr not in self.players.clients:
                 pid = self.players.add_player(addr)
+                print(f"[DEBUG] Nouveau joueur pid={pid}")
             else:
                 pid = self.players.clients[addr]
-            self.sock.sendto(struct.pack("II", pid, int(self.map_id)), addr)
+                print(f"[DEBUG] Joueur existant pid={pid}")
+            response = struct.pack("II", pid, int(self.map_id))
+            print(f"[DEBUG] Reponse envoyee a {addr} : {response.hex()} (pid={pid} map={self.map_id})")
+            self.sock.sendto(response, addr)
             return
+            
         if msg_type == 9:  
             self.sock.sendto(b'\x09' + data[1:9], addr)
         if msg_type == 1:
