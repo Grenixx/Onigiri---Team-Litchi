@@ -529,8 +529,8 @@ class ClientEnemyManager:
                         self.game.hitstop_timer = 2
                         self.game.screenshake = 15
                         self.game.recoil=75
-                        self.game.cooldown=2
-                        self.game.cooldown_max=2
+                        self.game.cooldown=0
+                        self.game.cooldown_max=0
                         self.game.KO_time=0
                     elif current_weapon.weapon_type == "mace1":
                         self.game.hitstop_timer = 2
