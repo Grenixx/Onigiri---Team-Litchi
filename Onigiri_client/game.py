@@ -376,7 +376,6 @@ class Game:
                     if event.key == self.controls["RIGHT"]:
                         self.movement[1] = True
                     if event.key == self.controls["JUMP"]:
-                        self.player.jump_held = True
                         if self.player.request_jump():
                             self.sfx['jump'].play()
                     if event.key == self.controls["DASH"]:
@@ -407,8 +406,7 @@ class Game:
                         self.movement[0] = False
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = False
-                    if event.key == self.controls["JUMP"]:
-                        self.player.jump_held = False
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  
                         execute_attack(self)
@@ -481,7 +479,6 @@ class Game:
 
 
             if self.controller.joystick:
-                self.player.jump_held = self.controller.button_a
                 if self.controller.button_a and not getattr(self, '_ctrl_jump_pressed', False):
                     self._ctrl_jump_pressed = True
                     if self.player.request_jump():
