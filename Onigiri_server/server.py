@@ -75,8 +75,14 @@ class GameServer:
         self.port = port
         self.rate = rate
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((ip, port))
-        self.sock.settimeout(0.002)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        try:
+            self.sock.bind((ip, port))
+        except OSError as e:
+            print(f"[SERVER] Port bind failed: {e}")
+            sys.exit(1)
+        self.sock.settimeout(0.05)
         self.next_map = 0
         self.map = TilemapServer()
         self.map_id = 0
@@ -248,9 +254,23 @@ class GameServer:
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description='Onigiri Server')
-    parser.add_argument('--start_local', type=int, default=1, help='Whether the server starts in local')
-    parser.add_argument('--name', type=str, default="Onigiri Server", help='Name of the server')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("ip", type=str, default="0.0.0.0", nargs="?")
+    parser.add_argument("port", type=int, default=5005, nargs="?")
+    parser.add_argument("--name", type=str, default="Onigiri Server")
+    parser.add_argument("--start_local", type=int, default=1)
+
     args = parser.parse_args()
-    server = GameServer(local=args.start_local == 1, server_name=args.name)  
+
+    server = GameServer(
+        local=args.start_local == 1,
+        ip=args.ip,
+        port=args.port,
+        server_name=args.name
+    )
+
+    parser.add_argument('--ip', type=str, default="0.0.0.0")
+    parser.add_argument('--port', type=int, default=5005)
+
     server.run()

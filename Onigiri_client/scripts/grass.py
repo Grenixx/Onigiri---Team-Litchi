@@ -161,8 +161,9 @@ class GrassManager:
 
     # an update and render combination function
     def update_render(self, surf, dt, offset=(0, 0), rot_function=None, emissive_surf=None):
-        visible_tile_range = (int(surf.get_width() // self.tile_size) + 1, int(surf.get_height() // self.tile_size) + 1)
-        base_pos = (int(offset[0] // self.tile_size), int(offset[1] // self.tile_size))
+        render_padding = 5
+        visible_tile_range = (int(surf.get_width() // self.tile_size) + 1 + render_padding * 2, int(surf.get_height() // self.tile_size) + 1 + render_padding * 2)
+        base_pos = (int(offset[0] // self.tile_size) - render_padding, int(offset[1] // self.tile_size) - render_padding)
 
         # get list of grass tiles to render based on visible area
         render_list = []
