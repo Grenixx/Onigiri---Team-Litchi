@@ -126,9 +126,9 @@ class Game:
             'ambience': pygame.mixer.Sound(resource_path('data/sfx/ambience.wav')),
         }
 
-        self.MUSIC_Volume = 0  
-        self.SFX_Volume = 0  
-        self.music_on = False  
+        self.MUSIC_Volume = 0.025
+        self.SFX_Volume = 0.025
+        # self.music_on = False  
 
         self.sfx['ambience'].set_volume(self.SFX_Volume)
         self.sfx['shoot'].set_volume(self.SFX_Volume)

@@ -503,7 +503,10 @@ def refresh_servers():
 
             label = f"{s.get('name', 'Unknown')} ({s.get('ip')})"
 
-            action = lambda ip=s.get('ip'): start_game(ip)
+            action = lambda s=s: start_game(
+                s.get("ip"),
+                int(s.get("port", 5005))
+            )
 
             items.append((label, action))
 
