@@ -40,7 +40,7 @@ def execute_attack(self):
     self.player.attack(direction)
 
 class Game:
-    def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1"):
+    def __init__(self, max_fps=60, resolution : list = [0, 0], ip="127.0.0.1", port=5005):
         self.max_fps = max_fps
         pygame.init()
 
@@ -144,7 +144,7 @@ class Game:
         self.level = 0        
         self.load_level(self.level)
         self.screenshake = 0
-        self.net = ClientNetwork(ip, 5005)
+        self.net = ClientNetwork(ip, port)
         self.net.connect()
         self.remote_players = {}
         self.ctx = moderngl.create_standalone_context()

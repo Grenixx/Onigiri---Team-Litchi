@@ -242,13 +242,11 @@ class Menu:
                         selected_btn.callback()
 
 
-def start_game(ip="127.0.0.1"):
-    game = Game(FPS, [WIDTH,HEIGHT], ip=ip)
+def start_game(ip="127.0.0.1", port=5555):
+    game = Game(FPS, [WIDTH, HEIGHT], ip=ip, port=port)
     update_user_prefs()
     save_user_prefs()
     game.run()
-    
-    # Au retour, on s'assure que l'écran du menu est bien défini
     global screen
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
@@ -303,7 +301,6 @@ def refps(fps_value):
 
 
 
-
 def refresh_servers():
     global server_menu
     items = []
@@ -315,12 +312,12 @@ def refresh_servers():
         items.append(("No servers found", None))
     else:
         for s in servers:
-            # On capture la variable s['ip'] avec un argument par défaut dans la lambda
             label = f"{s.get('name', 'Unknown')} ({s.get('ip')})"
             action = lambda ip=s.get('ip'): start_game(ip)
             items.append((label, action))
             
     items.append(("Refresh", refresh_servers))
+    items.append(("Direct Connect", lambda: set_active_menu(direct_connect_menu)))  
     items.append(("Back", lambda: set_active_menu(main_menu)))
     
     server_menu.items_data = items
@@ -332,6 +329,14 @@ def open_server_browser():
 
 # Input field for server name
 server_name_input = InputButton((0,0,0,0), "Onigiri Server", font)
+# Input fields pour connexion directe
+direct_ip_input = InputButton((0,0,0,0), "127.0.0.1", font)
+direct_port_input = InputButton((0,0,0,0), "5555", font)
+
+def direct_connect():
+    ip = direct_ip_input.input_text
+    port = direct_port_input.input_text
+    start_game(ip, int(port))   
 
 def host_game():
     update_user_prefs() 
@@ -376,7 +381,13 @@ keyboard_menu = Menu("Keyboard", [(lambda: f"Jump : {pygame.key.name(CONTROLS['J
 (lambda: f"UP : {pygame.key.name(CONTROLS['UP'])}", lambda: rebinding("UP")),(lambda: f"DOWN : {pygame.key.name(CONTROLS['DOWN'])}", lambda: rebinding("DOWN")),("Back", lambda: set_active_menu(options_menu))], font)
 graphics_menu = Menu("Graphics",[("3840-2160",lambda: resize(3840, 2160)),("2560-1440",lambda: resize(2560, 1440)),("1920-1080",lambda: resize(1920, 1080)),("1680-1050",lambda: resize(1680, 1050)),("1280-720",lambda: resize(1280,720)),("1024-768",lambda: resize(1024,768)),("800-600",lambda: resize(800,600)),("Back", lambda: set_active_menu(options_menu))],font)
 fps_menu = Menu("FPS",[("30 FPS",lambda: refps(30)),("45 FPS",lambda: refps(45)),("60 FPS",lambda: refps(60)),("120 FPS",lambda: refps(120)),("144 FPS",lambda: refps(144)),("165 FPS",lambda: refps(165)),("180 FPS",lambda: refps(180)),("240 FPS",lambda: refps(240)),("UNCAPPED FPS",lambda: refps(1000000000)),("Back", lambda: set_active_menu(options_menu))],font)
-lst_menu = [main_menu,host_menu,options_menu,keyboard_menu,graphics_menu,server_menu]
+direct_connect_menu = Menu("Direct Connect", [
+    direct_ip_input,
+    direct_port_input,
+    ("Connect", direct_connect),
+    ("Back", lambda: set_active_menu(server_menu))
+], font)
+lst_menu = [main_menu, host_menu, options_menu, keyboard_menu, graphics_menu, server_menu, direct_connect_menu]
 
 
 def set_active_menu(menu):
