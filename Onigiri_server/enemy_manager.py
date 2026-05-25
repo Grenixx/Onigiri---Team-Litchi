@@ -705,6 +705,7 @@ BOSS_MIDDLE_DOUBLE_ATTACK = 100
 class Boss(Enemy):
     def __init__(self, eid: int, pos: list, enemy_manager: EnemyManager):
         super().__init__(eid, pos, enemy_manager, BOSS_SPEED, 1500, (200, 200), "any", 0)
+        pos = add_vecs(pos, [0, -32])
         self.properties['type'] = "Boss"
         self.properties['state'] = 'spawn'
         if PRINT_DEBUG_SPAWNING_INFO: print(f"Boss created at {pos} with eid : {eid} !")

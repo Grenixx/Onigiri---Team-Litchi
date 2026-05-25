@@ -67,6 +67,7 @@ class Game:
         self.movement = [False, False]
         
         self.assets = {
+            'arena': load_images(resource_path('data/images/tiles/arena'), True),
             'decor': load_images(resource_path('data/images/tiles/decor'), True),
             'grass': load_images(resource_path('data/images/tiles/grass'), ['0', '2', '4', '6']),
             'grassSpawner': load_images(resource_path('data/images/grass'), True),

@@ -2,12 +2,20 @@ import sys
     
 import pygame
 
-from scripts.utils import load_images
+from scripts.utils import load_image, load_images
 from scripts.tilemap import Tilemap
 
 import os
+import re
 
 RENDER_SCALE = 2.0
+
+def natural_sort_key(name):
+    return [int(part) if part.isdigit() else part.lower() for part in re.split(r'(\d+)', name)]
+
+def load_editor_images(path):
+    folder_path = os.path.join('data/images', path)
+    return [load_image(os.path.join(path, img_name)) for img_name in sorted(os.listdir(folder_path), key=natural_sort_key)]
 
 class Editor:
     def __init__(self):
@@ -34,6 +42,7 @@ class Editor:
             'grassSpawner': load_images('grass'), #celui qui retire le commentaire je l encule 
             'tuto': load_images('tuto/steles'),
             'texte':load_images('tuto/texte'),
+            'arena': load_editor_images('tiles/arena'),
         }
         
         
@@ -41,7 +50,7 @@ class Editor:
         
         self.tilemap = Tilemap(self, tile_size=16)
         
-        self.level = 0
+        self.level = 4
         self.load_level(self.level)
         
         self.scroll = [0, 0]

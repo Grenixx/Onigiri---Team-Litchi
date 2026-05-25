@@ -1,6 +1,6 @@
 import json
 
-PHYSICS_TILES = {'grass', 'stone'}
+PHYSICS_TILES = {'grass', 'stone', 'arena'}
 
 class TilemapServer:
     def __init__(self, tile_size=16):
