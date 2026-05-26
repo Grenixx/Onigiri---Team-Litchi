@@ -406,6 +406,7 @@ class Game:
                         self.movement[0] = False
                     if event.key == self.controls["RIGHT"] or event.key == pygame.K_RIGHT:
                         self.movement[1] = False
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  
                         execute_attack(self)

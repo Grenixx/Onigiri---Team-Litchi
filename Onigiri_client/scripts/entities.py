@@ -174,6 +174,7 @@ class Player(PhysicsEntity):
         self.can_dash = True # Celeste-style: un seul dash en l'air, refresh au sol
 
 
+
     def update(self, tilemap, movement=(0, 0), dt=0):
         # Mise à jour des timers de cooldown/buffer
         if self.game.KO_time > 0:
@@ -528,8 +529,8 @@ class ClientEnemyManager:
                         self.game.hitstop_timer = 2
                         self.game.screenshake = 15
                         self.game.recoil=75
-                        self.game.cooldown=2
-                        self.game.cooldown_max=2
+                        self.game.cooldown=0
+                        self.game.cooldown_max=0
                         self.game.KO_time=0
                     elif current_weapon.weapon_type == "mace1":
                         self.game.hitstop_timer = 2

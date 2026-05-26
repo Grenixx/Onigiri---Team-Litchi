@@ -1,5 +1,5 @@
 @echo off
-pip install pyinstaller
+pip install pyinstaller pygame moderngl numpy miniupnpc screeninfo
 cd Onigiri_client
 pyinstaller --onefile --add-data "data;data" --add-data "scripts;scripts" --icon="..\icone.ico" menu.py
 mkdir ..\ClientBuild
