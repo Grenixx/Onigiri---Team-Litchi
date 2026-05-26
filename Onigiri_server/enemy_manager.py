@@ -682,7 +682,7 @@ BOSS_ALL_ATTACKS = {
     'projectiles': 20, # 'projectiles': 10,
     'dromps': 10, # 'dromps': 5,
     'patrols': 15, # 'patrols': 10,
-    'teleportIn': 30. # 'teleportIn': 50
+    'teleportIn': 30 # 'teleportIn': 50
 }
 
 BOSS_STATES_DURATION = {
