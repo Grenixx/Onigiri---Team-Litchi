@@ -34,6 +34,8 @@ class ClientNetwork:
         self.map_change_id = None
         self.damaging_eid = []
 
+        print(f"[DEBUG] server_ip = '{server_ip}'")
+        print(f"[DEBUG] server_port = {server_port}")
 
     def connect(self):
         print("Connexion au serveur...")
